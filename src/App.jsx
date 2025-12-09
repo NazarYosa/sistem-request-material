@@ -909,7 +909,7 @@ function App() {
             <div>
               <h3 className="font-bold text-2xl text-slate-800">
                 Data Material{" "}
-                <span className="text-blue-600 text-xl font-medium border-b-2 border-blue-200 pb-1">
+                <span className="text-blue-600 text-2xl font-medium pb-1">
                   {new Date(selectedDate).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
