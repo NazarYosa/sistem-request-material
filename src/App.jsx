@@ -4,18 +4,12 @@
 // function App() {
 //   const [dataMaterial, setDataMaterial] = useState([]);
 //   const [printData, setPrintData] = useState(null);
-//   const [logs, setLogs] = useState([]);
 //   const [isProcessing, setIsProcessing] = useState(false);
 
 //   // Default: Hari Ini
 //   const [selectedDate, setSelectedDate] = useState(
 //     new Date().toLocaleDateString("en-CA")
 //   );
-
-//   const addLog = (msg) => {
-//     const time = new Date().toLocaleTimeString("id-ID", { hour12: false });
-//     setLogs((prev) => [`[${time}] ${msg}`, ...prev]);
-//   };
 
 //   const getMarkersFromDate = (dateString) => {
 //     const dateObj = new Date(dateString);
@@ -32,9 +26,7 @@
 //     const markers = getMarkersFromDate(selectedDate);
 
 //     setDataMaterial([]);
-//     setLogs([]);
 //     setIsProcessing(true);
-//     addLog(`📅 Memproses Tanggal: ${markers.fullDate}...`);
 
 //     setTimeout(() => {
 //       Array.from(files).forEach((file) => {
@@ -59,23 +51,16 @@
 //                 const result = processSheet(jsonData, sheetName, markers);
 //                 if (result.length > 0) {
 //                   extractedData = [...extractedData, ...result];
-//                   addLog(`   ✅ ${sheetName}: ${result.length} baris data.`);
 //                 }
 //               }
 //             });
 
-//             if (extractedData.length === 0) {
-//               addLog(`⚠️ File ${file.name}: Kosong di tgl tersebut.`);
-//             } else {
-//               // AGGREGATE (PENJUMLAHAN)
+//             if (extractedData.length > 0) {
 //               const aggregated = aggregateData(extractedData);
 //               setDataMaterial((prev) => [...prev, ...aggregated]);
-//               addLog(
-//                 `🎉 Selesai! ${aggregated.length} Item Material (Setelah Dijumlah).`
-//               );
 //             }
 //           } catch (error) {
-//             addLog(`❌ ERROR: ${error.message}`);
+//             console.error(error);
 //           } finally {
 //             setIsProcessing(false);
 //           }
@@ -281,51 +266,36 @@
 //   }, {});
 
 //   return (
-//     <div className="h-screen flex flex-col bg-slate-100 text-slate-800 font-sans overflow-hidden">
-//       {/* === HEADER FIXED === */}
-//       <div className="flex-none bg-white shadow-sm z-20 print:hidden border-b border-slate-300">
-//         <div className="px-6 py-3 flex justify-between items-center border-b border-slate-200">
-//           <div>
-//             <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">
-//               VUTEQ <span className="text-blue-600">LABEL SYSTEM</span>
-//             </h1>
-//           </div>
-
+//     <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden">
+//       {/* HEADER FIXED */}
+//       <div className="flex-none bg-white shadow-md z-20 print:hidden border-b border-gray-200">
+//         <div className="px-6 py-4 flex justify-between items-center border-b border-gray-100 relative">
 //           <div className="flex items-center gap-3">
-//             <label className="text-xs font-bold text-slate-500 uppercase">
-//               Pilih Tanggal:
-//             </label>
-//             <input
-//               type="date"
-//               value={selectedDate}
-//               onChange={(e) => setSelectedDate(e.target.value)}
-//               className="text-sm font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
-//             />
+//             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl shadow-blue-200 shadow-lg">
+//               🖨️
+//             </div>
+//             <div>
+//               <h1 className="text-xl font-bold text-slate-800 tracking-tight leading-none mx-auto">
+//                 VUTEQ INDONESIA
+//               </h1>
+//             </div>
 //           </div>
-//         </div>
 
-//         <div className="grid grid-cols-12 gap-0 h-32">
-//           <div className="col-span-5 p-3 border-r border-slate-200 bg-slate-50">
-//             <label
-//               className={`flex flex-col items-center justify-center w-full h-full border-2 border-dashed rounded-lg cursor-pointer transition-all ${
-//                 isProcessing
-//                   ? "bg-gray-100 border-gray-300"
-//                   : "bg-white border-blue-400 hover:bg-blue-50"
-//               }`}
-//             >
-//               <div className="flex flex-row items-center gap-3">
-//                 <span className="text-2xl">{isProcessing ? "⏳" : "📥"}</span>
-//                 <div className="text-left">
-//                   <p className="text-sm font-bold text-slate-700">
-//                     {isProcessing
-//                       ? "Sedang Memproses..."
-//                       : "Upload Excel Disini"}
-//                   </p>
-//                   <p className="text-[10px] text-slate-500">
-//                     Format: Production Plan (.xlsx)
-//                   </p>
-//                 </div>
-//               </div>
+//           <div className="flex items-center gap-4">
+//             <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+//               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+//                 TGL:
+//               </label>
+//               <input
+//                 type="date"
+//                 value={selectedDate}
+//                 onChange={(e) => setSelectedDate(e.target.value)}
+//                 className="text-sm font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
+//               />
+//             </div>
+
+//             <label className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all active:scale-95 shadow-sm gap-2">
+//               <span>📂</span> Upload Excel
 //               <input
 //                 type="file"
 //                 multiple
@@ -337,134 +307,157 @@
 //             </label>
 //           </div>
 
-//           <div className="col-span-7 bg-slate-900 p-3 overflow-y-auto font-mono text-[11px] text-slate-300 scrollbar-thin scrollbar-thumb-slate-700">
-//             {isProcessing && (
-//               <div className="w-full bg-slate-700 rounded-full h-1 mb-2 overflow-hidden">
-//                 <div className="bg-blue-500 h-1 rounded-full animate-progress w-full origin-left"></div>
-//               </div>
-//             )}
-//             {logs.length === 0 ? (
-//               <div className="h-full flex items-center justify-center text-slate-600 italic">
-//                 Ready. Menunggu upload file...
-//               </div>
-//             ) : (
-//               logs.map((log, i) => (
-//                 <div
-//                   key={i}
-//                   className={`mb-0.5 break-words border-l-2 pl-2 ${
-//                     log.includes("ERROR")
-//                       ? "border-red-500 text-red-400"
-//                       : log.includes("✅")
-//                       ? "border-green-500 text-green-400"
-//                       : "border-blue-500"
-//                   }`}
-//                 >
-//                   {log}
-//                 </div>
-//               ))
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* === DATA SCROLLABLE === */}
-//       <div className="flex-1 overflow-y-auto p-6 bg-slate-100 print:hidden">
-//         <div className="flex justify-between items-center mb-4">
-//           <h3 className="font-bold text-lg text-slate-700 flex items-center gap-2">
-//             📋 Data Material
-//             <span className="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full border border-slate-300">
-//               {dataMaterial.length} Items
-//             </span>
-//           </h3>
-//           {dataMaterial.length > 0 && (
-//             <button
-//               onClick={() => {
-//                 setDataMaterial([]);
-//                 setLogs([]);
-//               }}
-//               className="text-xs text-red-600 hover:text-red-800 font-bold underline bg-white px-3 py-1 rounded border border-red-200"
-//             >
-//               RESET DATA
-//             </button>
+//           {/* Loading Bar */}
+//           {isProcessing && (
+//             <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 overflow-hidden">
+//               <div className="h-full bg-blue-500 animate-progress w-full origin-left"></div>
+//             </div>
 //           )}
 //         </div>
-
-//         {Object.keys(groupedUI).length === 0 ? (
-//           <div className="flex flex-col items-center justify-center h-64 text-slate-400 border-2 border-dashed border-slate-300 rounded-lg bg-white">
-//             <p className="font-medium">Data Kosong</p>
-//           </div>
-//         ) : (
-//           <div className="space-y-6 pb-10">
-//             {Object.keys(groupedUI).map((machine) => (
-//               <div
-//                 key={machine}
-//                 className="bg-white border border-slate-400 shadow-sm rounded-sm overflow-hidden"
-//               >
-//                 <div className="bg-slate-200 px-4 py-1.5 border-b border-slate-400 flex justify-between items-center">
-//                   <span className="font-bold text-sm text-slate-800 uppercase">
-//                     🏗️ {machine}
-//                   </span>
-//                 </div>
-
-//                 {/* TABEL BARU: KG & SAK */}
-//                 <table className="w-full text-sm text-left border-collapse border border-slate-400">
-//                   <thead className="bg-slate-100 text-slate-700 text-xs uppercase font-bold">
-//                     <tr>
-//                       <th className="px-3 py-2 border border-slate-400 w-[45%]">
-//                         PART NAME
-//                       </th>
-//                       <th className="px-3 py-2 border border-slate-400 w-[15%] text-center">
-//                         KG
-//                       </th>
-//                       <th className="px-3 py-2 border border-slate-400 w-[20%] text-center">
-//                         QTY SAK
-//                       </th>
-//                       <th className="px-3 py-2 border border-slate-400 w-[20%] text-center">
-//                         AKSI
-//                       </th>
-//                     </tr>
-//                   </thead>
-//                   <tbody className="divide-y divide-slate-400">
-//                     {groupedUI[machine].map((item, idx) => (
-//                       <tr key={idx} className="hover:bg-yellow-50">
-//                         <td className="px-3 py-2 border border-slate-400 font-medium text-slate-900">
-//                           {item.partName}
-//                         </td>
-//                         <td className="px-3 py-2 border border-slate-400 text-center font-mono text-slate-600">
-//                           {item.inputKg > 0 ? item.inputKg.toFixed(1) : "-"}
-//                         </td>
-//                         <td className="px-3 py-2 border border-slate-400 text-center bg-slate-50">
-//                           <span className="text-base font-bold text-blue-800">
-//                             {item.totalQty}
-//                           </span>
-//                           {/* Detail Asli (Pecahan) */}
-//                           <span className="text-xs text-slate-500 ml-1">
-//                             (
-//                             {item.inputSak % 1 === 0
-//                               ? item.inputSak
-//                               : item.inputSak.toFixed(1)}
-//                             )
-//                           </span>
-//                         </td>
-//                         <td className="px-3 py-2 border border-slate-400 text-center">
-//                           <button
-//                             onClick={() => handlePrint(item)}
-//                             className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1 px-3 rounded shadow-sm"
-//                           >
-//                             PRINT ({item.jmlLabel})
-//                           </button>
-//                         </td>
-//                       </tr>
-//                     ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             ))}
-//           </div>
-//         )}
 //       </div>
 
-//       {/* === PRINT TEMPLATE === */}
+//       {/* === DATA SCROLLABLE SECTION (GRID 2 KOLOM) === */}
+//       <div className="flex-1 overflow-y-auto p-8 print:hidden">
+//         <div className="max-w-[1600px] mx-auto">
+//           <div className="flex justify-between items-end mb-6">
+//             <div>
+//               <h3 className="font-bold text-2xl text-slate-800">
+//                 Data Material{" "}
+//                 <span className="text-blue-600 text-2xl font-medium pb-1">
+//                   {new Date(selectedDate).toLocaleDateString("id-ID", {
+//                     day: "numeric",
+//                     month: "long",
+//                     year: "numeric",
+//                   })}
+//                 </span>
+//               </h3>
+//               <p className="text-sm text-slate-500 mt-1">
+//                 Total 
+//                 <span className="font-bold text-blue-600 mx-1">
+//                 {dataMaterial.length}
+//                 </span>
+//                 item material ditemukan.
+//               </p>
+//             </div>
+
+//             {dataMaterial.length > 0 && (
+//               <button
+//                 onClick={() => setDataMaterial([])}
+//                 className="text-xs text-red-500 hover:text-red-700 font-bold tracking-wide uppercase transition-colors px-4 py-2 rounded-lg hover:bg-red-50"
+//               >
+//                 Reset Data
+//               </button>
+//             )}
+//           </div>
+
+//           {Object.keys(groupedUI).length === 0 ? (
+//             <div className="flex flex-col items-center justify-center h-80 text-slate-400 border border-dashed border-slate-300 rounded-2xl bg-white shadow-sm">
+//               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-3xl opacity-50">
+//                 📊
+//               </div>
+//               <p className="font-medium text-slate-600">
+//                 Belum ada data ditampilkan
+//               </p>
+//               <p className="text-xs mt-1">
+//                 Silakan pilih tanggal & upload file excel
+//               </p>
+//             </div>
+//           ) : (
+//             // GRID 2 KOLOM
+//             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pb-20">
+//               {Object.keys(groupedUI).map((machine) => (
+//                 <div
+//                   key={machine}
+//                   className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+//                 >
+//                   <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+//                     <div className="flex items-center gap-2">
+//                       <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+//                       <span className="font-bold text-slate-700 text-sm uppercase tracking-wide">
+//                         Mesin: {machine}
+//                       </span>
+//                     </div>
+//                     <span className="text-[10px] font-bold bg-white border border-gray-200 px-3 py-1 rounded-full text-slate-500">
+//                       {groupedUI[machine].length} PARTS
+//                     </span>
+//                   </div>
+
+//                   <div className="overflow-x-auto">
+//                     <table className="w-full text-sm text-left">
+//                       <thead className="bg-white text-slate-500 border-b border-gray-100">
+//                         <tr>
+//                           <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[40%]">
+//                             Part Name
+//                           </th>
+//                           <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-center text-gray-400">
+//                             Total KG
+//                           </th>
+//                           <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-center">
+//                             Qty Sak
+//                           </th>
+//                           <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-right">
+//                             Action
+//                           </th>
+//                         </tr>
+//                       </thead>
+//                       <tbody className="divide-y divide-gray-50">
+//                         {groupedUI[machine].map((item, idx) => (
+//                           <tr
+//                             key={idx}
+//                             className="hover:bg-blue-50/50 transition-colors duration-150 group"
+//                           >
+//                             <td className="px-5 py-3">
+//                               <div className="font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
+//                                 {item.partName}
+//                               </div>
+//                             </td>
+//                             <td className="px-5 py-3 text-center">
+//                               <span className="font-medium text-black bg-gray-50 px-2 py-1 rounded text-xs">
+//                                 {item.inputKg > 0
+//                                   ? item.inputKg.toLocaleString("id-ID", {
+//                                       maximumFractionDigits: 1,
+//                                     })
+//                                   : "-"}
+//                               </span>
+//                             </td>
+//                             <td className="px-5 py-3 text-center">
+//                               <div className="inline-flex flex-col items-center">
+//                                 <span className="text-lg font-bold text-slate-800">
+//                                   {item.totalQty}
+//                                 </span>
+//                                 <span className="text-sm text-black font-medium">
+//                                   (
+//                                   {item.inputSak % 1 === 0
+//                                     ? item.inputSak
+//                                     : item.inputSak.toFixed(1)}
+//                                   )
+//                                 </span>
+//                               </div>
+//                             </td>
+//                             <td className="px-5 py-3 text-right">
+//                               <button
+//                                 onClick={() => handlePrint(item)}
+//                                 className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 text-xs font-bold py-1.5 px-4 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-2 ml-auto"
+//                               >
+//                                 <span>🖨️</span> Print
+//                                 <span className="bg-slate-100 group-hover:bg-emerald-100 px-1.5 rounded text-sm min-w-5 text-center">
+//                                   {item.jmlLabel}
+//                                 </span>
+//                               </button>
+//                             </td>
+//                           </tr>
+//                         ))}
+//                       </tbody>
+//                     </table>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* PRINT TEMPLATE */}
 //       <div className="hidden print:grid print:grid-cols-2 print:grid-rows-3 print:gap-4 print:w-[210mm] print:h-[297mm] print:p-[10mm] bg-white text-black font-sans leading-none">
 //         {printData &&
 //           printData.map((lbl, idx) => (
@@ -655,7 +648,7 @@ function App() {
     }, 800);
   };
 
-  // === 2. CORE LOGIC (FILL DOWN + SAK & KG CAPTURE) ===
+  // === 2. CORE LOGIC (SUPER STRICT NAME FILTER) ===
   const processSheet = (rows, sheetName, markers) => {
     let headerRow = -1;
     let colPartName = -1;
@@ -664,7 +657,6 @@ function App() {
     let offsetSak = -1;
     let offsetKg = -1;
 
-    // A. DETEKSI HEADER
     for (let i = 0; i < Math.min(50, rows.length); i++) {
       const row = rows[i];
       row.forEach((cell, idx) => {
@@ -707,33 +699,57 @@ function App() {
       offsetSak = 3;
     }
 
-    // B. EKSTRAKSI DATA (DENGAN FILL DOWN)
     const results = [];
-    let currentPartName = null; // Penampung nama baris induk
+    let currentPartName = null;
     let currentPartNo = "-";
 
     for (let i = headerRow + 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row) continue;
 
-      const cellPartName = String(row[colPartName] || "").trim();
+      let cellPartName = String(row[colPartName] || "").trim();
 
-      // LOGIKA FILL DOWN:
-      // Jika ada nama baru -> Update current
-      if (
+      // === VALIDASI NAMA PART (REVISI) ===
+
+      // 1. Cek Part Number Nyasar (Ada Angka DAN Ada Strip)
+      // Contoh: 86814/13-I7000, 72321-73R00
+      const looksLikePartNo =
+        /[0-9]/.test(cellPartName) && /-/.test(cellPartName);
+
+      // 2. Cek Kode Model (Dalam kurung)
+      // Contoh: (Y4L), (SU2ID)
+      const isModelCode = /^\(.*\)$/.test(cellPartName);
+
+      // 3. Cek Kode Pendek (<= 5 Huruf)
+      // Contoh: Y4L, SU2ID, D03B. (Part Name asli biasanya > 5 huruf)
+      const isShortCode = cellPartName.length <= 5;
+
+      // 4. Cek Header Sampah
+      const isHeader = ["PART NAME", "TOTAL", "SUB TOTAL", "MODEL"].some((x) =>
+        cellPartName.toUpperCase().includes(x)
+      );
+
+      // KEPUTUSAN: Apakah ini Nama Valid?
+      const isValidName =
         cellPartName &&
-        !["PART NAME", "TOTAL", "SUB TOTAL"].some((x) =>
-          cellPartName.toUpperCase().includes(x)
-        )
-      ) {
+        !looksLikePartNo &&
+        !isModelCode &&
+        !isShortCode &&
+        !isHeader;
+
+      if (isValidName) {
+        // UPDATE INDUK
         currentPartName = cellPartName;
-        currentPartNo = colPartNo !== -1 ? String(row[colPartNo] || "-") : "-";
+        // Reset Part No jika ada nama baru
+        const rawNo = String(row[colPartNo] || "").trim();
+        if (rawNo.length > 3) currentPartNo = rawNo;
       }
 
-      // Jika cell kosong, kita pakai currentPartName yang lama (baris merged/bawahnya)
+      // Kalau nama tidak valid, kita skip update currentPartName
+      // (Artinya kita pakai currentPartName dari baris atasnya/induk)
+
       if (!currentPartName) continue;
 
-      // Skip baris ACTUAL
       let isActualRow = false;
       for (let c = 0; c < 10; c++) {
         const cellVal = String(row[c]).toUpperCase().trim();
@@ -744,11 +760,9 @@ function App() {
       }
       if (isActualRow) continue;
 
-      // --- AMBIL DATA ---
       let finalSak = 0;
       let displayKg = 0;
 
-      // Ambil KG
       if (offsetKg !== -1) {
         let val = parseFloat(
           String(row[dateColIndex + offsetKg]).replace(",", ".")
@@ -756,7 +770,6 @@ function App() {
         if (!isNaN(val) && val > 0) displayKg = val;
       }
 
-      // Ambil SAK
       if (offsetSak !== -1) {
         let val = parseFloat(
           String(row[dateColIndex + offsetSak]).replace(",", ".")
@@ -764,16 +777,14 @@ function App() {
         if (!isNaN(val) && val > 0) finalSak = val;
       }
 
-      // Fallback SAK ambil dari KG jika kosong
       if (finalSak === 0 && displayKg > 0) {
         finalSak = displayKg;
       }
 
-      // Simpan jika ada data (menggunakan currentPartName)
       if (finalSak > 0) {
         results.push({
           machine: sheetName.replace(".csv", "").replace(".xlsx", "").trim(),
-          partName: currentPartName, // Pakai nama dari memori (fill down)
+          partName: currentPartName,
           partNo: currentPartNo,
           rawSak: finalSak,
           rawKg: displayKg,
@@ -783,13 +794,11 @@ function App() {
     return results;
   };
 
-  // === 3. AGGREGASI (JUMLAHKAN SAK & KG) ===
+  // === 3. AGGREGASI (TETAP) ===
   const aggregateData = (rawData) => {
     const grouped = {};
     rawData.forEach((item) => {
-      // Grouping Key: Mesin + PartName
       const key = `${item.machine}__${item.partName}`;
-
       if (!grouped[key]) {
         grouped[key] = {
           machine: item.machine,
@@ -799,7 +808,6 @@ function App() {
           totalRawKg: 0,
         };
       }
-      // INI PROSES PENJUMLAHANNYA
       grouped[key].totalRawSak += item.rawSak;
       grouped[key].totalRawKg += item.rawKg;
     });
@@ -816,28 +824,71 @@ function App() {
         inputKg: item.totalRawKg,
         totalQty: totalQty,
         jmlLabel: jmlLabel,
+        recycleInput: 0,
       };
     });
   };
 
-  // === 4. PRINT ENGINE ===
+  // === 4. HANDLE RECYCLE (TETAP) ===
+  const handleRecycleChange = (id, val) => {
+    const newVal = Math.max(0, parseInt(val) || 0);
+    setDataMaterial((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const netQty = Math.max(0, item.totalQty - newVal);
+          const newJmlLabel = Math.ceil(netQty / 13) || (newVal > 0 ? 1 : 0);
+          return { ...item, recycleInput: newVal, jmlLabel: newJmlLabel };
+        }
+        return item;
+      })
+    );
+  };
+
+  // === 5. PRINT ENGINE (TETAP) ===
   const handlePrint = (item) => {
     const labels = [];
-    let remaining = item.totalQty;
-    let boxKe = 1;
-    const totalBox = item.jmlLabel;
 
-    while (remaining > 0) {
-      const isi = Math.min(13, remaining);
+    const totalPlan = item.totalQty;
+    const totalRecycle = item.recycleInput;
+    const netRequest = Math.max(0, totalPlan - totalRecycle);
+
+    let totalBox = Math.ceil(netRequest / 13);
+
+    if (totalBox === 0 && totalRecycle > 0) totalBox = 1;
+    if (totalBox === 0 && totalPlan > 0) totalBox = 1;
+
+    const recyclePerBox = Math.floor(totalRecycle / totalBox);
+    const recycleRemainder = totalRecycle % totalBox;
+
+    let remainingNet = netRequest;
+
+    for (let i = 0; i < totalBox; i++) {
+      const currentNet = Math.min(13, remainingNet);
+      const currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+
+      let qtyDisplay = `${currentNet}`;
+      if (currentRecycle > 0) {
+        qtyDisplay = `${currentNet} + ${currentRecycle}`;
+      }
+
+      let totalDisplay = `${netRequest}`;
+      if (totalRecycle > 0) {
+        totalDisplay = `${netRequest} + ${totalRecycle}`;
+      } else {
+        totalDisplay = `${totalPlan}`;
+      }
+
       labels.push({
         ...item,
-        currentQty: isi,
-        boxKe: boxKe,
+        qtyDisplay: qtyDisplay,
+        totalDisplay: totalDisplay,
+        boxKe: i + 1,
         totalBox: totalBox,
       });
-      remaining -= isi;
-      boxKe++;
+
+      remainingNet -= currentNet;
     }
+
     setPrintData(labels);
   };
 
@@ -861,9 +912,12 @@ function App() {
               🖨️
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 tracking-tight leading-none mx-auto">
-                VUTEQ INDONESIA
+              <h1 className="text-xl font-bold text-slate-800 tracking-tight leading-none">
+                VUTEQ <span className="text-blue-600">LABEL SYSTEM</span>
               </h1>
+              <p className="text-[10px] text-slate-400 font-medium tracking-widest mt-1 uppercase">
+                Production Plan Reader
+              </p>
             </div>
           </div>
 
@@ -893,7 +947,6 @@ function App() {
             </label>
           </div>
 
-          {/* Loading Bar */}
           {isProcessing && (
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100 overflow-hidden">
               <div className="h-full bg-blue-500 animate-progress w-full origin-left"></div>
@@ -902,14 +955,14 @@ function App() {
         </div>
       </div>
 
-      {/* === DATA SCROLLABLE SECTION (GRID 2 KOLOM) === */}
+      {/* DATA SCROLLABLE SECTION (GRID 2 KOLOM) */}
       <div className="flex-1 overflow-y-auto p-8 print:hidden">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex justify-between items-end mb-6">
             <div>
               <h3 className="font-bold text-2xl text-slate-800">
                 Data Material{" "}
-                <span className="text-blue-600 text-2xl font-medium pb-1">
+                <span className="text-blue-600 text-xl font-medium border-b-2 border-blue-200 pb-1">
                   {new Date(selectedDate).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "long",
@@ -918,10 +971,10 @@ function App() {
                 </span>
               </h3>
               <p className="text-sm text-slate-500 mt-1">
-                Total 
-                <span className="font-bold text-blue-600 mx-1">
-                {dataMaterial.length}
-                </span>
+                Total{" "}
+                <span className="font-bold text-blue-600">
+                  {dataMaterial.length}
+                </span>{" "}
                 item material ditemukan.
               </p>
             </div>
@@ -949,7 +1002,6 @@ function App() {
               </p>
             </div>
           ) : (
-            // GRID 2 KOLOM
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pb-20">
               {Object.keys(groupedUI).map((machine) => (
                 <div
@@ -972,16 +1024,19 @@ function App() {
                     <table className="w-full text-sm text-left">
                       <thead className="bg-white text-slate-500 border-b border-gray-100">
                         <tr>
-                          <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[40%]">
+                          <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider w-[35%]">
                             Part Name
                           </th>
-                          <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-center text-gray-400">
+                          <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center text-gray-400">
                             Total KG
                           </th>
-                          <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-center">
-                            Qty Sak
+                          <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center text-emerald-600">
+                            Recycle
                           </th>
-                          <th className="px-5 py-3 font-semibold text-xs uppercase tracking-wider w-[20%] text-right">
+                          <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center">
+                            Total Sak
+                          </th>
+                          <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-right">
                             Action
                           </th>
                         </tr>
@@ -992,12 +1047,12 @@ function App() {
                             key={idx}
                             className="hover:bg-blue-50/50 transition-colors duration-150 group"
                           >
-                            <td className="px-5 py-3">
+                            <td className="px-4 py-3">
                               <div className="font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
                                 {item.partName}
                               </div>
                             </td>
-                            <td className="px-5 py-3 text-center">
+                            <td className="px-2 py-3 text-center">
                               <span className="font-medium text-black bg-gray-50 px-2 py-1 rounded text-xs">
                                 {item.inputKg > 0
                                   ? item.inputKg.toLocaleString("id-ID", {
@@ -1006,13 +1061,29 @@ function App() {
                                   : "-"}
                               </span>
                             </td>
-                            <td className="px-5 py-3 text-center">
+                            <td className="px-2 py-3 text-center">
+                              <input
+                                type="number"
+                                min="0"
+                                className="w-12 text-center text-xs font-bold text-emerald-700 border border-emerald-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                value={
+                                  item.recycleInput === 0
+                                    ? ""
+                                    : item.recycleInput
+                                }
+                                placeholder="0"
+                                onChange={(e) =>
+                                  handleRecycleChange(item.id, e.target.value)
+                                }
+                              />
+                            </td>
+                            <td className="px-2 py-3 text-center">
                               <div className="inline-flex flex-col items-center">
                                 <span className="text-lg font-bold text-slate-800">
                                   {item.totalQty}
                                 </span>
-                                <span className="text-sm text-black font-medium">
-                                  (
+                                <span className="text-[9px] text-slate-400 font-medium">
+                                  (Raw:{" "}
                                   {item.inputSak % 1 === 0
                                     ? item.inputSak
                                     : item.inputSak.toFixed(1)}
@@ -1020,13 +1091,13 @@ function App() {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-5 py-3 text-right">
+                            <td className="px-2 py-3 text-right">
                               <button
                                 onClick={() => handlePrint(item)}
-                                className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 text-xs font-bold py-1.5 px-4 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-2 ml-auto"
+                                className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-2 ml-auto"
                               >
                                 <span>🖨️</span> Print
-                                <span className="bg-slate-100 group-hover:bg-emerald-100 px-1.5 rounded text-sm min-w-5 text-center">
+                                <span className="bg-slate-100 group-hover:bg-emerald-100 px-1.5 rounded text-[10px] min-w-5 text-center">
                                   {item.jmlLabel}
                                 </span>
                               </button>
@@ -1044,103 +1115,126 @@ function App() {
       </div>
 
       {/* PRINT TEMPLATE */}
-      <div className="hidden print:grid print:grid-cols-2 print:grid-rows-3 print:gap-4 print:w-[210mm] print:h-[297mm] print:p-[10mm] bg-white text-black font-sans leading-none">
+      <div className="hidden print:grid print:grid-cols-3 print:gap-4 print:w-full print:p-4 bg-white text-black font-sans leading-none">
         {printData &&
           printData.map((lbl, idx) => (
             <div
               key={idx}
-              className="border-[2px] border-black flex flex-col h-full relative p-0 bg-white box-border"
+              className="border-2 border-black flex flex-col relative box-border p-2 bg-white break-inside-avoid"
+              style={{ height: "95mm" }}
             >
-              <div className="h-[42px] border-b-2 border-black relative">
-                <span className="absolute top-0 right-2 text-2xl font-black">
-                  50T
-                </span>
-                <div className="text-center font-bold text-base mt-2">
-                  REQUEST MATERIAL
+              <div className="flex justify-between items-center border-b-2 border-black pb-1 mb-1">
+                <div className="text-xl font-black w-1/4 uppercase">
+                  {lbl.machine}
                 </div>
-                <span className="absolute bottom-[1px] right-[2px] text-[8px] font-mono">
+                <div className="text-sm font-bold underline text-center w-2/4">
+                  PEMAKAIAN MATERIAL
+                </div>
+                <div className="w-1/4 text-[8px] text-right font-mono">
                   PD-FR-K046
-                </span>
-              </div>
-              <div className="grid grid-cols-2 border-b border-black text-[10px] h-[38px]">
-                <div className="p-1 pl-2 flex flex-col justify-center">
-                  <span className="text-[9px]">PROSES:</span>
-                  <b className="text-sm">INJECTION</b>
-                </div>
-                <div className="p-1 border-l border-black flex flex-col justify-center items-center bg-gray-50">
-                  <span className="text-[9px]">MESIN:</span>
-                  <span className="font-bold text-lg">{lbl.machine}</span>
                 </div>
               </div>
-              <div className="px-2 py-2 border-b border-black text-[9px] space-y-1">
+
+              <div className="mb-2 text-[10px] font-bold space-y-0.5">
+                <div className="flex justify-between">
+                  <div className="flex">
+                    <span className="w-16">PROSES</span>
+                    <span>: INJECTION</span>
+                  </div>
+                  <div className="flex">
+                    <span className="w-12">MODEL</span>
+                    <span>: {lbl.machine}</span>
+                  </div>
+                </div>
                 <div className="flex">
                   <span className="w-16">Part Name</span>
-                  <span className="font-bold uppercase">: {lbl.partName}</span>
+                  <span>: {lbl.partName}</span>
                 </div>
                 <div className="flex">
                   <span className="w-16">Part No</span>
-                  <span className="font-bold">: {lbl.partNo}</span>
+                  <span>: {lbl.partNo}</span>
                 </div>
               </div>
-              <div className="flex-grow p-1">
-                <table className="w-full text-[10px] border-collapse">
+
+              <div className="grow">
+                <table className="w-full text-[9px] border-collapse border border-black">
                   <thead>
-                    <tr className="border-b border-black">
-                      <th className="text-center w-[25%] pb-1 font-bold">
+                    <tr className="border-b border-black bg-gray-100">
+                      <th className="border-r border-black p-1 w-[30%] text-left">
                         ITEM
                       </th>
-                      <th className="text-center w-[35%] pb-1 font-bold">
-                        STD MATERIAL
+                      <th className="border-r border-black p-1 w-[35%] text-left">
+                        STANDARD MATERIAL
                       </th>
-                      <th className="text-center pb-1 font-bold">
-                        ACTUAL MATERIAL
-                      </th>
+                      <th className="p-1 w-[35%] text-left">ACTUAL MATERIAL</th>
                     </tr>
                   </thead>
-                  <tbody className="text-[10px]">
-                    <tr>
-                      <td className="py-2">PART NAME</td>
-                      <td className="py-2 font-bold pl-2">{lbl.partName}</td>
-                      <td className="py-2 border-b border-dotted border-black"></td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">COLOUR</td>
-                      <td className="py-2 font-bold pl-2">BLACK</td>
-                      <td className="py-2 border-b border-dotted border-black"></td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">QTY SAK</td>
-                      <td className="py-2 pl-2">
-                        <span className="text-sm font-bold">
-                          {lbl.currentQty}
-                        </span>{" "}
-                        / {lbl.totalQty}
+                  <tbody>
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        PART NAME
                       </td>
-                      <td className="py-2 border-b border-dotted border-black"></td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center font-bold uppercase">
+                        {lbl.partName}
+                      </td>
                     </tr>
-                    <tr>
-                      <td className="py-2">BOX KE</td>
-                      <td className="py-2 pl-2 font-bold">
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        PART NO
+                      </td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center font-bold">
+                        {lbl.partNo}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        COLOUR
+                      </td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center font-bold">BLACK</td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        LOT NO
+                      </td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center"></td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        QTY MATERIAL
+                      </td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center font-bold text-sm">
+                        {lbl.qtyDisplay} / {lbl.totalDisplay}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-black">
+                      <td className="border-r border-black p-1 font-bold">
+                        QTY BOX KE
+                      </td>
+                      <td className="border-r border-black p-1"></td>
+                      <td className="p-1 text-center font-bold text-sm">
                         {lbl.boxKe} / {lbl.totalBox}
                       </td>
-                      <td className="py-2 border-b border-dotted border-black"></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-              <div className="text-[9px] p-1 border-t border-black mt-auto">
-                <div className="flex justify-between border-b border-black pb-1 mb-1 items-end">
-                  <span>Waktu persiapan : 1 / 2 / 3</span>
+
+              <div className="mt-1 text-[8px] space-y-1 font-medium">
+                <div className="flex justify-between items-end border-b border-dotted border-black pb-0.5">
+                  <span>waktu persiapan : 1/2/3</span>
                   <span>
                     Tgl:{" "}
-                    <b className="font-mono">
-                      {new Date().toLocaleDateString("id-ID")}
-                    </b>
+                    <b>{new Date(selectedDate).toLocaleDateString("id-ID")}</b>
                   </span>
                 </div>
                 <div className="flex justify-between items-end">
-                  <span>Waktu pemakaian : 1 / 2 / 3</span>
-                  <span>Tgl: ........................</span>
+                  <span>waktu pemakaian : 1/2/3</span>
+                  <span>Tgl: ...................</span>
                 </div>
               </div>
             </div>
@@ -1154,6 +1248,17 @@ function App() {
         }
         .animate-progress {
           animation: progress 1.5s infinite linear;
+        }
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 5mm;
+          }
+          .print\\:grid-cols-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5mm;
+          }
         }
       `}</style>
     </div>
