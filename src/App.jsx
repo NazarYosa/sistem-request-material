@@ -1881,7 +1881,7 @@ function App() {
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress { animation: progress 1.5s infinite linear; }
         @media print {
-          @page { size: A4 portrait; margin: 5mm; }
+          @page { size: A4 landscape; margin: 5mm; }
           .print\\:grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
           body { -webkit-print-color-adjust: exact; }
         }
