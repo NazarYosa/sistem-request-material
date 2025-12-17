@@ -29,10 +29,10 @@ function App() {
     partNoHgs: "",
     finishGood: "",
     materialName: "",
-    partNoMaterial: "", // Baru
+    partNoMaterial: "",
     model: "",
-    qrImage: "", // Baru (Gambar)
-    partImage: "", // Baru (Gambar)
+    qrImage: "",
+    partImage: "",
   });
 
   useEffect(() => {
@@ -57,7 +57,14 @@ function App() {
     fetchData();
   }, []);
 
-  const [viewMode, setViewMode] = useState("scan"); // 'scan' | 'input'
+  const [viewMode, setViewMode] = useState("scan");
+
+  // === HELPER: BERSIHKAN KEY (Ganti / jadi _ agar Database terima) ===
+  const generateKey = (name) => {
+    if (!name) return "";
+    // Ganti spasi ganda, huruf besar, dan ganti / jadi _
+    return name.replace(/\s+/g, " ").trim().toUpperCase().replace(/\//g, "_");
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -99,18 +106,65 @@ function App() {
     if (ref.current) ref.current.value = ""; // Reset input file
   };
 
-  // --- CRUD DATABASE (UPDATE: SUPPORT EDIT) ---
   // --- SIMPAN KE FIREBASE ---
+  // const handleSaveInput = async () => {
+  //   if (!inputForm.partName) return alert("Part Name wajib diisi!");
+
+  //   const newKey = inputForm.partName.trim().toUpperCase();
+
+  //   try {
+  //     // 1. Jika mode EDIT dan Nama Part diganti, hapus data lama di Firebase
+  //     if (editingKey && editingKey !== newKey) {
+  //       await deleteDoc(doc(db, "master_parts", editingKey));
+  //       // Hapus juga di state lokal
+  //       setMasterDb((prev) => {
+  //         const temp = { ...prev };
+  //         delete temp[editingKey];
+  //         return temp;
+  //       });
+  //     }
+
+  //     // 2. Simpan ke Firebase Firestore
+  //     await setDoc(doc(db, "master_parts", newKey), inputForm);
+
+  //     // 3. Update State Lokal (Biar gak perlu refresh page)
+  //     setMasterDb((prev) => ({
+  //       ...prev,
+  //       [newKey]: inputForm,
+  //     }));
+
+  //     // 4. Reset Form
+  //     setInputForm({
+  //       partName: "",
+  //       partNo: "",
+  //       color: "",
+  //       partNoHgs: "",
+  //       finishGood: "",
+  //       materialName: "",
+  //       partNoMaterial: "",
+  //       model: "",
+  //       qrImage: "",
+  //       partImage: "",
+  //     });
+  //     setEditingKey(null);
+  //     alert("Data berhasil disimpan ke Cloud!");
+  //   } catch (error) {
+  //     console.error("Error saving: ", error);
+  //     alert("Gagal menyimpan data.");
+  //   }
+  // };
+
+  // --- SIMPAN KE FIREBASE (AUTO REPLACE / JADI _) ---
   const handleSaveInput = async () => {
     if (!inputForm.partName) return alert("Part Name wajib diisi!");
 
-    const newKey = inputForm.partName.trim().toUpperCase();
+    // GENERATE KEY AMAN (CONTOH: "TRIM R/L" JADI "TRIM R_L")
+    const newKey = generateKey(inputForm.partName);
 
     try {
-      // 1. Jika mode EDIT dan Nama Part diganti, hapus data lama di Firebase
+      // 1. Jika mode EDIT dan Nama Part diganti, hapus data lama
       if (editingKey && editingKey !== newKey) {
         await deleteDoc(doc(db, "master_parts", editingKey));
-        // Hapus juga di state lokal
         setMasterDb((prev) => {
           const temp = { ...prev };
           delete temp[editingKey];
@@ -118,10 +172,10 @@ function App() {
         });
       }
 
-      // 2. Simpan ke Firebase Firestore
+      // 2. Simpan ke Firebase (ID pakai _, tapi isi inputForm tetap asli ada /)
       await setDoc(doc(db, "master_parts", newKey), inputForm);
 
-      // 3. Update State Lokal (Biar gak perlu refresh page)
+      // 3. Update State Lokal
       setMasterDb((prev) => ({
         ...prev,
         [newKey]: inputForm,
@@ -451,88 +505,182 @@ function App() {
 
   // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: AMBIL DATA DB) ===
   // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE LOGIKA: RECYCLE MENGURANGI NEW) ===
+  // const handlePrintRequest = (item) => {
+  //   const labels = [];
+
+  //   // Ambil data total
+  //   const totalPlan = item.totalQty; // Misal: 30
+  //   const totalRecycle = item.recycleInput; // Misal: 2
+  //   const netRequest = Math.max(0, totalPlan - totalRecycle); // 28
+
+  //   // 1. Hitung Jumlah Box berdasarkan TOTAL PLAN (bukan net)
+  //   // Karena box tetap harus menampung total 30 pcs
+  //   let totalBox = Math.ceil(totalPlan / 13);
+  //   if (totalBox === 0 && totalPlan > 0) totalBox = 1;
+
+  //   // 2. Distribusi Recycle (Dibagi rata ke semua box)
+  //   const recyclePerBox = Math.floor(totalRecycle / totalBox);
+  //   const recycleRemainder = totalRecycle % totalBox;
+
+  //   let remainingPlan = totalPlan; // Sisa yang harus dimasukkan ke box
+
+  //   for (let i = 0; i < totalBox; i++) {
+  //     // A. Tentukan isi box ini (Max 13, atau sisa plan)
+  //     const currentBoxTotal = Math.min(13, remainingPlan);
+
+  //     // B. Tentukan jumlah recycle di box ini
+  //     // (Jatah rata + sisa pembagian)
+  //     let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+
+  //     // Safety: Jangan sampai recycle melebihi kapasitas box ini
+  //     // (Misal sisa plan cuma 4, tapi jatah recycle 5 -> ya max 4 aja)
+  //     if (currentRecycle > currentBoxTotal) {
+  //       currentRecycle = currentBoxTotal;
+  //     }
+
+  //     // C. Tentukan jumlah barang baru (Net)
+  //     const currentNet = currentBoxTotal - currentRecycle;
+
+  //     // D. Buat Tampilan QTY (Format: "12 + 1")
+  //     let qtyDisplay = `${currentNet}`;
+  //     if (currentRecycle > 0) {
+  //       qtyDisplay = `${currentNet} + ${currentRecycle}`;
+  //     }
+
+  //     // E. Buat Tampilan Total (Format: "28 + 2")
+  //     let totalDisplay = `${netRequest}`;
+  //     if (totalRecycle > 0) {
+  //       totalDisplay = `${netRequest} + ${totalRecycle}`;
+  //     } else {
+  //       totalDisplay = `${totalPlan}`;
+  //     }
+
+  //     // F. Mapping Data ke Label (Sesuai kode terakhir)
+  //     const dbKey = item.partName.trim().toUpperCase();
+  //     const extraData = masterDb[dbKey] || {};
+
+  //     labels.push({
+  //       ...item,
+  //       // Mapping Data DB
+  //       partNameExcel: item.partName,
+  //       partNoMain: extraData.partNo || item.partNo,
+  //       materialName: extraData.materialName || "-",
+  //       partNoMaterial: extraData.partNoMaterial || "-",
+  //       color: extraData.color || "BLACK",
+  //       model: extraData.model || "-",
+
+  //       // Data Angka
+  //       qtyDisplay: qtyDisplay,
+  //       totalDisplay: totalDisplay,
+  //       boxKe: i + 1,
+  //       totalBox: totalBox,
+  //     });
+
+  //     // Kurangi sisa plan
+  //     remainingPlan -= currentBoxTotal;
+  //   }
+
+  //   setPrintType("REQ");
+  //   setPrintData(labels);
+  // };
+
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (COCOK DATA EXCEL & DB) ===
   const handlePrintRequest = (item) => {
+    // Cari Data DB menggunakan Key yang sudah dibersihkan (_)
+    // Contoh: Excel "TRIM R/L" -> Cari ID "TRIM R_L"
+    const dbKey = generateKey(item.partName);
+    const extraData = masterDb[dbKey] || {};
+
     const labels = [];
+    const totalPlan = item.totalQty;
+    const totalRecycle = item.recycleInput;
+    const netRequest = Math.max(0, totalPlan - totalRecycle);
 
-    // Ambil data total
-    const totalPlan = item.totalQty; // Misal: 30
-    const totalRecycle = item.recycleInput; // Misal: 2
-    const netRequest = Math.max(0, totalPlan - totalRecycle); // 28
-
-    // 1. Hitung Jumlah Box berdasarkan TOTAL PLAN (bukan net)
-    // Karena box tetap harus menampung total 30 pcs
     let totalBox = Math.ceil(totalPlan / 13);
     if (totalBox === 0 && totalPlan > 0) totalBox = 1;
 
-    // 2. Distribusi Recycle (Dibagi rata ke semua box)
     const recyclePerBox = Math.floor(totalRecycle / totalBox);
     const recycleRemainder = totalRecycle % totalBox;
 
-    let remainingPlan = totalPlan; // Sisa yang harus dimasukkan ke box
+    let remainingPlan = totalPlan;
 
     for (let i = 0; i < totalBox; i++) {
-      // A. Tentukan isi box ini (Max 13, atau sisa plan)
       const currentBoxTotal = Math.min(13, remainingPlan);
-
-      // B. Tentukan jumlah recycle di box ini
-      // (Jatah rata + sisa pembagian)
       let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
-
-      // Safety: Jangan sampai recycle melebihi kapasitas box ini
-      // (Misal sisa plan cuma 4, tapi jatah recycle 5 -> ya max 4 aja)
-      if (currentRecycle > currentBoxTotal) {
-        currentRecycle = currentBoxTotal;
-      }
-
-      // C. Tentukan jumlah barang baru (Net)
+      if (currentRecycle > currentBoxTotal) currentRecycle = currentBoxTotal;
       const currentNet = currentBoxTotal - currentRecycle;
 
-      // D. Buat Tampilan QTY (Format: "12 + 1")
       let qtyDisplay = `${currentNet}`;
-      if (currentRecycle > 0) {
-        qtyDisplay = `${currentNet} + ${currentRecycle}`;
-      }
+      if (currentRecycle > 0) qtyDisplay = `${currentNet} + ${currentRecycle}`;
 
-      // E. Buat Tampilan Total (Format: "28 + 2")
       let totalDisplay = `${netRequest}`;
-      if (totalRecycle > 0) {
-        totalDisplay = `${netRequest} + ${totalRecycle}`;
-      } else {
-        totalDisplay = `${totalPlan}`;
-      }
-
-      // F. Mapping Data ke Label (Sesuai kode terakhir)
-      const dbKey = item.partName.trim().toUpperCase();
-      const extraData = masterDb[dbKey] || {};
+      if (totalRecycle > 0) totalDisplay = `${netRequest} + ${totalRecycle}`;
+      else totalDisplay = `${totalPlan}`;
 
       labels.push({
         ...item,
-        // Mapping Data DB
+        // Nama Part dari Excel (Masih asli ada /)
         partNameExcel: item.partName,
+
+        // Data Tabel dari DB
         partNoMain: extraData.partNo || item.partNo,
         materialName: extraData.materialName || "-",
         partNoMaterial: extraData.partNoMaterial || "-",
         color: extraData.color || "BLACK",
         model: extraData.model || "-",
 
-        // Data Angka
         qtyDisplay: qtyDisplay,
         totalDisplay: totalDisplay,
         boxKe: i + 1,
         totalBox: totalBox,
       });
-
-      // Kurangi sisa plan
       remainingPlan -= currentBoxTotal;
     }
-
     setPrintType("REQ");
     setPrintData(labels);
   };
 
   // === 6. PRINT ENGINE 2: LABEL (INPUT DB) ===
+  // const handlePrintLabel = (item) => {
+  //   const dbKey = item.partName.trim().toUpperCase();
+  //   const extraData = masterDb[dbKey];
+
+  //   if (!extraData) {
+  //     alert("Data Part ini belum diinput di menu INPUT! Silakan input dulu.");
+  //     return;
+  //   }
+
+  //   const totalQty = item.totalQty;
+  //   const totalBox = Math.ceil(totalQty / 13) || 1;
+  //   const labels = [];
+  //   let remaining = totalQty;
+
+  //   for (let i = 1; i <= totalBox; i++) {
+  //     const currentQty = Math.min(13, remaining);
+  //     labels.push({
+  //       machine: item.machine,
+  //       partName: extraData.partName,
+  //       partNo: extraData.partNo,
+  //       color: extraData.color,
+  //       hgs: extraData.partNoHgs,
+  //       fg: extraData.finishGood,
+  //       material: extraData.materialName,
+  //       model: extraData.model,
+  //       qty: currentQty,
+  //       boxKe: i,
+  //       totalBox: totalBox,
+  //     });
+  //     remaining -= currentQty;
+  //   }
+
+  //   setPrintType("LABEL");
+  //   setPrintData(labels);
+  // };
+
+  // === 6. PRINT ENGINE 2: LABEL (INPUT DB) ===
   const handlePrintLabel = (item) => {
-    const dbKey = item.partName.trim().toUpperCase();
+    // Cari Data DB pakai Key Aman (_)
+    const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey];
 
     if (!extraData) {
@@ -549,6 +697,7 @@ function App() {
       const currentQty = Math.min(13, remaining);
       labels.push({
         machine: item.machine,
+        // Data dari DB (Masih asli ada /)
         partName: extraData.partName,
         partNo: extraData.partNo,
         color: extraData.color,
@@ -556,6 +705,10 @@ function App() {
         fg: extraData.finishGood,
         material: extraData.materialName,
         model: extraData.model,
+        matNo: extraData.partNoMaterial,
+        qr: extraData.qrImage,
+        img: extraData.partImage,
+
         qty: currentQty,
         boxKe: i,
         totalBox: totalBox,
@@ -756,7 +909,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* KOLOM KANAN (GAMBAR) - UPDATE ADA TOMBOL HAPUS */}
+                {/* KOLOM KANAN (GAMBAR)*/}
                 <div className="col-span-4 space-y-4">
                   {/* INPUT QR */}
                   <div
@@ -1118,10 +1271,7 @@ function App() {
                                     <div className="font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
                                       {item.partName}
                                     </div>
-                                    {/* Indikator DB */}
-                                    {masterDb[
-                                      item.partName.trim().toUpperCase()
-                                    ] && (
+                                    {masterDb[generateKey(item.partName)] && (
                                       <span className="text-[9px] bg-green-100 text-green-700 px-1.5 rounded ml-1">
                                         ✓ DB
                                       </span>
