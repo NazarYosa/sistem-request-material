@@ -1656,14 +1656,14 @@ function App() {
 
       {/* ================= AREA PRINT ================= */}
       <div className="hidden print:block bg-white text-black font-sans leading-none">
-        {/* === PRINT 1: REQUEST MATERIAL (KODE DARI MAS - PORTRAIT) === */}
         {printType === "REQ" && (
           <div className="grid grid-cols-3 gap-2 w-full p-2">
             {printData &&
               printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className="border border-black flex flex-col h-[279px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
+                  // SAYA GANTI h-60 JADI h-[285px] BIAR MUAT KALAU TABELNYA MAKIN TINGGI
+                  className="border border-black flex flex-col h-[297px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
                 >
                   <div>
                     <div className="flex justify-between items-center border-b-2 border-black pb-1 mb-1">
@@ -1700,70 +1700,71 @@ function App() {
                       <table className="w-full text-[9px] border-collapse border border-black font-sans">
                         <thead>
                           <tr className="border-b border-black bg-gray-200">
-                            <th className="border border-black p-0.5 w-[28%] text-left pl-2 font-bold">
+                            {/* DISINI: p-0.5 SAYA GANTI JADI p-1 BIAR LEBIH TINGGI */}
+                            <th className="border border-black p-1.5 w-[28%] text-left pl-2 font-bold">
                               ITEM
                             </th>
-                            <th className="border border-black p-0.5 w-[37%] text-left pl-2 font-bold">
+                            <th className="border border-black p-1.5 w-[37%] text-left pl-2 font-bold">
                               STANDARD MATERIAL
                             </th>
-                            <th className="border border-black p-0.5 w-[35%] text-left pl-2 font-bold">
+                            <th className="border border-black p-1.5 w-[35%] text-left pl-2 font-bold">
                               ACTUAL MATERIAL
                             </th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            {/* SEMUA TD DIBAWAH SAYA GANTI p-0.5 JADI p-1 */}
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               PART NAME
                             </td>
-                            <td className="border-r border-black p-0.5 pl-2 font-normal uppercase leading-none">
+                            <td className="border-r border-black p-1.5 pl-2 font-normal uppercase leading-none">
                               {lbl.partName}
                             </td>
-                            <td className="p-0.5 pl-2 font-bold"></td>
+                            <td className="p-1 pl-2 font-bold"></td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               PART NO
                             </td>
-                            <td className="border-r border-black p-0.5 pl-2 font-normal">
+                            <td className="border-r border-black p-1.5 pl-2 font-normal">
                               {lbl.partNo}
                             </td>
-                            <td className="p-0.5 pl-2 font-bold"></td>
+                            <td className="p-1.5 pl-2 font-bold"></td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               COLOUR
                             </td>
-                            <td className="border-r border-black p-0.5 pl-2 font-normal">
+                            <td className="border-r border-black p-1.5 pl-2 font-normal">
                               BLACK
                             </td>
-                            <td className="p-0.5 pl-2 font-bold"></td>
+                            <td className="p-1.5 pl-2 font-bold"></td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               LOT NO
                             </td>
-                            <td className="p-0.5 pl-2 font-bold" colSpan={2}>
-                              :
-                            </td>
+                            <td className="border-r border-black p-1.5 pl-2"></td>
+                            <td className="p-1.5 pl-2"></td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               QTY MATERIAL
                             </td>
                             <td
-                              className="p-0.5 pl-2 font-bold text-center text-xs"
+                              className="p-1.5 pl-2 font-bold text-center text-xs"
                               colSpan={2}
                             >
                               {lbl.qtyDisplay} / {lbl.totalDisplay}
                             </td>
                           </tr>
                           <tr className="border-b border-black">
-                            <td className="border-r border-black p-0.5 pl-2 font-bold">
+                            <td className="border-r border-black p-1.5 pl-2 font-bold">
                               QTY BOX KE
                             </td>
                             <td
-                              className="p-0.5 pl-2 font-bold text-center text-xs"
+                              className="p-1.5 pl-2 font-bold text-center text-xs"
                               colSpan={2}
                             >
                               {lbl.boxKe} / {lbl.totalBox}
