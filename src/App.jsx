@@ -449,95 +449,83 @@ function App() {
     );
   };
 
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (KODE DARI MAS - PORTRAIT) ===
-  // const handlePrintRequest = (item) => {
-  //   const labels = [];
-  //   const totalPlan = item.totalQty;
-  //   const totalRecycle = item.recycleInput;
-  //   const netRequest = Math.max(0, totalPlan - totalRecycle);
-
-  //   let totalBox = Math.ceil(netRequest / 13);
-  //   if (totalBox === 0 && totalRecycle > 0) totalBox = 1;
-  //   if (totalBox === 0 && totalPlan > 0) totalBox = 1;
-
-  //   const recyclePerBox = Math.floor(totalRecycle / totalBox);
-  //   const recycleRemainder = totalRecycle % totalBox;
-
-  //   let remainingNet = netRequest;
-
-  //   for (let i = 0; i < totalBox; i++) {
-  //     const currentNet = Math.min(13, remainingNet);
-  //     const currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
-
-  //     let qtyDisplay = `${currentNet}`;
-  //     if (currentRecycle > 0) qtyDisplay = `${currentNet} + ${currentRecycle}`;
-
-  //     let totalDisplay = `${netRequest}`;
-  //     if (totalRecycle > 0) totalDisplay = `${netRequest} + ${totalRecycle}`;
-  //     else totalDisplay = `${totalPlan}`;
-
-  //     labels.push({
-  //       ...item,
-  //       qtyDisplay: qtyDisplay,
-  //       totalDisplay: totalDisplay,
-  //       boxKe: i + 1,
-  //       totalBox: totalBox,
-  //     });
-  //     remainingNet -= currentNet;
-  //   }
-  //   setPrintType("REQ");
-  //   setPrintData(labels);
-  // };
-
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: DATA DARI DB) ===
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: AMBIL DATA DB) ===
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE LOGIKA: RECYCLE MENGURANGI NEW) ===
   const handlePrintRequest = (item) => {
-    // 1. Cari Data di Database berdasarkan Part Name dari Excel
-    const dbKey = item.partName.trim().toUpperCase();
-    const extraData = masterDb[dbKey] || {}; // Ambil data DB atau kosong jika belum input
-
     const labels = [];
-    const totalPlan = item.totalQty;
-    const totalRecycle = item.recycleInput;
-    const netRequest = Math.max(0, totalPlan - totalRecycle);
 
-    let totalBox = Math.ceil(netRequest / 13);
-    if (totalBox === 0 && totalRecycle > 0) totalBox = 1;
+    // Ambil data total
+    const totalPlan = item.totalQty; // Misal: 30
+    const totalRecycle = item.recycleInput; // Misal: 2
+    const netRequest = Math.max(0, totalPlan - totalRecycle); // 28
+
+    // 1. Hitung Jumlah Box berdasarkan TOTAL PLAN (bukan net)
+    // Karena box tetap harus menampung total 30 pcs
+    let totalBox = Math.ceil(totalPlan / 13);
     if (totalBox === 0 && totalPlan > 0) totalBox = 1;
 
+    // 2. Distribusi Recycle (Dibagi rata ke semua box)
     const recyclePerBox = Math.floor(totalRecycle / totalBox);
     const recycleRemainder = totalRecycle % totalBox;
 
-    let remainingNet = netRequest;
+    let remainingPlan = totalPlan; // Sisa yang harus dimasukkan ke box
 
     for (let i = 0; i < totalBox; i++) {
-      const currentNet = Math.min(13, remainingNet);
-      const currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+      // A. Tentukan isi box ini (Max 13, atau sisa plan)
+      const currentBoxTotal = Math.min(13, remainingPlan);
 
+      // B. Tentukan jumlah recycle di box ini
+      // (Jatah rata + sisa pembagian)
+      let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+
+      // Safety: Jangan sampai recycle melebihi kapasitas box ini
+      // (Misal sisa plan cuma 4, tapi jatah recycle 5 -> ya max 4 aja)
+      if (currentRecycle > currentBoxTotal) {
+        currentRecycle = currentBoxTotal;
+      }
+
+      // C. Tentukan jumlah barang baru (Net)
+      const currentNet = currentBoxTotal - currentRecycle;
+
+      // D. Buat Tampilan QTY (Format: "12 + 1")
       let qtyDisplay = `${currentNet}`;
-      if (currentRecycle > 0) qtyDisplay = `${currentNet} + ${currentRecycle}`;
+      if (currentRecycle > 0) {
+        qtyDisplay = `${currentNet} + ${currentRecycle}`;
+      }
 
+      // E. Buat Tampilan Total (Format: "28 + 2")
       let totalDisplay = `${netRequest}`;
-      if (totalRecycle > 0) totalDisplay = `${netRequest} + ${totalRecycle}`;
-      else totalDisplay = `${totalPlan}`;
+      if (totalRecycle > 0) {
+        totalDisplay = `${netRequest} + ${totalRecycle}`;
+      } else {
+        totalDisplay = `${totalPlan}`;
+      }
+
+      // F. Mapping Data ke Label (Sesuai kode terakhir)
+      const dbKey = item.partName.trim().toUpperCase();
+      const extraData = masterDb[dbKey] || {};
 
       labels.push({
         ...item,
-        // === MAPPING DATA ===
-        partName: item.partName, // DARI EXCEL
+        // Mapping Data DB
+        partNameExcel: item.partName,
+        partNoMain: extraData.partNo || item.partNo,
+        materialName: extraData.materialName || "-",
+        partNoMaterial: extraData.partNoMaterial || "-",
+        color: extraData.color || "BLACK",
+        model: extraData.model || "-",
 
-        // DARI DATABASE (Prioritas DB, fallback ke '-' jika kosong)
-        partNoMain: extraData.partNo || item.partNo || "-", // Part No Utama (Untuk Header)
-        partNoMaterial: extraData.partNoMaterial || "-", // Part No Material (Untuk Tabel)
-        model: extraData.model || "-", // Model
-        color: extraData.color || "BLACK", // Color (Default BLACK)
-
+        // Data Angka
         qtyDisplay: qtyDisplay,
         totalDisplay: totalDisplay,
         boxKe: i + 1,
         totalBox: totalBox,
       });
-      remainingNet -= currentNet;
+
+      // Kurangi sisa plan
+      remainingPlan -= currentBoxTotal;
     }
+
     setPrintType("REQ");
     setPrintData(labels);
   };
@@ -1051,10 +1039,10 @@ function App() {
                     </span>
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">
-                    Total{" "}
+                    Total
                     <span className="font-bold text-blue-600">
                       {dataMaterial.length}
-                    </span>{" "}
+                    </span>
                     item material ditemukan.
                   </p>
                 </div>
@@ -1181,7 +1169,7 @@ function App() {
                                       </span>
                                       {/* === TAMBAHAN: RAW SAK ASLI === */}
                                       <span className="text-[10px] text-slate-400 font-medium italic">
-                                        (Raw:{" "}
+                                        (Raw:
                                         {item.inputSak % 1 === 0
                                           ? item.inputSak
                                           : item.inputSak.toFixed(1)}
@@ -1230,7 +1218,7 @@ function App() {
               printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className="border border-black flex flex-col h-[285px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
+                  className="border border-black flex flex-col h-[275px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
                 >
                   <div>
                     {/* Header Judul */}
@@ -1251,21 +1239,21 @@ function App() {
                       <div className="flex">
                         <div className="w-16 font-bold shrink-0">Part Name</div>
                         <div className="w-2 text-center shrink-0">:</div>
-                        <div className="uppercase font-normal leading-tight flex-1">
+                        <div className="uppercase font-bold leading-tight flex-1">
                           {lbl.partName} {/* DARI EXCEL */}
                         </div>
                       </div>
                       <div className="flex">
                         <div className="w-16 font-bold shrink-0">Part No</div>
                         <div className="w-2 text-center shrink-0">:</div>
-                        <div className="font-normal flex-1">
+                        <div className="font-bold flex-1">
                           {lbl.partNoMain} {/* DARI DB (Main Part No) */}
                         </div>
                       </div>
                       <div className="flex">
                         <div className="w-16 font-bold shrink-0">Model</div>
                         <div className="w-2 text-center shrink-0">:</div>
-                        <div className="font-normal flex-1">
+                        <div className="font-bold flex-1">
                           {lbl.model} {/* DARI DB */}
                         </div>
                       </div>
@@ -1292,8 +1280,8 @@ function App() {
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               PART NAME
                             </td>
-                            <td className="border-r border-black p-1 pl-2 font-normal uppercase leading-none">
-                              {lbl.partName} {/* DARI EXCEL */}
+                            <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
+                              {lbl.materialName} {/* DARI EXCEL */}
                             </td>
                             <td className="p-1 pl-2 font-bold"></td>
                           </tr>
@@ -1301,7 +1289,7 @@ function App() {
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               PART NO
                             </td>
-                            <td className="border-r border-black p-1 pl-2 font-normal">
+                            <td className="border-r border-black p-1 pl-2 font-bold">
                               {lbl.partNoMaterial}{" "}
                               {/* DARI DB (Part No Material) */}
                             </td>
@@ -1311,7 +1299,7 @@ function App() {
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               COLOUR
                             </td>
-                            <td className="border-r border-black p-1 pl-2 font-normal">
+                            <td className="border-r border-black p-1 pl-2 font-bold">
                               {lbl.color} {/* DARI DB */}
                             </td>
                             <td className="p-1 pl-2 font-bold"></td>
@@ -1320,8 +1308,6 @@ function App() {
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               LOT NO
                             </td>
-                            <td className="border-r border-black p-1 pl-2"></td>
-                            <td className="p-1 pl-2"></td>
                           </tr>
                           <tr className="border-b border-black">
                             <td className="border-r border-black p-1 pl-2 font-bold">
@@ -1351,12 +1337,13 @@ function App() {
                   </div>
 
                   {/* Footer */}
-                  <div className="w-full text-[8px] font-bold">
+                  <div className="w-full text-[12px] font-bold">
                     <div className="flex justify-between items-end">
                       <span>Waktu Persiapan: 1 / 2 / 3</span>
-                      <span className="w-[90px] flex items-center">
+                      {/* GANTI w-[90px] JADI w-[150px] BIAR MUNDUR KE KIRI */}
+                      <span className="w-[150px] flex items-center">
                         Tanggal:
-                        <span className="font-normal ml-1">
+                        <span className="font-bold ml-1">
                           {new Date(selectedDate).toLocaleDateString("id-ID")}
                         </span>
                       </span>
@@ -1364,7 +1351,8 @@ function App() {
                     <div className="border-t-[1.5px] border-dotted border-black w-full my-1"></div>
                     <div className="flex justify-between items-end">
                       <span>Waktu Pemakaian: 1 / 2 / 3</span>
-                      <span className="w-[90px] flex items-center">
+                      {/* GANTI JUGA YANG BAWAH BIAR SEJAJAR */}
+                      <span className="w-[150px] flex items-center">
                         Tanggal:
                       </span>
                     </div>
