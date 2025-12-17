@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
-import { db } from "./firebase"; 
-import { collection, getDocs, setDoc, doc, deleteDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 
 function App() {
   const [dataMaterial, setDataMaterial] = useState([]);
@@ -626,7 +632,7 @@ function App() {
         partNoMain: extraData.partNo || item.partNo,
         materialName: extraData.materialName || "-",
         partNoMaterial: extraData.partNoMaterial || "-",
-        color: extraData.color || "BLACK",
+        color: extraData.color,
         model: extraData.model || "-",
 
         qtyDisplay: qtyDisplay,
@@ -997,7 +1003,7 @@ function App() {
                       : "bg-emerald-600 hover:bg-emerald-700"
                   }`}
                 >
-                  {editingKey ? "🔄 Update Data" : "💾 Simpan Database"}
+                  {editingKey ? "Update" : "Simpan"}
                 </button>
 
                 {editingKey && (
@@ -1005,7 +1011,7 @@ function App() {
                     onClick={handleCancelEdit}
                     className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded shadow-sm transition-all"
                   >
-                    ❌ Batal
+                  Batal
                   </button>
                 )}
               </div>
@@ -1374,7 +1380,7 @@ function App() {
                     {/* Header Judul */}
                     <div className="flex justify-between items-center border-b-2 border-black pb-1 mb-1">
                       <div className="w-1/4 text-left font-bold text-sm uppercase leading-none">
-                        {lbl.machine}
+                        {lbl.machine} T
                       </div>
                       <div className="w-2/4 text-center font-bold text-base uppercase leading-none transform translate-y-px">
                         REQUEST MATERIAL
@@ -1489,8 +1495,21 @@ function App() {
                   {/* Footer */}
                   <div className="w-full text-[12px] font-bold">
                     <div className="flex justify-between items-end">
-                      <span>Waktu Persiapan: 1 / 2 / 3</span>
-                      {/* GANTI w-[90px] JADI w-[150px] BIAR MUNDUR KE KIRI */}
+                      {/* === WAKTU PERSIAPAN (ANGKA 1 DILINGKARI) === */}
+                      <div className="flex items-center gap-1">
+                        <span>Waktu Persiapan:</span>
+                        <div className="flex items-center gap-1 ml-1">
+                          <span className="w-4 h-4 flex items-center justify-center border border-black rounded-full text-[10px] leading-none">
+                            1
+                          </span>
+                          <span>/</span>
+                          <span>2</span>
+                          <span>/</span>
+                          <span>3</span>
+                        </div>
+                      </div>
+
+                      {/* TANGGAL */}
                       <span className="w-[150px] flex items-center">
                         Tanggal:
                         <span className="font-bold ml-1">
@@ -1498,10 +1517,17 @@ function App() {
                         </span>
                       </span>
                     </div>
+
                     <div className="border-t-[1.5px] border-dotted border-black w-full my-1"></div>
+
                     <div className="flex justify-between items-end">
-                      <span>Waktu Pemakaian: 1 / 2 / 3</span>
-                      {/* GANTI JUGA YANG BAWAH BIAR SEJAJAR */}
+                      {/* WAKTU PEMAKAIAN (BIASA) */}
+                      <div className="flex items-center gap-1">
+                        <span>Waktu Pemakaian:</span>
+                        <span className="ml-1">1 / 2 / 3</span>
+                      </div>
+
+                      {/* TANGGAL KOSONG */}
                       <span className="w-[150px] flex items-center">
                         Tanggal:
                       </span>
