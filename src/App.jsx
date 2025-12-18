@@ -36,6 +36,8 @@ function App() {
     finishGood: "",
     materialName: "",
     partNoMaterial: "",
+    materialName2: "",
+    partNoMaterial2: "",
     model: "",
     qrImage: "",
     partImage: "",
@@ -509,91 +511,64 @@ function App() {
     );
   };
 
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: AMBIL DATA DB) ===
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE LOGIKA: RECYCLE MENGURANGI NEW) ===
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (COCOK DATA EXCEL & DB) ===
   // const handlePrintRequest = (item) => {
+  //   // Cari Data DB menggunakan Key yang sudah dibersihkan (_)
+  //   // Contoh: Excel "TRIM R/L" -> Cari ID "TRIM R_L"
+  //   const dbKey = generateKey(item.partName);
+  //   const extraData = masterDb[dbKey] || {};
+
   //   const labels = [];
+  //   const totalPlan = item.totalQty;
+  //   const totalRecycle = item.recycleInput;
+  //   const netRequest = Math.max(0, totalPlan - totalRecycle);
 
-  //   // Ambil data total
-  //   const totalPlan = item.totalQty; // Misal: 30
-  //   const totalRecycle = item.recycleInput; // Misal: 2
-  //   const netRequest = Math.max(0, totalPlan - totalRecycle); // 28
-
-  //   // 1. Hitung Jumlah Box berdasarkan TOTAL PLAN (bukan net)
-  //   // Karena box tetap harus menampung total 30 pcs
   //   let totalBox = Math.ceil(totalPlan / 13);
   //   if (totalBox === 0 && totalPlan > 0) totalBox = 1;
 
-  //   // 2. Distribusi Recycle (Dibagi rata ke semua box)
   //   const recyclePerBox = Math.floor(totalRecycle / totalBox);
   //   const recycleRemainder = totalRecycle % totalBox;
 
-  //   let remainingPlan = totalPlan; // Sisa yang harus dimasukkan ke box
+  //   let remainingPlan = totalPlan;
 
   //   for (let i = 0; i < totalBox; i++) {
-  //     // A. Tentukan isi box ini (Max 13, atau sisa plan)
   //     const currentBoxTotal = Math.min(13, remainingPlan);
-
-  //     // B. Tentukan jumlah recycle di box ini
-  //     // (Jatah rata + sisa pembagian)
   //     let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
-
-  //     // Safety: Jangan sampai recycle melebihi kapasitas box ini
-  //     // (Misal sisa plan cuma 4, tapi jatah recycle 5 -> ya max 4 aja)
-  //     if (currentRecycle > currentBoxTotal) {
-  //       currentRecycle = currentBoxTotal;
-  //     }
-
-  //     // C. Tentukan jumlah barang baru (Net)
+  //     if (currentRecycle > currentBoxTotal) currentRecycle = currentBoxTotal;
   //     const currentNet = currentBoxTotal - currentRecycle;
 
-  //     // D. Buat Tampilan QTY (Format: "12 + 1")
   //     let qtyDisplay = `${currentNet}`;
-  //     if (currentRecycle > 0) {
-  //       qtyDisplay = `${currentNet} + ${currentRecycle}`;
-  //     }
+  //     if (currentRecycle > 0) qtyDisplay = `${currentNet} + ${currentRecycle}`;
 
-  //     // E. Buat Tampilan Total (Format: "28 + 2")
   //     let totalDisplay = `${netRequest}`;
-  //     if (totalRecycle > 0) {
-  //       totalDisplay = `${netRequest} + ${totalRecycle}`;
-  //     } else {
-  //       totalDisplay = `${totalPlan}`;
-  //     }
-
-  //     // F. Mapping Data ke Label (Sesuai kode terakhir)
-  //     const dbKey = item.partName.trim().toUpperCase();
-  //     const extraData = masterDb[dbKey] || {};
+  //     if (totalRecycle > 0) totalDisplay = `${netRequest} + ${totalRecycle}`;
+  //     else totalDisplay = `${totalPlan}`;
 
   //     labels.push({
   //       ...item,
-  //       // Mapping Data DB
+  //       // Nama Part dari Excel (Masih asli ada /)
   //       partNameExcel: item.partName,
+
+  //       // Data Tabel dari DB
   //       partNoMain: extraData.partNo || item.partNo,
   //       materialName: extraData.materialName || "-",
   //       partNoMaterial: extraData.partNoMaterial || "-",
-  //       color: extraData.color || "BLACK",
+  //       color: extraData.color,
   //       model: extraData.model || "-",
 
-  //       // Data Angka
   //       qtyDisplay: qtyDisplay,
   //       totalDisplay: totalDisplay,
   //       boxKe: i + 1,
   //       totalBox: totalBox,
   //     });
-
-  //     // Kurangi sisa plan
   //     remainingPlan -= currentBoxTotal;
   //   }
-
   //   setPrintType("REQ");
   //   setPrintData(labels);
   // };
 
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (COCOK DATA EXCEL & DB) ===
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: SUPPORT 2 MATERIAL) ===
   const handlePrintRequest = (item) => {
-    // Cari Data DB menggunakan Key yang sudah dibersihkan (_)
-    // Contoh: Excel "TRIM R/L" -> Cari ID "TRIM R_L"
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey] || {};
 
@@ -625,14 +600,18 @@ function App() {
 
       labels.push({
         ...item,
-        // Nama Part dari Excel (Masih asli ada /)
         partNameExcel: item.partName,
-
-        // Data Tabel dari DB
         partNoMain: extraData.partNo || item.partNo,
+
+        // MATERIAL 1
         materialName: extraData.materialName || "-",
         partNoMaterial: extraData.partNoMaterial || "-",
-        color: extraData.color,
+
+        // MATERIAL 2 (Opsional, ambil dari DB)
+        materialName2: extraData.materialName2 || "", // Kalo kosong string kosong
+        partNoMaterial2: extraData.partNoMaterial2 || "",
+
+        color: extraData.color || "BLACK",
         model: extraData.model || "-",
 
         qtyDisplay: qtyDisplay,
@@ -824,6 +803,7 @@ function App() {
               <div className="grid grid-cols-12 gap-4 mb-6">
                 {/* KOLOM KIRI (TEKS) */}
                 <div className="col-span-8 grid grid-cols-2 gap-4">
+                  {/* === DATA UMUM PART === */}
                   <div className="col-span-2">
                     <label className="text-xs font-bold text-slate-500">
                       Part Name (Kunci)
@@ -838,55 +818,11 @@ function App() {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-slate-500">
-                      Part No
+                      Part No (Utama)
                     </label>
                     <input
                       name="partNo"
                       value={inputForm.partNo}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Part No HGS
-                    </label>
-                    <input
-                      name="partNoHgs"
-                      value={inputForm.partNoHgs}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Part No Material
-                    </label>
-                    <input
-                      name="partNoMaterial"
-                      value={inputForm.partNoMaterial}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Finish Good
-                    </label>
-                    <input
-                      name="finishGood"
-                      value={inputForm.finishGood}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Nama Material
-                    </label>
-                    <input
-                      name="materialName"
-                      value={inputForm.materialName}
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded text-sm"
                     />
@@ -911,6 +847,88 @@ function App() {
                       value={inputForm.color}
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded text-sm"
+                    />
+                  </div>
+
+                  {/* === DATA TAMBAHAN (HGS/FG) === */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-500">
+                      Part No HGS
+                    </label>
+                    <input
+                      name="partNoHgs"
+                      value={inputForm.partNoHgs}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500">
+                      Finish Good
+                    </label>
+                    <input
+                      name="finishGood"
+                      value={inputForm.finishGood}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm"
+                    />
+                  </div>
+
+                  {/* === DATA MATERIAL 1 (UTAMA) === */}
+                  <div className="col-span-2 border-t mt-2 pt-1 text-xs font-black text-slate-700 uppercase tracking-wider">
+                    Data Material 1 (Wajib)
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500">
+                      Nama Material 1
+                    </label>
+                    <input
+                      name="materialName"
+                      value={inputForm.materialName}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm border-slate-300"
+                      placeholder="Contoh: PP RESIN..."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500">
+                      Part No Material 1
+                    </label>
+                    <input
+                      name="partNoMaterial"
+                      value={inputForm.partNoMaterial}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm border-slate-300"
+                      placeholder="Contoh: 123-456..."
+                    />
+                  </div>
+
+                  {/* === DATA MATERIAL 2 (OPSIONAL) === */}
+                  <div className="col-span-2 border-t mt-2 pt-1 text-xs font-black text-blue-600 uppercase tracking-wider">
+                    Data Material 2 (Opsional - Jika Double Material)
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-blue-500">
+                      Nama Material 2
+                    </label>
+                    <input
+                      name="materialName2"
+                      value={inputForm.materialName2 || ""}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm bg-blue-50 border-blue-200"
+                      placeholder="Kosongkan jika cuma 1 material"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-blue-500">
+                      Part No Material 2
+                    </label>
+                    <input
+                      name="partNoMaterial2"
+                      value={inputForm.partNoMaterial2 || ""}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm bg-blue-50 border-blue-200"
+                      placeholder="-"
                     />
                   </div>
                 </div>
@@ -1011,7 +1029,7 @@ function App() {
                     onClick={handleCancelEdit}
                     className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded shadow-sm transition-all"
                   >
-                  Batal
+                    Batal
                   </button>
                 )}
               </div>
@@ -1031,10 +1049,10 @@ function App() {
                 </div>
 
                 <div className="overflow-y-auto h-[450px] border rounded-lg shadow-sm bg-white relative">
-                  <table className="w-full text-sm text-left border-collapse">
+                  <table className="w-full text-sm text-left border-collapse whitespace-nowrap">
                     <thead className="bg-gray-100 font-bold text-slate-700 sticky top-0 z-20 shadow-sm">
                       <tr>
-                        <th className="p-3 border-b border-gray-200 w-[20%] bg-gray-100">
+                        <th className="p-3 border-b border-gray-200 bg-gray-100 min-w-[150px]">
                           Part Name
                         </th>
                         <th className="p-3 border-b border-gray-200 bg-gray-100">
@@ -1043,32 +1061,42 @@ function App() {
                         <th className="p-3 border-b border-gray-200 bg-gray-100">
                           Part No
                         </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
-                          Mat. No
+
+                        {/* Header Material 1 (Biru Tipis) */}
+                        <th className="p-3 border-b  bg-blue-50 text-blue-800 border-l border-blue-100">
+                          Mat. Name 1
                         </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
+                        <th className="p-3 border-b  bg-blue-50 text-blue-800">
+                          Mat. No 1
+                        </th>
+
+                        {/* Header Material 2 (Kuning Tipis) */}
+                        <th className="p-3 border-b  bg-yellow-50 text-yellow-800 border-l border-yellow-100">
+                          Mat. Name 2
+                        </th>
+                        <th className="p-3 border-b border-gray-200 bg-yellow-50 text-yellow-800">
+                          Mat. No 2
+                        </th>
+
+                        <th className="p-3 border-b border-gray-200 bg-gray-100 border-l">
                           HGS
                         </th>
                         <th className="p-3 border-b border-gray-200 bg-gray-100">
                           FG
                         </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
-                          Material
-                        </th>
-                        <th className="p-3 border-b border-gray-200 text-center w-[100px] bg-gray-100">
+                        <th className="p-3 border-b border-gray-200 text-center w-20 bg-gray-100">
                           QR
                         </th>
-                        <th className="p-3 border-b border-gray-200 text-center w-[100px] bg-gray-100">
+                        <th className="p-3 border-b border-gray-200 text-center w-20 bg-gray-100">
                           Foto
                         </th>
-                        <th className="p-3 border-b border-gray-200 text-center bg-gray-100">
+                        <th className="p-3 border-b border-gray-200 text-center bg-gray-100 sticky right-0 z-30 shadow-l">
                           Action
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {(() => {
-                        // 1. Filter & Sort Data dulu
                         const filteredData = Object.entries(masterDb)
                           .filter(([key, item]) => {
                             if (!searchTerm) return true;
@@ -1084,12 +1112,11 @@ function App() {
                             a[1].partName.localeCompare(b[1].partName)
                           );
 
-                        // 2. Cek Kosong (Baik karena belum input / tidak ketemu di search)
                         if (filteredData.length === 0) {
                           return (
                             <tr>
                               <td
-                                colSpan="10"
+                                colSpan="12"
                                 className="p-10 text-center text-gray-400 italic bg-gray-50"
                               >
                                 Data tidak ditemukan
@@ -1098,43 +1125,71 @@ function App() {
                           );
                         }
 
-                        // 3. Render Data jika ada
                         return filteredData.map(([key, item]) => (
                           <tr
                             key={key}
-                            className={`hover:bg-blue-50 transition-colors ${
-                              editingKey === key ? "bg-blue-100" : ""
+                            className={`hover:bg-gray-50 transition-colors ${
+                              editingKey === key
+                                ? "bg-blue-100 hover:bg-blue-200"
+                                : ""
                             }`}
                           >
-                            <td className="p-3 font-bold align-middle">
+                            <td className="p-3 font-bold align-middle text-slate-700">
                               {item.partName}
                             </td>
                             <td className="p-3 align-middle">{item.model}</td>
-                            <td className="p-3 align-middle">{item.partNo}</td>
-                            <td className="p-3 align-middle">
+                            <td className="p-3 align-middle font-mono text-xs">
+                              {item.partNo}
+                            </td>
+
+                            {/* Kolom Material 1 */}
+                            <td className="p-3 align-middle bg-blue-50/30 border-l border-blue-50 font-medium text-blue-900">
+                              {item.materialName}
+                            </td>
+                            <td className="p-3 align-middle bg-blue-50/30 text-xs font-mono text-blue-800">
                               {item.partNoMaterial}
                             </td>
-                            <td className="p-3 align-middle">
+
+                            {/* Kolom Material 2 (Logika dash jika kosong) */}
+                            <td className="p-3 align-middle bg-yellow-50/30 border-l border-yellow-50 font-medium text-yellow-900">
+                              {item.materialName2 ? (
+                                item.materialName2
+                              ) : (
+                                <span className="text-gray-300">-</span>
+                              )}
+                            </td>
+                            <td className="p-3 align-middle bg-yellow-50/30 text-xs font-mono text-yellow-800">
+                              {item.partNoMaterial2 ? (
+                                item.partNoMaterial2
+                              ) : (
+                                <span className="text-gray-300">-</span>
+                              )}
+                            </td>
+
+                            <td className="p-3 align-middle border-l">
                               {item.partNoHgs}
                             </td>
                             <td className="p-3 align-middle">
                               {item.finishGood}
                             </td>
-                            <td className="p-3 align-middle">
-                              {item.materialName}
-                            </td>
 
                             <td className="p-3 text-center align-middle">
                               {item.qrImage ? (
-                                <div className="flex justify-center">
+                                <div className="flex justify-center group relative">
                                   <img
                                     src={item.qrImage}
                                     alt="QR"
-                                    className="h-16 w-16 object-contain border bg-white rounded shadow-sm hover:scale-150 transition-transform cursor-pointer relative z-0 hover:z-50"
+                                    className="h-8 w-8 object-contain border bg-white rounded shadow-sm cursor-pointer"
                                   />
+                                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-white border shadow-lg rounded p-1">
+                                    <img
+                                      src={item.qrImage}
+                                      className="w-full h-auto"
+                                    />
+                                  </div>
                                 </div>
                               ) : (
-                                <span className="text-gray-300 text-xs italic">
+                                <span className="text-gray-300 text-[10px] italic">
                                   -
                                 </span>
                               )}
@@ -1142,33 +1197,41 @@ function App() {
 
                             <td className="p-3 text-center align-middle">
                               {item.partImage ? (
-                                <div className="flex justify-center">
+                                <div className="flex justify-center group relative">
                                   <img
                                     src={item.partImage}
                                     alt="Part"
-                                    className="h-16 w-16 object-contain border bg-white rounded shadow-sm hover:scale-150 transition-transform cursor-pointer relative z-0 hover:z-50"
+                                    className="h-8 w-8 object-contain border bg-white rounded shadow-sm cursor-pointer"
                                   />
+                                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-white border shadow-lg rounded p-1">
+                                    <img
+                                      src={item.partImage}
+                                      className="w-full h-auto"
+                                    />
+                                  </div>
                                 </div>
                               ) : (
-                                <span className="text-gray-300 text-xs italic">
+                                <span className="text-gray-300 text-[10px] italic">
                                   -
                                 </span>
                               )}
                             </td>
 
-                            <td className="p-3 text-center align-middle">
-                              <div className="flex flex-col gap-2 items-center">
+                            <td className="p-3 text-center align-middle sticky right-0 bg-white shadow-l z-10">
+                              <div className="flex justify-center gap-1">
                                 <button
                                   onClick={() => handleEditDb(key)}
-                                  className="bg-blue-50 text-blue-600 px-3 py-1 rounded text-xs font-bold hover:bg-blue-100 w-full border border-blue-200"
+                                  className="bg-blue-100 text-blue-600 p-1.5 rounded hover:bg-blue-200 transition-colors"
+                                  title="Edit"
                                 >
-                                  Edit
+                                  ✏️
                                 </button>
                                 <button
                                   onClick={() => handleDeleteDb(key)}
-                                  className="bg-red-50 text-red-600 px-3 py-1 rounded text-xs font-bold hover:bg-red-100 w-full border border-red-200"
+                                  className="bg-red-100 text-red-600 p-1.5 rounded hover:bg-red-200 transition-colors"
+                                  title="Hapus"
                                 >
-                                  Hapus
+                                  🗑️
                                 </button>
                               </div>
                             </td>
@@ -1374,7 +1437,7 @@ function App() {
               printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className="border border-black flex flex-col h-[275px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
+                  className="border border-black flex flex-col h-[314px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
                 >
                   <div>
                     {/* Header Judul */}
@@ -1432,39 +1495,95 @@ function App() {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              PART NAME
-                            </td>
-                            <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
-                              {lbl.materialName} {/* DARI EXCEL */}
-                            </td>
-                            <td className="p-1 pl-2 font-bold"></td>
-                          </tr>
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              PART NO
-                            </td>
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              {lbl.partNoMaterial}{" "}
-                              {/* DARI DB (Part No Material) */}
-                            </td>
-                            <td className="p-1 pl-2 font-bold"></td>
-                          </tr>
+                          {/* === LOGIKA MATERIAL GANDA === */}
+                          {lbl.materialName2 ? (
+                            // JIKA ADA 2 MATERIAL
+                            <>
+                              {/* Set 1 */}
+                              <tr className="border-b border-black">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  MATERIAL NAME 1
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
+                                  {lbl.materialName}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  MATERIAL NO. 1
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  {lbl.partNoMaterial}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+
+                              {/* Set 2 */}
+                              <tr className="border-b border-black bg-gray-50">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  MATERIAL NAME 2
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
+                                  {lbl.materialName2}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+                              <tr className="border-b border-black bg-gray-50">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  MATERIAL NO. 2
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  {lbl.partNoMaterial2}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+                            </>
+                          ) : (
+                            // JIKA CUMA 1 MATERIAL (Standar)
+                            <>
+                              <tr className="border-b border-black">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  PART NAME
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
+                                  {lbl.materialName}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+                              <tr className="border-b border-black">
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  PART NO
+                                </td>
+                                <td className="border-r border-black p-1 pl-2 font-bold">
+                                  {lbl.partNoMaterial}
+                                </td>
+                                <td className="p-1 pl-2 font-bold"></td>
+                              </tr>
+                            </>
+                          )}
+
+                          {/* === BAGIAN BAWAH (SAMA UNTUK KEDUANYA) === */}
                           <tr className="border-b border-black">
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               COLOUR
                             </td>
                             <td className="border-r border-black p-1 pl-2 font-bold">
-                              {lbl.color} {/* DARI DB */}
+                              {lbl.color}
                             </td>
                             <td className="p-1 pl-2 font-bold"></td>
                           </tr>
+
+                          {/* LOT NO MERGED */}
                           <tr className="border-b border-black">
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               LOT NO
                             </td>
+                            <td className="p-1 pl-2 font-bold" colSpan={2}>
+                              :
+                            </td>
                           </tr>
+
                           <tr className="border-b border-black">
                             <td className="border-r border-black p-1 pl-2 font-bold">
                               QTY MATERIAL
