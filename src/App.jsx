@@ -1437,7 +1437,9 @@ function App() {
               printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className="border border-black flex flex-col h-[314px] justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid"
+                  className={`border border-black flex flex-col justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid ${
+                    lbl.materialName2 ? "h-[325px]" : "h-[276px]"
+                  }`}
                 >
                   <div>
                     {/* Header Judul */}
@@ -1495,56 +1497,64 @@ function App() {
                           </tr>
                         </thead>
                         <tbody>
-                          {/* === LOGIKA MATERIAL GANDA === */}
+                          {/* === LOGIKA TAMPILAN GANDA (MERGE HEADER KIRI) === */}
                           {lbl.materialName2 ? (
-                            // JIKA ADA 2 MATERIAL
+                            // === JIKA ADA 2 MATERIAL ===
                             <>
-                              {/* Set 1 */}
+                              {/* --- BLOK 1: MATERIAL NAME --- */}
                               <tr className="border-b border-black">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MATERIAL NAME 1
+                                {/* Header Kiri: MATERIAL NAME (Makan 2 Baris) */}
+                                <td
+                                  className="border-r border-black p-1 pl-2 font-bold align-middle"
+                                  rowSpan={2}
+                                >
+                                  MAT. NAME
                                 </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
-                                  {lbl.materialName}
+                                {/* Data Kanan: Material 1 */}
+                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
+                                  1. {lbl.materialName}
                                 </td>
                                 <td className="p-1 pl-2 font-bold"></td>
                               </tr>
                               <tr className="border-b border-black">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MATERIAL NO. 1
-                                </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  {lbl.partNoMaterial}
+                                {/* (Kolom Kiri dilewati karena rowspan) */}
+                                {/* Data Kanan: Material 2 */}
+                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
+                                  2. {lbl.materialName2}
                                 </td>
                                 <td className="p-1 pl-2 font-bold"></td>
                               </tr>
 
-                              {/* Set 2 */}
-                              <tr className="border-b border-black bg-gray-50">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MATERIAL NAME 2
+                              {/* --- BLOK 2: MATERIAL NO --- */}
+                              <tr className="border-b border-black">
+                                {/* Header Kiri: MATERIAL NO (Makan 2 Baris) */}
+                                <td
+                                  className="border-r border-black p-1 pl-2 font-bold align-middle"
+                                  rowSpan={2}
+                                >
+                                  MAT. NO
                                 </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
-                                  {lbl.materialName2}
+                                {/* Data Kanan: No 1 */}
+                                <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
+                                  1. {lbl.partNoMaterial}
                                 </td>
                                 <td className="p-1 pl-2 font-bold"></td>
                               </tr>
-                              <tr className="border-b border-black bg-gray-50">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MATERIAL NO. 2
-                                </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  {lbl.partNoMaterial2}
+                              <tr className="border-b border-black">
+                                {/* (Kolom Kiri dilewati karena rowspan) */}
+                                {/* Data Kanan: No 2 */}
+                                <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
+                                  2. {lbl.partNoMaterial2}
                                 </td>
                                 <td className="p-1 pl-2 font-bold"></td>
                               </tr>
                             </>
                           ) : (
-                            // JIKA CUMA 1 MATERIAL (Standar)
+                            // === JIKA CUMA 1 MATERIAL (Standar) ===
                             <>
                               <tr className="border-b border-black">
                                 <td className="border-r border-black p-1 pl-2 font-bold">
-                                  PART NAME
+                                  MAT. NAME
                                 </td>
                                 <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
                                   {lbl.materialName}
@@ -1553,7 +1563,7 @@ function App() {
                               </tr>
                               <tr className="border-b border-black">
                                 <td className="border-r border-black p-1 pl-2 font-bold">
-                                  PART NO
+                                  MAT. NO
                                 </td>
                                 <td className="border-r border-black p-1 pl-2 font-bold">
                                   {lbl.partNoMaterial}
