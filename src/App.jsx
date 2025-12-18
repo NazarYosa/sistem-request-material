@@ -511,62 +511,6 @@ function App() {
     );
   };
 
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (COCOK DATA EXCEL & DB) ===
-  // const handlePrintRequest = (item) => {
-  //   // Cari Data DB menggunakan Key yang sudah dibersihkan (_)
-  //   // Contoh: Excel "TRIM R/L" -> Cari ID "TRIM R_L"
-  //   const dbKey = generateKey(item.partName);
-  //   const extraData = masterDb[dbKey] || {};
-
-  //   const labels = [];
-  //   const totalPlan = item.totalQty;
-  //   const totalRecycle = item.recycleInput;
-  //   const netRequest = Math.max(0, totalPlan - totalRecycle);
-
-  //   let totalBox = Math.ceil(totalPlan / 13);
-  //   if (totalBox === 0 && totalPlan > 0) totalBox = 1;
-
-  //   const recyclePerBox = Math.floor(totalRecycle / totalBox);
-  //   const recycleRemainder = totalRecycle % totalBox;
-
-  //   let remainingPlan = totalPlan;
-
-  //   for (let i = 0; i < totalBox; i++) {
-  //     const currentBoxTotal = Math.min(13, remainingPlan);
-  //     let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
-  //     if (currentRecycle > currentBoxTotal) currentRecycle = currentBoxTotal;
-  //     const currentNet = currentBoxTotal - currentRecycle;
-
-  //     let qtyDisplay = `${currentNet}`;
-  //     if (currentRecycle > 0) qtyDisplay = `${currentNet} + ${currentRecycle}`;
-
-  //     let totalDisplay = `${netRequest}`;
-  //     if (totalRecycle > 0) totalDisplay = `${netRequest} + ${totalRecycle}`;
-  //     else totalDisplay = `${totalPlan}`;
-
-  //     labels.push({
-  //       ...item,
-  //       // Nama Part dari Excel (Masih asli ada /)
-  //       partNameExcel: item.partName,
-
-  //       // Data Tabel dari DB
-  //       partNoMain: extraData.partNo || item.partNo,
-  //       materialName: extraData.materialName || "-",
-  //       partNoMaterial: extraData.partNoMaterial || "-",
-  //       color: extraData.color,
-  //       model: extraData.model || "-",
-
-  //       qtyDisplay: qtyDisplay,
-  //       totalDisplay: totalDisplay,
-  //       boxKe: i + 1,
-  //       totalBox: totalBox,
-  //     });
-  //     remainingPlan -= currentBoxTotal;
-  //   }
-  //   setPrintType("REQ");
-  //   setPrintData(labels);
-  // };
-
   // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: SUPPORT 2 MATERIAL) ===
   const handlePrintRequest = (item) => {
     const dbKey = generateKey(item.partName);
@@ -623,6 +567,76 @@ function App() {
     }
     setPrintType("REQ");
     setPrintData(labels);
+  };
+
+  // === 7. PRINT ALL ENGINE: ANTRIAN SAMBUNG (HEMAT KERTAS) ===
+  const handlePrintAllRequest = () => {
+    if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
+
+    let allLabelsAccumulated = [];
+
+    // Loop dataMaterial (pastikan variabel ini sesuai state data Mas)
+    dataMaterial.forEach((item) => {
+      if (item.totalQty > 0) {
+        const dbKey = generateKey(item.partName);
+        const extraData = masterDb[dbKey] || {};
+
+        const totalPlan = item.totalQty;
+        const totalRecycle = item.recycleInput || 0;
+        const netRequest = Math.max(0, totalPlan - totalRecycle);
+
+        if (netRequest === 0 && totalRecycle === 0) return;
+
+        let totalBox = Math.ceil(totalPlan / 13);
+        if (totalBox === 0 && totalPlan > 0) totalBox = 1;
+
+        const recyclePerBox = Math.floor(totalRecycle / totalBox);
+        const recycleRemainder = totalRecycle % totalBox;
+        let remainingPlan = totalPlan;
+
+        for (let i = 0; i < totalBox; i++) {
+          const currentBoxTotal = Math.min(13, remainingPlan);
+          let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+          if (currentRecycle > currentBoxTotal)
+            currentRecycle = currentBoxTotal;
+          const currentNet = currentBoxTotal - currentRecycle;
+
+          let qtyDisplay = `${currentNet}`;
+          if (currentRecycle > 0)
+            qtyDisplay = `${currentNet} + ${currentRecycle}`;
+
+          let totalDisplay = `${netRequest}`;
+          if (totalRecycle > 0)
+            totalDisplay = `${netRequest} + ${totalRecycle}`;
+          else totalDisplay = `${totalPlan}`;
+
+          allLabelsAccumulated.push({
+            ...item,
+            partNameExcel: item.partName,
+            partNoMain: extraData.partNo || item.partNo,
+            materialName: extraData.materialName || "-",
+            partNoMaterial: extraData.partNoMaterial || "-",
+            materialName2: extraData.materialName2 || "",
+            partNoMaterial2: extraData.partNoMaterial2 || "",
+            color: extraData.color || "BLACK",
+            model: extraData.model || "-",
+            qtyDisplay: qtyDisplay,
+            totalDisplay: totalDisplay,
+            boxKe: i + 1,
+            totalBox: totalBox,
+          });
+          remainingPlan -= currentBoxTotal;
+        }
+      }
+    });
+
+    if (allLabelsAccumulated.length === 0) {
+      alert("Tidak ada data yang perlu di-print (Qty 0 semua).");
+      return;
+    }
+
+    setPrintType("REQ");
+    setPrintData(allLabelsAccumulated);
   };
 
   // === 6. PRINT ENGINE 2: LABEL (INPUT DB) ===
@@ -716,7 +730,7 @@ function App() {
   }, {});
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden">
+    <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden print:h-auto print:overflow-visible">
       {/* HEADER */}
       <div className="flex-none bg-white shadow-md z-20 print:hidden border-b border-gray-200">
         <div className="px-6 py-4 flex justify-between items-center border-b border-gray-100 relative">
@@ -767,6 +781,13 @@ function App() {
                 className="text-sm font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
               />
             </div>
+            {/* Tombol Print All Baru */}
+            <button
+              onClick={handlePrintAllRequest}
+              className="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-2 transition-transform transform active:scale-95"
+            >
+              🖨️ PRINT ALL REQ
+            </button>
             {viewMode === "scan" && (
               <label className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all active:scale-95 shadow-sm gap-2">
                 <span>📂</span> Upload Excel
@@ -1430,236 +1451,229 @@ function App() {
 
       {/* ================= AREA PRINT ================= */}
       <div className="hidden print:block bg-white text-black font-sans leading-none">
-        {/* === PRINT 1: REQUEST MATERIAL (UPDATE: DATA DB) === */}
+        {/* === PRINT 1: REQUEST MATERIAL (FINAL FIX: FLEX WRAP + PAGE BREAK) === */}
         {printType === "REQ" && (
-          <div className="grid grid-cols-3 gap-2 w-full p-2">
+          <div className="w-full flex flex-wrap content-start">
             {printData &&
               printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className={`border border-black flex flex-col justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white break-inside-avoid ${
-                    lbl.materialName2 ? "h-[325px]" : "h-[276px]"
-                  }`}
+                  // STYLE KHUSUS PRINT:
+                  // 1. width: "33%" -> Agar pas 3 kolom.
+                  // 2. breakInside: "avoid" -> JANGAN POTONG box ini.
+                  // 3. pageBreakInside: "avoid" -> Support browser lama.
+                  // 4. display: "flex" -> Biar isinya rapi.
+                  style={{
+                    width: "33%",
+                    padding: "4px",
+                    boxSizing: "border-box",
+                    breakInside: "avoid",
+                    pageBreakInside: "avoid",
+                    pageBreakBefore: "auto",
+                    pageBreakAfter: "auto",
+                  }}
                 >
-                  <div>
-                    {/* Header Judul */}
-                    <div className="flex justify-between items-center border-b-2 border-black pb-1 mb-1">
-                      <div className="w-1/4 text-left font-bold text-sm uppercase leading-none">
-                        {lbl.machine} T
+                  <div
+                    className={`border border-black flex flex-col justify-between relative box-border px-1.5 pt-1.5 pb-3 bg-white w-full ${
+                      lbl.materialName2 ? "h-[325px]" : "h-[279px]"
+                    }`}
+                  >
+                    {/* --- ISI KARTU --- */}
+                    <div>
+                      {/* Header Judul */}
+                      <div className="flex justify-between items-center border-b-2 border-black pb-1 mb-1">
+                        <div className="w-1/4 text-left font-bold text-sm uppercase leading-none">
+                          {lbl.machine} T
+                        </div>
+                        <div className="w-2/4 text-center font-bold text-base uppercase leading-none transform translate-y-px">
+                          REQUEST MATERIAL
+                        </div>
+                        <div className="w-1/4 text-right text-[10px] font-normal leading-none text-black">
+                          PD-FR-K046
+                        </div>
                       </div>
-                      <div className="w-2/4 text-center font-bold text-base uppercase leading-none transform translate-y-px">
-                        REQUEST MATERIAL
+
+                      {/* Sub Header Info */}
+                      <div className="px-0.5 text-[9px] space-y-0.5 mb-1">
+                        <div className="flex">
+                          <div className="w-16 font-bold shrink-0">
+                            Part Name
+                          </div>
+                          <div className="w-2 text-center shrink-0">:</div>
+                          <div className="uppercase font-bold leading-tight flex-1">
+                            {lbl.partNameExcel}
+                          </div>
+                        </div>
+                        <div className="flex">
+                          <div className="w-16 font-bold shrink-0">Part No</div>
+                          <div className="w-2 text-center shrink-0">:</div>
+                          <div className="font-bold flex-1">
+                            {lbl.partNoMain}
+                          </div>
+                        </div>
+                        <div className="flex">
+                          <div className="w-16 font-bold shrink-0">Model</div>
+                          <div className="w-2 text-center shrink-0">:</div>
+                          <div className="font-bold flex-1">{lbl.model}</div>
+                        </div>
                       </div>
-                      <div className="w-1/4 text-right text-[10px] font-normal leading-none text-black">
-                        PD-FR-K046
+
+                      {/* Tabel Utama */}
+                      <div className="mt-0.5">
+                        <table className="w-full text-[9px] border-collapse border border-black font-sans">
+                          <thead>
+                            <tr className="border-b border-black bg-gray-200">
+                              <th className="border border-black p-1 w-[28%] text-left pl-2 font-bold">
+                                ITEM
+                              </th>
+                              <th className="border border-black p-1 w-[37%] text-left pl-2 font-bold">
+                                STANDARD MATERIAL
+                              </th>
+                              <th className="border border-black p-1 w-[35%] text-left pl-2 font-bold">
+                                ACTUAL MATERIAL
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* Logic Material 1 vs 2 */}
+                            {lbl.materialName2 ? (
+                              <>
+                                <tr className="border-b border-black">
+                                  <td
+                                    className="border-r border-black p-1 pl-2 font-bold align-middle"
+                                    rowSpan={2}
+                                  >
+                                    MAT. NAME
+                                  </td>
+                                  <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
+                                    1. {lbl.materialName}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                                <tr className="border-b border-black">
+                                  <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
+                                    2. {lbl.materialName2}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                                <tr className="border-b border-black">
+                                  <td
+                                    className="border-r border-black p-1 pl-2 font-bold align-middle"
+                                    rowSpan={2}
+                                  >
+                                    MAT. NO
+                                  </td>
+                                  <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
+                                    1. {lbl.partNoMaterial}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                                <tr className="border-b border-black">
+                                  <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
+                                    2. {lbl.partNoMaterial2}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                              </>
+                            ) : (
+                              <>
+                                <tr className="border-b border-black">
+                                  <td className="border-r border-black p-1 pl-2 font-bold">
+                                    MAT. NAME
+                                  </td>
+                                  <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
+                                    {lbl.materialName}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                                <tr className="border-b border-black">
+                                  <td className="border-r border-black p-1 pl-2 font-bold">
+                                    MAT. NO
+                                  </td>
+                                  <td className="border-r border-black p-1 pl-2 font-bold">
+                                    {lbl.partNoMaterial}
+                                  </td>
+                                  <td className="p-1 pl-2 font-bold"></td>
+                                </tr>
+                              </>
+                            )}
+
+                            <tr className="border-b border-black">
+                              <td className="border-r border-black p-1 pl-2 font-bold">
+                                COLOUR
+                              </td>
+                              <td className="border-r border-black p-1 pl-2 font-bold">
+                                {lbl.color}
+                              </td>
+                              <td className="p-1 pl-2 font-bold"></td>
+                            </tr>
+                            <tr className="border-b border-black">
+                              <td className="border-r border-black p-1 pl-2 font-bold">
+                                LOT NO
+                              </td>
+                              <td className="p-1 pl-2 font-bold" colSpan={2}>
+                                :
+                              </td>
+                            </tr>
+                            <tr className="border-b border-black">
+                              <td className="border-r border-black p-1 pl-2 font-bold">
+                                QTY MATERIAL
+                              </td>
+                              <td
+                                className="p-1 pl-2 font-bold text-center text-xs"
+                                colSpan={2}
+                              >
+                                {lbl.qtyDisplay} / {lbl.totalDisplay}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-black">
+                              <td className="border-r border-black p-1 pl-2 font-bold">
+                                QTY BOX KE
+                              </td>
+                              <td
+                                className="p-1 pl-2 font-bold text-center text-xs"
+                                colSpan={2}
+                              >
+                                {lbl.boxKe} / {lbl.totalBox}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
-                    {/* Sub Header Info */}
-                    <div className="px-0.5 text-[9px] space-y-0.5 mb-1">
-                      <div className="flex">
-                        <div className="w-16 font-bold shrink-0">Part Name</div>
-                        <div className="w-2 text-center shrink-0">:</div>
-                        <div className="uppercase font-bold leading-tight flex-1">
-                          {lbl.partName} {/* DARI EXCEL */}
+                    {/* Footer */}
+                    <div className="w-full text-[12px] font-bold">
+                      <div className="flex justify-between items-end">
+                        <div className="flex items-center gap-1">
+                          <span>Waktu Persiapan:</span>
+                          <div className="flex items-center gap-1 ml-1">
+                            <span className="w-4 h-4 flex items-center justify-center border border-black rounded-full text-[10px] leading-none">
+                              1
+                            </span>
+                            <span>/</span>
+                            <span>2</span>
+                            <span>/</span>
+                            <span>3</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex">
-                        <div className="w-16 font-bold shrink-0">Part No</div>
-                        <div className="w-2 text-center shrink-0">:</div>
-                        <div className="font-bold flex-1">
-                          {lbl.partNoMain} {/* DARI DB (Main Part No) */}
-                        </div>
-                      </div>
-                      <div className="flex">
-                        <div className="w-16 font-bold shrink-0">Model</div>
-                        <div className="w-2 text-center shrink-0">:</div>
-                        <div className="font-bold flex-1">
-                          {lbl.model} {/* DARI DB */}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Tabel Utama */}
-                    <div className="mt-0.5">
-                      <table className="w-full text-[9px] border-collapse border border-black font-sans">
-                        <thead>
-                          <tr className="border-b border-black bg-gray-200">
-                            <th className="border border-black p-1 w-[28%] text-left pl-2 font-bold">
-                              ITEM
-                            </th>
-                            <th className="border border-black p-1 w-[37%] text-left pl-2 font-bold">
-                              STANDARD MATERIAL
-                            </th>
-                            <th className="border border-black p-1 w-[35%] text-left pl-2 font-bold">
-                              ACTUAL MATERIAL
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* === LOGIKA TAMPILAN GANDA (MERGE HEADER KIRI) === */}
-                          {lbl.materialName2 ? (
-                            // === JIKA ADA 2 MATERIAL ===
-                            <>
-                              {/* --- BLOK 1: MATERIAL NAME --- */}
-                              <tr className="border-b border-black">
-                                {/* Header Kiri: MATERIAL NAME (Makan 2 Baris) */}
-                                <td
-                                  className="border-r border-black p-1 pl-2 font-bold align-middle"
-                                  rowSpan={2}
-                                >
-                                  MAT. NAME
-                                </td>
-                                {/* Data Kanan: Material 1 */}
-                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
-                                  1. {lbl.materialName}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-                              <tr className="border-b border-black">
-                                {/* (Kolom Kiri dilewati karena rowspan) */}
-                                {/* Data Kanan: Material 2 */}
-                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-tight">
-                                  2. {lbl.materialName2}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-
-                              {/* --- BLOK 2: MATERIAL NO --- */}
-                              <tr className="border-b border-black">
-                                {/* Header Kiri: MATERIAL NO (Makan 2 Baris) */}
-                                <td
-                                  className="border-r border-black p-1 pl-2 font-bold align-middle"
-                                  rowSpan={2}
-                                >
-                                  MAT. NO
-                                </td>
-                                {/* Data Kanan: No 1 */}
-                                <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
-                                  1. {lbl.partNoMaterial}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-                              <tr className="border-b border-black">
-                                {/* (Kolom Kiri dilewati karena rowspan) */}
-                                {/* Data Kanan: No 2 */}
-                                <td className="border-r border-black p-1 pl-2 font-bold leading-tight">
-                                  2. {lbl.partNoMaterial2}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-                            </>
-                          ) : (
-                            // === JIKA CUMA 1 MATERIAL (Standar) ===
-                            <>
-                              <tr className="border-b border-black">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MAT. NAME
-                                </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold uppercase leading-none">
-                                  {lbl.materialName}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-                              <tr className="border-b border-black">
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  MAT. NO
-                                </td>
-                                <td className="border-r border-black p-1 pl-2 font-bold">
-                                  {lbl.partNoMaterial}
-                                </td>
-                                <td className="p-1 pl-2 font-bold"></td>
-                              </tr>
-                            </>
-                          )}
-
-                          {/* === BAGIAN BAWAH (SAMA UNTUK KEDUANYA) === */}
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              COLOUR
-                            </td>
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              {lbl.color}
-                            </td>
-                            <td className="p-1 pl-2 font-bold"></td>
-                          </tr>
-
-                          {/* LOT NO MERGED */}
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              LOT NO
-                            </td>
-                            <td className="p-1 pl-2 font-bold" colSpan={2}>
-                              :
-                            </td>
-                          </tr>
-
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              QTY MATERIAL
-                            </td>
-                            <td
-                              className="p-1 pl-2 font-bold text-center text-xs"
-                              colSpan={2}
-                            >
-                              {lbl.qtyDisplay} / {lbl.totalDisplay}
-                            </td>
-                          </tr>
-                          <tr className="border-b border-black">
-                            <td className="border-r border-black p-1 pl-2 font-bold">
-                              QTY BOX KE
-                            </td>
-                            <td
-                              className="p-1 pl-2 font-bold text-center text-xs"
-                              colSpan={2}
-                            >
-                              {lbl.boxKe} / {lbl.totalBox}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="w-full text-[12px] font-bold">
-                    <div className="flex justify-between items-end">
-                      {/* === WAKTU PERSIAPAN (ANGKA 1 DILINGKARI) === */}
-                      <div className="flex items-center gap-1">
-                        <span>Waktu Persiapan:</span>
-                        <div className="flex items-center gap-1 ml-1">
-                          <span className="w-4 h-4 flex items-center justify-center border border-black rounded-full text-[10px] leading-none">
-                            1
+                        <span className="w-[150px] flex items-center">
+                          Tanggal:
+                          <span className="font-bold ml-1">
+                            {new Date(selectedDate).toLocaleDateString("id-ID")}
                           </span>
-                          <span>/</span>
-                          <span>2</span>
-                          <span>/</span>
-                          <span>3</span>
-                        </div>
-                      </div>
-
-                      {/* TANGGAL */}
-                      <span className="w-[150px] flex items-center">
-                        Tanggal:
-                        <span className="font-bold ml-1">
-                          {new Date(selectedDate).toLocaleDateString("id-ID")}
                         </span>
-                      </span>
-                    </div>
-
-                    <div className="border-t-[1.5px] border-dotted border-black w-full my-1"></div>
-
-                    <div className="flex justify-between items-end">
-                      {/* WAKTU PEMAKAIAN (BIASA) */}
-                      <div className="flex items-center gap-1">
-                        <span>Waktu Pemakaian:</span>
-                        <span className="ml-1">1 / 2 / 3</span>
                       </div>
-
-                      {/* TANGGAL KOSONG */}
-                      <span className="w-[150px] flex items-center">
-                        Tanggal:
-                      </span>
+                      <div className="border-t-[1.5px] border-dotted border-black w-full my-1"></div>
+                      <div className="flex justify-between items-end">
+                        <div className="flex items-center gap-1">
+                          <span>Waktu Pemakaian:</span>
+                          <span className="ml-1">1 / 2 / 3</span>
+                        </div>
+                        <span className="w-[150px] flex items-center">
+                          Tanggal:
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1756,9 +1770,14 @@ function App() {
           .print\\:grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
           body { -webkit-print-color-adjust: exact; }
         }
+          div {
+            float: none !important;
+          }
       `}</style>
     </div>
   );
 }
 
 export default App;
+
+
