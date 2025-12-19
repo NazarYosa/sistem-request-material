@@ -1459,7 +1459,7 @@ function App() {
                                   </td>
 
                                   <td className="px-2 py-3 text-center">
-                                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded text-xs border border-blue-100">
+                                    <span className="font-bold px-2 py-1 rounded text-xs border ">
                                       {/* Tampilkan Plan Hasil Hitung */}
                                       {item.inputPlan > 0
                                         ? item.inputPlan
