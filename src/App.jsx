@@ -32,6 +32,7 @@ function App() {
     partName: "",
     partNo: "",
     color: "",
+    weight: "",
     partNoHgs: "",
     finishGood: "",
     materialName: "",
@@ -461,7 +462,45 @@ function App() {
   };
 
   // === 3. AGGREGASI ===
+  // const aggregateData = (rawData) => {
+  //   const grouped = {};
+  //   rawData.forEach((item) => {
+  //     const key = `${item.machine}__${item.partName}`;
+  //     if (!grouped[key]) {
+  //       grouped[key] = {
+  //         machine: item.machine,
+  //         no: item.no,
+  //         partName: item.partName,
+  //         partNo: item.partNo,
+  //         totalRawSak: 0,
+  //         totalRawKg: 0,
+  //       };
+  //     }
+  //     grouped[key].totalRawSak += item.rawSak;
+  //     grouped[key].totalRawKg += item.rawKg;
+  //   });
+
+  //   return Object.values(grouped).map((item) => {
+  //     const totalQty = Math.ceil(item.totalRawSak);
+  //     const jmlLabel = Math.ceil(totalQty / 13);
+  //     return {
+  //       id: Math.random().toString(36),
+  //       machine: item.machine,
+  //       no: item.no,
+  //       partName: item.partName,
+  //       partNo: item.partNo,
+  //       inputSak: item.totalRawSak,
+  //       inputKg: item.totalRawKg,
+  //       totalQty: totalQty,
+  //       jmlLabel: jmlLabel,
+  //       recycleInput: 0,
+  //     };
+  //   });
+  // };
+
+  // === 3. AGGREGASI: FINAL (PLAN HITUNGAN + SAK BULAT KE ATAS) ===
   const aggregateData = (rawData) => {
+    // A. Grouping Data
     const grouped = {};
     rawData.forEach((item) => {
       const key = `${item.machine}__${item.partName}`;
@@ -479,18 +518,47 @@ function App() {
       grouped[key].totalRawKg += item.rawKg;
     });
 
+    // B. Mapping Data
     return Object.values(grouped).map((item) => {
+      // 1. Ambil Data DB untuk Berat
+      const dbKey = generateKey(item.partName);
+      const extraData = masterDb[dbKey] || {};
+
+      let rawWeight = extraData.weight;
+      let stringWeight = String(rawWeight).replace(",", ".");
+      let partWeight = parseFloat(stringWeight);
+      let isValidWeight = !isNaN(partWeight) && partWeight > 0;
+
+      // 2. Hitung Plan (KG / Berat)
+      let calculatedPlan = 0;
+      if (item.totalRawKg > 0 && isValidWeight) {
+        calculatedPlan = Math.ceil(item.totalRawKg / partWeight);
+      }
+
+      // 3. Tentukan Total Sak (REQ)
+      // Pakai Math.ceil() supaya 20.1 jadi 21
       const totalQty = Math.ceil(item.totalRawSak);
+
+      // 4. Hitung Label (Background)
       const jmlLabel = Math.ceil(totalQty / 13);
+
       return {
         id: Math.random().toString(36),
         machine: item.machine,
         no: item.no,
         partName: item.partName,
-        partNo: item.partNo,
+        partNo: extraData.partNo || item.partNo,
+
+        // Data Mentah (Tetap Koma) untuk info Raw
         inputSak: item.totalRawSak,
         inputKg: item.totalRawKg,
+
+        // Data Plan Hasil Hitungan
+        inputPlan: calculatedPlan,
+
+        // Data Utama Sak (Sudah Bulat ke Atas)
         totalQty: totalQty,
+
         jmlLabel: jmlLabel,
         recycleInput: 0,
       };
@@ -813,8 +881,6 @@ function App() {
       {/* BODY */}
       <div className="flex-1 overflow-y-auto p-8 print:hidden">
         <div className="w-full mx-auto">
-          {/* VIEW INPUT */}
-          {/* === VIEW INPUT DATABASE (UPDATE FITUR PASTE GAMBAR) === */}
           {viewMode === "input" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="font-bold text-lg text-slate-700 mb-4 border-b pb-2">
@@ -893,6 +959,24 @@ function App() {
                       onChange={handleInputChange}
                       className="w-full border p-2 rounded text-sm"
                     />
+                  </div>
+
+                  <div className="col-span-2 mt-2 border-t pt-2">
+                    <label className="text-xs font-bold text-emerald-600">
+                      Berat Part (Kg)
+                    </label>
+                    <input
+                      name="weight"
+                      type="number"
+                      step="0.001" // Supaya bisa koma
+                      value={inputForm.weight}
+                      onChange={handleInputChange}
+                      className="w-full border p-2 rounded text-sm border-emerald-300 bg-emerald-50 font-bold text-emerald-800"
+                      placeholder="Contoh: 0.55"
+                    />
+                    <p className="text-[9px] text-gray-400 mt-1">
+                      *Digunakan untuk menghitung Plan (Total KG / Berat)
+                    </p>
                   </div>
 
                   {/* === DATA MATERIAL 1 (UTAMA) === */}
@@ -1083,6 +1167,8 @@ function App() {
                           Part No
                         </th>
 
+                        <th>Berat (Kg)</th>
+
                         {/* Header Material 1 (Biru Tipis) */}
                         <th className="p-3 border-b  bg-blue-50 text-blue-800 border-l border-blue-100">
                           Mat. Name 1
@@ -1162,6 +1248,8 @@ function App() {
                             <td className="p-3 align-middle font-mono text-xs">
                               {item.partNo}
                             </td>
+
+                            <td>{item.weight}</td>
 
                             {/* Kolom Material 1 */}
                             <td className="p-3 align-middle bg-blue-50/30 border-l border-blue-50 font-medium text-blue-900">
@@ -1333,7 +1421,9 @@ function App() {
                               <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider w-[30%]">
                                 Part Name
                               </th>
-                              {/* Header KG */}
+                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[10%] text-center text-blue-600">
+                                Plan
+                              </th>
                               <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center text-gray-400">
                                 Total KG
                               </th>
@@ -1366,6 +1456,15 @@ function App() {
                                         ✓ DB
                                       </span>
                                     )}
+                                  </td>
+
+                                  <td className="px-2 py-3 text-center">
+                                    <span className="font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded text-xs border border-blue-100">
+                                      {/* Tampilkan Plan Hasil Hitung */}
+                                      {item.inputPlan > 0
+                                        ? item.inputPlan
+                                        : "-"}
+                                    </span>
                                   </td>
 
                                   {/* === TAMBAHAN: TOTAL KG (Raw Data) === */}
