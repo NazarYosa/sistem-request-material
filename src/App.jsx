@@ -598,7 +598,7 @@ function App() {
     let remainingPlan = totalPlan;
 
     for (let i = 0; i < totalBox; i++) {
-      const currentBoxTotal = Math.min(13, remainingPlan);
+      const currentBoxTotal = Math.min(11, remainingPlan);
       let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
       if (currentRecycle > currentBoxTotal) currentRecycle = currentBoxTotal;
       const currentNet = currentBoxTotal - currentRecycle;
@@ -1844,7 +1844,7 @@ function App() {
                           QTY / BOX
                         </td>
                         <td className="p-2 font-black text-lg">
-                          {lbl.qty}{" "}
+                          {lbl.qty}
                           <span className="text-xs font-normal">
                             (Box {lbl.boxKe}/{lbl.totalBox})
                           </span>
@@ -1865,7 +1865,7 @@ function App() {
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress { animation: progress 1.5s infinite linear; }
         @media print {
-          @page { size: A4 landscape; margin: 5mm; }
+          @page { size: A4 landscape;}
           .print\\:grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
           body { -webkit-print-color-adjust: exact; }
         }
@@ -1878,5 +1878,3 @@ function App() {
 }
 
 export default App;
-
-
