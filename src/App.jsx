@@ -1729,9 +1729,6 @@ function App() {
                               <td className="border-r border-black p-1 pl-2 font-bold">
                                 LOT NO
                               </td>
-                              <td className="p-1 pl-2 font-bold" colSpan={2}>
-                                :
-                              </td>
                             </tr>
                             <tr className="border-b border-black">
                               <td className="border-r border-black p-1 pl-2 font-bold">
@@ -1799,83 +1796,168 @@ function App() {
           </div>
         )}
 
-        {/* === PRINT 2: NEW LABEL (DARI DATA INPUT) === */}
         {printType === "LABEL" && (
-          <div className="grid grid-cols-3 gap-4 w-full p-4">
-            {printData &&
-              printData.map((lbl, idx) => (
+          <div className="w-full h-full bg-white text-black font-sans leading-none">
+            {/* Container A4 Landscape */}
+            <div
+              className="grid grid-cols-2 gap-6 p-6"
+              style={{ width: "297mm", height: "210mm" }}
+            >
+              {printData.map((lbl, idx) => (
+                // LABEL INDIVIDUAL
                 <div
                   key={idx}
-                  className="border-2 border-black flex flex-col relative box-border p-3 bg-white break-inside-avoid"
-                  style={{ height: "95mm" }}
+                  // Grid Setup: 5 Kolom x 7 Baris
+                  // Baris 1 (Header) fix 45px, sisanya (1fr) dibagi rata
+                  className="grid grid-cols-5 grid-rows-[45px_1fr_1fr_1fr_1fr_1fr_1fr] border-2 border-black box-border"
+                  style={{ width: "100%", height: "95mm" }}
                 >
-                  <div className="text-center font-black text-xl border-b-2 border-black pb-2 mb-2 uppercase">
-                    PART IDENTIFICATION
+                  {/* ================= BARIS 1: HEADER ================= */}
+                  {/* Area: . . . . . (Col Span 5) */}
+                  <div className="col-span-5 border-b-2 border-black flex items-center">
+                    {/* Logo */}
+                    <div className="w-[20%] h-full flex items-center justify-center border-r border-black pl-2">
+                      <span className="font-black italic text-2xl">VuteQ</span>
+                    </div>
+                    {/* Judul */}
+                    <div className="w-[30%] h-full flex items-center justify-center border-r border-black">
+                      <span className="border-2 border-black px-2 py-0.5 text-lg font-bold bg-black text-white">
+                        PART TAG
+                      </span>
+                    </div>
+                    {/* Model (Saya masukkan di header agar muat) */}
+                    <div className="w-[30%] h-full flex flex-col justify-center px-2 border-r border-black">
+                      <span className="text-[8px] font-bold">MODEL</span>
+                      <span className="text-lg font-black leading-none">
+                        {lbl.model}
+                      </span>
+                    </div>
+                    {/* Box No */}
+                    <div className="w-[20%] h-full flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold text-lg">
+                        {/* Asumsi ada data boxKe, jika tidak ada pakai index+1 */}
+                        {lbl.boxKe || idx + 1}
+                      </div>
+                    </div>
                   </div>
-                  <table className="w-full text-xs border-collapse border border-black grow">
-                    <tbody>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold w-[30%] bg-gray-100">
-                          PART NAME
-                        </td>
-                        <td className="p-2 font-bold uppercase text-sm">
-                          {lbl.partName}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          MODEL
-                        </td>
-                        <td className="p-2 font-bold">{lbl.model}</td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          PART NO
-                        </td>
-                        <td className="p-2 font-bold text-lg">{lbl.partNo}</td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          COLOR
-                        </td>
-                        <td className="p-2 font-bold">{lbl.color}</td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          HGS NO
-                        </td>
-                        <td className="p-2 font-bold">{lbl.hgs}</td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          MATERIAL
-                        </td>
-                        <td className="p-2 font-bold">{lbl.material}</td>
-                      </tr>
-                      <tr className="border-b border-black">
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          FINISH GOOD
-                        </td>
-                        <td className="p-2 font-bold">{lbl.fg}</td>
-                      </tr>
-                      <tr>
-                        <td className="border-r border-black p-2 font-bold bg-gray-100">
-                          QTY / BOX
-                        </td>
-                        <td className="p-2 font-black text-lg">
-                          {lbl.qty}
-                          <span className="text-xs font-normal">
-                            (Box {lbl.boxKe}/{lbl.totalBox})
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="text-[10px] text-right mt-2 italic">
-                    Printed: {new Date().toLocaleString()}
+
+                  {/* ================= BARIS 2-4: AREA TENGAH ================= */}
+
+                  {/* --- FOTO PART (KIRI) --- */}
+                  {/* Area: Foto Part (Row 2-4, Col 1-2) */}
+                  <div className="row-start-2 row-span-3 col-start-1 col-span-2 border-r-2 border-b-2 border-black flex items-center justify-center p-2 overflow-hidden">
+                    {lbl.image ? (
+                      <img
+                        src={lbl.image}
+                        alt="Part"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : lbl.qr ? (
+                      <img
+                        src={lbl.qr}
+                        alt="QR"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-gray-300 font-bold">NO IMAGE</span>
+                    )}
+                  </div>
+
+                  {/* --- DATA PART (KANAN) --- */}
+
+                  {/* 1. Part Name */}
+                  {/* Label (Row 2, Col 3) */}
+                  <div className="row-start-2 col-start-3 border-r border-b border-black p-1 flex items-center bg-gray-50">
+                    <span className="text-[10px] font-bold">PART NAME</span>
+                  </div>
+                  {/* Isi (Row 2, Col 4-5) */}
+                  <div className="row-start-2 col-start-4 col-span-2 border-b border-black p-1 flex items-center">
+                    <span className="font-bold text-lg uppercase leading-tight">
+                      {lbl.partName}
+                    </span>
+                  </div>
+
+                  {/* 2. Part No HGS */}
+                  {/* Label (Row 3, Col 3) */}
+                  <div className="row-start-3 col-start-3 border-r border-b border-black p-1 flex items-center bg-gray-50">
+                    <span className="text-[10px] font-bold">PART NO HGS</span>
+                  </div>
+                  {/* Isi (Row 3, Col 4-5) */}
+                  <div className="row-start-3 col-start-4 col-span-2 border-b border-black p-1 flex items-center">
+                    <span className="font-black text-xl uppercase leading-none">
+                      {lbl.partNo}
+                    </span>
+                  </div>
+
+                  {/* 3. Part No FG */}
+                  {/* Label (Row 4, Col 3) */}
+                  <div className="row-start-4 col-start-3 border-r border-b-2 border-black p-1 flex items-center bg-gray-50">
+                    <span className="text-[10px] font-bold">PART NO FG</span>
+                  </div>
+                  {/* Isi (Row 4, Col 4-5) */}
+                  <div className="row-start-4 col-start-4 col-span-2 border-b-2 border-black p-1 flex items-center">
+                    <span className="font-bold text-md uppercase">
+                      {lbl.fg}
+                    </span>
+                  </div>
+
+                  {/* ================= BARIS 5-7: AREA BAWAH ================= */}
+
+                  {/* --- QTY (KIRI BAWAH) --- */}
+
+                  {/* Label QTY (Row 5, Col 1) */}
+                  <div className="row-start-5 col-start-1 border-r border-b border-black flex items-center justify-center bg-gray-100">
+                    <span className="text-xs font-bold">QTY</span>
+                  </div>
+
+                  {/* Isi JUMLAH QTY (Row 6-7, Col 1 -> Span 2 Baris) */}
+                  <div className="row-start-6 row-span-2 col-start-1 border-r border-black flex items-center justify-center">
+                    <span className="text-5xl font-black">{lbl.qty}</span>
+                  </div>
+
+                  {/* --- TABEL TANGGAL (KANAN BAWAH) --- */}
+
+                  {/* Baris 5: TGL PROD */}
+                  <div className="row-start-5 col-start-2 border-r border-b border-black p-1 flex items-center">
+                    <span className="text-[9px] font-bold">TGL PROD</span>
+                  </div>
+                  <div className="row-start-5 col-start-3 col-span-2 border-r border-b border-black p-1">
+                    {/* Kosong untuk stempel/tulis */}
+                  </div>
+                  <div className="row-start-5 col-start-5 border-b border-black p-1 relative">
+                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                      PIC
+                    </span>
+                  </div>
+
+                  {/* Baris 6: TGL ASSY */}
+                  <div className="row-start-6 col-start-2 border-r border-b border-black p-1 flex items-center">
+                    <span className="text-[9px] font-bold">TGL ASSY</span>
+                  </div>
+                  <div className="row-start-6 col-start-3 col-span-2 border-r border-b border-black p-1">
+                    {/* Kosong */}
+                  </div>
+                  <div className="row-start-6 col-start-5 border-b border-black p-1 relative">
+                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                      PIC
+                    </span>
+                  </div>
+
+                  {/* Baris 7: TGL DLV */}
+                  <div className="row-start-7 col-start-2 border-r border-black p-1 flex items-center">
+                    <span className="text-[9px] font-bold">TGL DLV</span>
+                  </div>
+                  <div className="row-start-7 col-start-3 col-span-2 border-r border-black p-1">
+                    {/* Kosong */}
+                  </div>
+                  <div className="row-start-7 col-start-5 p-1 relative">
+                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                      PIC
+                    </span>
                   </div>
                 </div>
               ))}
+            </div>
           </div>
         )}
       </div>
