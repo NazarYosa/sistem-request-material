@@ -1797,11 +1797,10 @@ function App() {
           </div>
         )}
 
-        {/* === PRINT 2: LABEL 2x5 (PORTRAIT - LOGO VUTEQ IMAGE) === */}
+        {/* === PRINT 2: LABEL 2x5 (PORTRAIT - CENTERED LABELS) === */}
         {printType === "LABEL" && (
           <div className="w-full h-full bg-white text-black font-sans leading-none">
             <div
-              // Grid 2 Kolom, Konten Rata Atas (content-start), Gap 3mm
               className="grid grid-cols-2 content-start"
               style={{
                 width: "210mm",
@@ -1814,19 +1813,15 @@ function App() {
                 <div
                   key={idx}
                   className="grid grid-cols-5 grid-rows-[0.6fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border page-break-inside-avoid"
-                  // Tinggi 54mm
                   style={{ width: "100%", height: "54mm" }}
                 >
                   {/* ================= BARIS 1 (Header) ================= */}
 
-                  {/* --- LOGO VUTEQ (GAMBAR) --- */}
+                  {/* LOGO VUTEQ */}
                   <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
                     <img
-                      // GANTI URL INI DENGAN PATH GAMBAR LOGO ASLI MAS
                       src={vuteqlogo}
                       alt="VuteQ Logo"
-                      // w-full h-full: Memenuhi kotak
-                      // object-contain: Menjaga rasio 768x249 agar tidak gepeng
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -1861,7 +1856,7 @@ function App() {
 
                   {/* ================= BARIS 2-4 (Body Tengah) ================= */}
 
-                  {/* FOTO PART (Span 3 Baris) */}
+                  {/* FOTO PART */}
                   <div className="col-start-1 col-span-2 row-start-2 row-span-3 border-r border-b border-black p-1 flex items-center justify-center overflow-hidden">
                     {lbl.img ? (
                       <img
@@ -1876,9 +1871,13 @@ function App() {
                     )}
                   </div>
 
-                  {/* Part Name */}
-                  <div className="col-start-3 row-start-2 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
-                    <span className="text-[6px] font-bold">PART NAME</span>
+                  {/* --- LABEL CENTERED --- */}
+
+                  {/* Part Name (Centered) */}
+                  <div className="col-start-3 row-start-2 border-r border-b border-black p-0.5 flex items-center justify-center bg-gray-50">
+                    <span className="text-[6px] font-bold text-center">
+                      PART NAME
+                    </span>
                   </div>
                   <div className="col-start-4 col-span-2 row-start-2 border-b border-black p-0.5 flex items-center">
                     <span className="font-bold text-[9px] uppercase leading-none line-clamp-2">
@@ -1886,9 +1885,11 @@ function App() {
                     </span>
                   </div>
 
-                  {/* Part No HGS */}
-                  <div className="col-start-3 row-start-3 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
-                    <span className="text-[6px] font-bold">PART NO HGS</span>
+                  {/* Part No HGS (Centered) */}
+                  <div className="col-start-3 row-start-3 border-r border-b border-black p-0.5 flex items-center justify-center bg-gray-50">
+                    <span className="text-[6px] font-bold text-center">
+                      PART NO HGS
+                    </span>
                   </div>
                   <div className="col-start-4 col-span-2 row-start-3 border-b border-black p-0.5 flex items-center">
                     <span className="font-black text-xs uppercase">
@@ -1896,9 +1897,11 @@ function App() {
                     </span>
                   </div>
 
-                  {/* Part No FG */}
-                  <div className="col-start-3 row-start-4 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
-                    <span className="text-[6px] font-bold">PART NO FG</span>
+                  {/* Part No FG (Centered) */}
+                  <div className="col-start-3 row-start-4 border-r border-b border-black p-0.5 flex items-center justify-center bg-gray-50">
+                    <span className="text-[6px] font-bold text-center">
+                      PART NO FG
+                    </span>
                   </div>
                   <div className="col-start-4 col-span-2 row-start-4 border-b border-black p-0.5 flex items-center">
                     <span className="font-bold text-[9px] uppercase">
@@ -1908,7 +1911,7 @@ function App() {
 
                   {/* ================= BARIS 5-7 (Footer) ================= */}
 
-                  {/* QTY (Span 2 Baris) */}
+                  {/* QTY */}
                   <div className="col-start-1 row-start-5 border-r border-b border-black flex items-center justify-center bg-gray-100">
                     <span className="text-[8px] font-bold">QTY</span>
                   </div>
@@ -1916,37 +1919,43 @@ function App() {
                     <span className="text-3xl font-black">{lbl.qty}</span>
                   </div>
 
-                  {/* Tabel Tanggal (Kanan Bawah) */}
+                  {/* --- TANGGAL CENTERED --- */}
 
-                  {/* TGL PROD */}
-                  <div className="col-start-2 row-start-5 border-r border-b border-black p-0.5 flex items-center">
-                    <span className="text-[6px] font-bold">TGL PROD</span>
+                  {/* TGL PROD (Centered) */}
+                  <div className="col-start-2 row-start-5 border-r border-b border-black p-0.5 flex items-center justify-center">
+                    <span className="text-[6px] font-bold text-center">
+                      TGL PROD
+                    </span>
                   </div>
                   <div className="col-start-3 col-span-2 row-start-5 border-r border-b border-black p-0.5"></div>
                   <div className="col-start-5 row-start-5 border-b border-black p-0.5 relative">
-                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
+                    <span className="absolute top-0.5 left-0.5 text-[7px] text-black font-bold">
                       PIC
                     </span>
                   </div>
 
-                  {/* TGL ASSY */}
-                  <div className="col-start-2 row-start-6 border-r border-b border-black p-0.5 flex items-center">
-                    <span className="text-[6px] font-bold">TGL ASSY</span>
+                  {/* TGL ASSY (Centered) */}
+                  <div className="col-start-2 row-start-6 border-r border-b border-black p-0.5 flex items-center justify-center">
+                    <span className="text-[6px] font-bold text-center">
+                      TGL ASSY
+                    </span>
                   </div>
                   <div className="col-start-3 col-span-2 row-start-6 border-r border-b border-black p-0.5"></div>
                   <div className="col-start-5 row-start-6 border-b border-black p-0.5 relative">
-                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
+                    <span className="absolute top-0.5 left-0.5 text-[7px] text-black font-bold">
                       PIC
                     </span>
                   </div>
 
-                  {/* TGL DLV */}
-                  <div className="col-start-2 row-start-7 border-r border-black p-0.5 flex items-center">
-                    <span className="text-[6px] font-bold">TGL DLV</span>
+                  {/* TGL DLV (Centered) */}
+                  <div className="col-start-2 row-start-7 border-r border-black p-0.5 flex items-center justify-center">
+                    <span className="text-[6px] font-bold text-center">
+                      TGL DLV
+                    </span>
                   </div>
                   <div className="col-start-3 col-span-2 row-start-7 border-r border-black p-0.5"></div>
                   <div className="col-start-5 row-start-7 p-0.5 relative">
-                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
+                    <span className="absolute top-0.5 left-0.5 text-[7px] text-black font-bold">
                       PIC
                     </span>
                   </div>
