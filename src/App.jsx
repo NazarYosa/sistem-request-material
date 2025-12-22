@@ -35,6 +35,7 @@ function App() {
   const [inputForm, setInputForm] = useState({
     partName: "",
     partNo: "",
+    partNoHgs: "",
     color: "",
     weight: "",
     finishGood: "",
@@ -196,6 +197,7 @@ function App() {
       setInputForm({
         partName: "",
         partNo: "",
+        partNoHgs: "",
         color: "",
         finishGood: "",
         materialName: "",
@@ -223,6 +225,7 @@ function App() {
     setInputForm({
       partName: "",
       partNo: "",
+      partNoHgs: "",
       color: "",
       finishGood: "",
       materialName: "",
@@ -768,7 +771,7 @@ function App() {
         partName: extraData.partName,
         partNo: extraData.partNo,
         color: extraData.color,
-        hgs: extraData.partNo,
+        hgs: extraData.partNoHgs,
         fg: extraData.finishGood,
         material: extraData.materialName,
         model: extraData.model,
@@ -887,12 +890,12 @@ function App() {
                 Input Master Data Part
               </h3>
 
-              {/* === FORM INPUT (COMPACT - SIZE ADJUSTED) === */}
+              {/* === FORM INPUT (UPDATED: ADA HGS) === */}
               <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-5 mb-8">
                 <div className="grid grid-cols-12 gap-6">
-                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
+                  {/* --- KOLOM KIRI: DATA TEKS --- */}
                   <div className="col-span-9 grid grid-cols-4 gap-4">
-                    {/* BARIS 1: IDENTITAS UTAMA */}
+                    {/* BARIS 1: IDENTITAS UTAMA & HGS */}
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Part Name
@@ -907,21 +910,34 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                        Part No (HGS)
+                        Part No (Utama)
                       </label>
                       <input
                         name="partNo"
                         value={inputForm.partNo}
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
-                        placeholder="No. Utama"
+                        placeholder="No. System/Material"
                       />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-600 uppercase mb-1">
+                        Part No HGS
+                      </label>
+                      <input
+                        name="partNoHgs"
+                        value={inputForm.partNoHgs || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white transition-all shadow-sm"
+                        placeholder="Untuk Label Tag"
+                      />
+                    </div>
+
+                    {/* BARIS 2: BERAT & DETAIL */}
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
                       </label>
-
                       <input
                         name="weight"
                         type="number"
@@ -932,8 +948,6 @@ function App() {
                         placeholder="0.00"
                       />
                     </div>
-
-                    {/* BARIS 2: DETAIL PART */}
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                         Model
@@ -967,10 +981,11 @@ function App() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
                       />
                     </div>
-                    {/* PEMISAH TIPIS */}
+
+                    {/* PEMISAH */}
                     <div className="col-span-4 border-t border-gray-200 my-1"></div>
 
-                    {/* BARIS 3: MATERIAL 1 & 2 */}
+                    {/* BARIS 3: MATERIAL */}
                     <div>
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Mat. Name 1
@@ -1019,7 +1034,7 @@ function App() {
                     </div>
                   </div>
 
-                  {/* --- KOLOM KANAN: GAMBAR (Lebar 3/12) --- */}
+                  {/* --- KOLOM KANAN: GAMBAR --- */}
                   <div className="col-span-3 flex flex-col gap-3">
                     {/* QR Code */}
                     <div
@@ -1158,7 +1173,7 @@ function App() {
                           Part Name
                         </th>
                         <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                          Part No (HGS)
+                          Part No (Utama)
                         </th>
                         <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
                           Model
@@ -1188,6 +1203,10 @@ function App() {
                         {/* MODE LABEL */}
                         {dbTableMode === "LABEL" && (
                           <>
+                            {/* NEW: KOLOM HGS */}
+                            <th className="px-4 py-4 bg-purple-50 text-purple-900 border-b border-l border-purple-200">
+                              Part No HGS
+                            </th>
                             <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
                               Part No FG
                             </th>
@@ -1209,7 +1228,6 @@ function App() {
                       </tr>
                     </thead>
 
-                    {/* BODY (Teks Hitam Semua) */}
                     <tbody className="divide-y divide-gray-200">
                       {(() => {
                         const filteredData = Object.entries(masterDb)
@@ -1244,7 +1262,7 @@ function App() {
                           const isOddRow = index % 2 !== 0;
                           const rowClass = isOddRow
                             ? "bg-gray-100"
-                            : "bg-white"; // Saya gelapkan dikit abunya (gray-100) biar kontras sama putih
+                            : "bg-white";
 
                           return (
                             <tr
@@ -1291,6 +1309,10 @@ function App() {
                               {/* MODE LABEL */}
                               {dbTableMode === "LABEL" && (
                                 <>
+                                  {/* NEW: DATA PART NO HGS */}
+                                  <td className="px-4 py-4 text-purple-700 font-bold border-l border-purple-100 bg-purple-50/50">
+                                    {item.partNoHgs || "-"}
+                                  </td>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
                                     {item.finishGood || "-"}
                                   </td>
@@ -1797,7 +1819,7 @@ function App() {
           </div>
         )}
 
-        {/* === PRINT 2: LABEL 2x5 (PORTRAIT - CENTERED LABELS) === */}
+        {/* === PRINT 2: LABEL 2x5 (PORTRAIT - CENTERED LABELS & FIXED HGS) === */}
         {printType === "LABEL" && (
           <div className="w-full h-full bg-white text-black font-sans leading-none">
             <div
@@ -1885,7 +1907,7 @@ function App() {
                     </span>
                   </div>
 
-                  {/* Part No HGS (Centered) */}
+                  {/* Part No HGS (Centered) - AMBIL DARI lbl.hgs */}
                   <div className="col-start-3 row-start-3 border-r border-b border-black p-0.5 flex items-center justify-center bg-gray-50">
                     <span className="text-[6px] font-bold text-center">
                       PART NO HGS
@@ -1893,7 +1915,7 @@ function App() {
                   </div>
                   <div className="col-start-4 col-span-2 row-start-3 border-b border-black p-0.5 flex items-center">
                     <span className="font-black text-xs uppercase">
-                      {lbl.partNo}
+                      {lbl.hgs || "-"}
                     </span>
                   </div>
 
