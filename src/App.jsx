@@ -655,7 +655,7 @@ function App() {
 
         if (netRequest === 0 && totalRecycle === 0) return;
 
-        let totalBox = Math.ceil(totalPlan / 13);
+        let totalBox = Math.ceil(totalPlan / 11);
         if (totalBox === 0 && totalPlan > 0) totalBox = 1;
 
         const recyclePerBox = Math.floor(totalRecycle / totalBox);
@@ -663,7 +663,7 @@ function App() {
         let remainingPlan = totalPlan;
 
         for (let i = 0; i < totalBox; i++) {
-          const currentBoxTotal = Math.min(13, remainingPlan);
+          const currentBoxTotal = Math.min(11, remainingPlan);
           let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
           if (currentRecycle > currentBoxTotal)
             currentRecycle = currentBoxTotal;
