@@ -919,9 +919,6 @@ function App() {
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
-                        <span className="text-[10px] text-gray-400 italic ml-1 leading-tight">
-                          *Gunakan titik (.) untuk desimal berat.
-                        </span>
                       </label>
 
                       <input
