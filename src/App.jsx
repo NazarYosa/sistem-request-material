@@ -921,21 +921,21 @@ function App() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-purple-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                         Part No HGS
                       </label>
                       <input
                         name="partNoHgs"
                         value={inputForm.partNoHgs || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white transition-all shadow-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
                         placeholder="Untuk Label Tag"
                       />
                     </div>
 
                     {/* BARIS 2: BERAT & DETAIL */}
                     <div>
-                      <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                         Berat (Kg)
                       </label>
                       <input
@@ -944,7 +944,7 @@ function App() {
                         step="0.001"
                         value={inputForm.weight}
                         onChange={handleInputChange}
-                        className="w-full border border-emerald-400 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all shadow-sm placeholder:text-emerald-300"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold  focus:outline-none focus:ring-2 focus:ring-blue-500  bg-white transition-all shadow-sm "
                         placeholder="0.00"
                       />
                     </div>
@@ -1204,7 +1204,7 @@ function App() {
                         {dbTableMode === "LABEL" && (
                           <>
                             {/* NEW: KOLOM HGS */}
-                            <th className="px-4 py-4 bg-purple-50 text-purple-900 border-b border-l border-purple-200">
+                            <th className="px-4 py-4 bg-gray-50  border-b border-l border-gray-200">
                               Part No HGS
                             </th>
                             <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
@@ -1310,7 +1310,7 @@ function App() {
                               {dbTableMode === "LABEL" && (
                                 <>
                                   {/* NEW: DATA PART NO HGS */}
-                                  <td className="px-4 py-4 text-purple-700 font-bold border-l border-purple-100 bg-purple-50/50">
+                                  <td className="px-4 py-4  font-bold border-l border-purple-100">
                                     {item.partNoHgs || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
@@ -1915,7 +1915,7 @@ function App() {
                   </div>
                   <div className="col-start-4 col-span-2 row-start-3 border-b border-black p-0.5 flex items-center">
                     <span className="font-black text-xs uppercase">
-                      {lbl.hgs || "-"}
+                      {lbl.hgs}
                     </span>
                   </div>
 
@@ -1927,7 +1927,7 @@ function App() {
                   </div>
                   <div className="col-start-4 col-span-2 row-start-4 border-b border-black p-0.5 flex items-center">
                     <span className="font-bold text-[9px] uppercase">
-                      {lbl.fg || "-"}
+                      {lbl.fg}
                     </span>
                   </div>
 
