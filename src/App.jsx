@@ -17,6 +17,9 @@ function App() {
   const [editingKey, setEditingKey] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [viewMode, setViewMode] = useState("scan");
+  const [dbTableMode, setDbTableMode] = useState("REQ");
+
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-CA")
   );
@@ -33,7 +36,6 @@ function App() {
     partNo: "",
     color: "",
     weight: "",
-    partNoHgs: "",
     finishGood: "",
     materialName: "",
     partNoMaterial: "",
@@ -66,7 +68,6 @@ function App() {
     fetchData();
   }, []);
 
-  const [viewMode, setViewMode] = useState("scan");
 
   // === HELPER: BERSIHKAN KEY (Ganti / jadi _ agar Database terima) ===
   const generateKey = (name) => {
@@ -195,7 +196,6 @@ function App() {
         partName: "",
         partNo: "",
         color: "",
-        partNoHgs: "",
         finishGood: "",
         materialName: "",
         partNoMaterial: "",
@@ -223,7 +223,6 @@ function App() {
       partName: "",
       partNo: "",
       color: "",
-      partNoHgs: "",
       finishGood: "",
       materialName: "",
       partNoMaterial: "",
@@ -768,7 +767,7 @@ function App() {
         partName: extraData.partName,
         partNo: extraData.partNo,
         color: extraData.color,
-        hgs: extraData.partNoHgs,
+        hgs: extraData.partNo,
         fg: extraData.finishGood,
         material: extraData.materialName,
         model: extraData.model,
@@ -887,234 +886,241 @@ function App() {
                 Input Master Data Part
               </h3>
 
-              <div className="grid grid-cols-12 gap-4 mb-6">
-                {/* KOLOM KIRI (TEKS) */}
-                <div className="col-span-8 grid grid-cols-2 gap-4">
-                  {/* === DATA UMUM PART === */}
-                  <div className="col-span-2">
-                    <label className="text-xs font-bold text-slate-500">
-                      Part Name (Kunci)
-                    </label>
-                    <input
-                      name="partName"
-                      value={inputForm.partName}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm font-bold bg-yellow-50"
-                      placeholder="Copy Paste dari Excel..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Part No (Utama)
-                    </label>
-                    <input
-                      name="partNo"
-                      value={inputForm.partNo}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Model
-                    </label>
-                    <input
-                      name="model"
-                      value={inputForm.model}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Color
-                    </label>
-                    <input
-                      name="color"
-                      value={inputForm.color}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
+              {/* === FORM INPUT (COMPACT - SIZE ADJUSTED) === */}
+              <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-5 mb-8">
+                <div className="grid grid-cols-12 gap-6">
+                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
+                  <div className="col-span-9 grid grid-cols-4 gap-4">
+                    {/* BARIS 1: IDENTITAS UTAMA */}
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Part Name
+                      </label>
+                      <input
+                        name="partName"
+                        value={inputForm.partName}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
+                        placeholder="Paste Nama Part..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Part No (HGS)
+                      </label>
+                      <input
+                        name="partNo"
+                        value={inputForm.partNo}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
+                        placeholder="No. Utama"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
+                        Berat (Kg)
+                      </label>
+                      <input
+                        name="weight"
+                        type="number"
+                        step="0.001"
+                        value={inputForm.weight}
+                        onChange={handleInputChange}
+                        className="w-full border border-emerald-400 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all shadow-sm placeholder:text-emerald-300"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* BARIS 2: DETAIL PART */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                        Model
+                      </label>
+                      <input
+                        name="model"
+                        value={inputForm.model}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                        Color
+                      </label>
+                      <input
+                        name="color"
+                        value={inputForm.color}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                        Finish Good
+                      </label>
+                      <input
+                        name="finishGood"
+                        value={inputForm.finishGood}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                      />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <span className="text-[10px] text-gray-400 italic leading-tight">
+                        *Gunakan titik (.) untuk desimal berat.
+                      </span>
+                    </div>
+
+                    {/* PEMISAH TIPIS */}
+                    <div className="col-span-4 border-t border-gray-200 my-1"></div>
+
+                    {/* BARIS 3: MATERIAL 1 & 2 */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Mat. Name 1
+                      </label>
+                      <input
+                        name="materialName"
+                        value={inputForm.materialName}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Mat. No 1
+                      </label>
+                      <input
+                        name="partNoMaterial"
+                        value={inputForm.partNoMaterial}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
+                        Mat. Name 2
+                      </label>
+                      <input
+                        name="materialName2"
+                        value={inputForm.materialName2 || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all placeholder:text-gray-300"
+                        placeholder="Opsional"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
+                        Mat. No 2
+                      </label>
+                      <input
+                        name="partNoMaterial2"
+                        value={inputForm.partNoMaterial2 || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all placeholder:text-gray-300"
+                        placeholder="Opsional"
+                      />
+                    </div>
                   </div>
 
-                  {/* === DATA TAMBAHAN (HGS/FG) === */}
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Part No HGS
-                    </label>
-                    <input
-                      name="partNoHgs"
-                      value={inputForm.partNoHgs}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Finish Good
-                    </label>
-                    <input
-                      name="finishGood"
-                      value={inputForm.finishGood}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm"
-                    />
-                  </div>
+                  {/* --- KOLOM KANAN: GAMBAR (Lebar 3/12) --- */}
+                  <div className="col-span-3 flex flex-col gap-3">
+                    {/* QR Code */}
+                    <div
+                      className="flex-1 border-2 border-dashed border-gray-300 rounded-xl hover:bg-white hover:border-blue-400 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-gray-50 min-h-[100px] group"
+                      onClick={() => qrInputRef.current.click()}
+                      onPaste={(e) => handlePasteImage(e, "qrImage")}
+                    >
+                      {inputForm.qrImage ? (
+                        <div className="relative w-full h-full p-2 flex items-center justify-center">
+                          <img
+                            src={inputForm.qrImage}
+                            className="max-h-[90px] object-contain"
+                            alt="QR"
+                          />
+                          <button
+                            onClick={(e) =>
+                              handleRemoveImage(e, "qrImage", qrInputRef)
+                            }
+                            className="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border hover:bg-red-50"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-xs text-center group-hover:text-blue-500 transition-colors">
+                          <span className="text-2xl mb-1 block">📷</span> Upload
+                          QR
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        ref={qrInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, "qrImage")}
+                      />
+                    </div>
 
-                  <div className="col-span-2 mt-2 border-t pt-2">
-                    <label className="text-xs font-bold text-emerald-600">
-                      Berat Part (Kg)
-                    </label>
-                    <input
-                      name="weight"
-                      type="number"
-                      step="0.001" // Supaya bisa koma
-                      value={inputForm.weight}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm border-emerald-300 bg-emerald-50 font-bold text-emerald-800"
-                      placeholder="Contoh: 0.55"
-                    />
-                    <p className="text-[9px] text-gray-400 mt-1">
-                      *Digunakan untuk menghitung Plan (Total KG / Berat)
-                    </p>
-                  </div>
-
-                  {/* === DATA MATERIAL 1 (UTAMA) === */}
-                  <div className="col-span-2 border-t mt-2 pt-1 text-xs font-black text-slate-700 uppercase tracking-wider">
-                    Data Material 1 (Wajib)
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Nama Material 1
-                    </label>
-                    <input
-                      name="materialName"
-                      value={inputForm.materialName}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm border-slate-300"
-                      placeholder="Contoh: PP RESIN..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500">
-                      Part No Material 1
-                    </label>
-                    <input
-                      name="partNoMaterial"
-                      value={inputForm.partNoMaterial}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm border-slate-300"
-                      placeholder="Contoh: 123-456..."
-                    />
-                  </div>
-
-                  {/* === DATA MATERIAL 2 (OPSIONAL) === */}
-                  <div className="col-span-2 border-t mt-2 pt-1 text-xs font-black text-blue-600 uppercase tracking-wider">
-                    Data Material 2 (Opsional - Jika Double Material)
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-blue-500">
-                      Nama Material 2
-                    </label>
-                    <input
-                      name="materialName2"
-                      value={inputForm.materialName2 || ""}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm bg-blue-50 border-blue-200"
-                      placeholder="Kosongkan jika cuma 1 material"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-blue-500">
-                      Part No Material 2
-                    </label>
-                    <input
-                      name="partNoMaterial2"
-                      value={inputForm.partNoMaterial2 || ""}
-                      onChange={handleInputChange}
-                      className="w-full border p-2 rounded text-sm bg-blue-50 border-blue-200"
-                      placeholder="-"
-                    />
+                    {/* Foto Part */}
+                    <div
+                      className="flex-1 border-2 border-dashed border-gray-300 rounded-xl hover:bg-white hover:border-blue-400 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-gray-50 min-h-[100px] group"
+                      onClick={() => partImgInputRef.current.click()}
+                      onPaste={(e) => handlePasteImage(e, "partImage")}
+                    >
+                      {inputForm.partImage ? (
+                        <div className="relative w-full h-full p-2 flex items-center justify-center">
+                          <img
+                            src={inputForm.partImage}
+                            className="max-h-[90px] object-contain rounded"
+                            alt="Part"
+                          />
+                          <button
+                            onClick={(e) =>
+                              handleRemoveImage(e, "partImage", partImgInputRef)
+                            }
+                            className="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border hover:bg-red-50"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-xs text-center group-hover:text-blue-500 transition-colors">
+                          <span className="text-2xl mb-1 block">🖼️</span> Upload
+                          Foto
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        ref={partImgInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, "partImage")}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* KOLOM KANAN (GAMBAR)*/}
-                <div className="col-span-4 space-y-4">
-                  {/* INPUT QR */}
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:bg-gray-50 cursor-pointer relative h-32 flex flex-col items-center justify-center overflow-hidden group"
-                    onPaste={(e) => handlePasteImage(e, "qrImage")}
-                    onClick={() => qrInputRef.current.click()}
+                {/* TOMBOL ACTION */}
+                <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-gray-200">
+                  {editingKey && (
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-slate-500 hover:text-slate-700 font-bold py-2 px-5 rounded-lg text-sm transition-all hover:bg-slate-100"
+                    >
+                      Batal
+                    </button>
+                  )}
+                  <button
+                    onClick={handleSaveInput}
+                    className={`text-white font-bold py-2 px-8 rounded-lg text-sm shadow-md transition-transform transform active:scale-95 ${
+                      editingKey
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-slate-800 hover:bg-slate-900"
+                    }`}
                   >
-                    {inputForm.qrImage ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={inputForm.qrImage}
-                          alt="QR"
-                          className="h-full w-full object-contain"
-                        />
-                        <button
-                          onClick={(e) =>
-                            handleRemoveImage(e, "qrImage", qrInputRef)
-                          }
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600 transition-colors"
-                          title="Hapus Gambar"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-gray-400 text-xs">
-                        <span className="text-2xl block">📷</span>Klik Upload /
-                        Ctrl+V (QR)
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      ref={qrInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, "qrImage")}
-                    />
-                  </div>
-
-                  {/* INPUT FOTO PART */}
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:bg-gray-50 cursor-pointer relative h-32 flex flex-col items-center justify-center overflow-hidden group"
-                    onPaste={(e) => handlePasteImage(e, "partImage")}
-                    onClick={() => partImgInputRef.current.click()}
-                  >
-                    {inputForm.partImage ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={inputForm.partImage}
-                          alt="Part"
-                          className="h-full w-full object-contain"
-                        />
-                        <button
-                          onClick={(e) =>
-                            handleRemoveImage(e, "partImage", partImgInputRef)
-                          }
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600 transition-colors"
-                          title="Hapus Gambar"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-gray-400 text-xs">
-                        <span className="text-2xl block">🖼️</span>Klik Upload /
-                        Ctrl+V (Part)
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      ref={partImgInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, "partImage")}
-                    />
-                  </div>
+                    {editingKey ? "Update Data" : "+ Simpan Data"}
+                  </button>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -1138,71 +1144,98 @@ function App() {
                   </button>
                 )}
               </div>
-              {/* LIST DATA (SCROLLABLE, STICKY HEADER & EMPTY STATE) */}
-              <div className="mt-8">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-bold text-slate-700">
-                    Data Tersimpan ({Object.keys(masterDb).length})
-                  </h4>
-                  <input
-                    type="text"
-                    placeholder="🔍 Cari Part Name / Part No..."
-                    className="border border-gray-300 rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:border-blue-500 shadow-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
 
-                <div className="overflow-y-auto h-[450px] border rounded-lg shadow-sm bg-white relative">
-                  <table className="w-full text-sm text-left border-collapse whitespace-nowrap">
-                    <thead className="bg-gray-100 font-bold text-slate-700 sticky top-0 z-20 shadow-sm">
-                      <tr>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100 min-w-[150px]">
+              {/* [INSERT TOMBOL DISINI] Tab Switcher */}
+              <div className=" bg-slate-100 p-1.5 rounded-lg my-5 inline-flex border border-slate-200">
+                <button
+                  onClick={() => setDbTableMode("REQ")}
+                  className={`px-5 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "REQ"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 shadow-none"
+                  }`}
+                >
+                  REQ MATERIAL
+                </button>
+                <button
+                  onClick={() => setDbTableMode("LABEL")}
+                  className={`px-5 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 shadow-none"
+                  }`}
+                >
+                  Part Tag
+                </button>
+              </div>
+
+              {/* 2. Tabel Utama */}
+              <div className="overflow-hidden border border-black/10 rounded-xl shadow-sm bg-white">
+                <div className="overflow-x-auto h-[500px]">
+                  <table className="w-full text-sm text-left border-collapse whitespace-nowrap font-sans">
+                    {/* HEADER (Teks Hitam) */}
+                    <thead className="bg-white text-black sticky top-0 z-20 shadow-sm ring-1 ring-black/5">
+                      <tr className="uppercase text-xs tracking-wider font-extrabold">
+                        <th className="px-4 py-4 w-12 text-center bg-gray-50 border-b border-gray-200">
+                          No
+                        </th>
+                        <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
                           Part Name
                         </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
+                        <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                          Part No (HGS)
+                        </th>
+                        <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
                           Model
                         </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
-                          Part No
-                        </th>
 
-                        <th>Berat (Kg)</th>
+                        {/* MODE REQ */}
+                        {dbTableMode === "REQ" && (
+                          <>
+                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
+                              Material 1
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                              No. Mat 1
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
+                              Material 2
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                              No. Mat 2
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b  text-center border-l border-gray-200">
+                              Berat (Kg)
+                            </th>
+                          </>
+                        )}
 
-                        {/* Header Material 1 (Biru Tipis) */}
-                        <th className="p-3 border-b  bg-blue-50 text-blue-800 border-l border-blue-100">
-                          Mat. Name 1
-                        </th>
-                        <th className="p-3 border-b  bg-blue-50 text-blue-800">
-                          Mat. No 1
-                        </th>
+                        {/* MODE LABEL */}
+                        {dbTableMode === "LABEL" && (
+                          <>
+                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
+                              Part No FG
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b  text-center border-l border-gray-200">
+                              Berat (Kg)
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
+                              QR Code
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
+                              Foto Part
+                            </th>
+                          </>
+                        )}
 
-                        {/* Header Material 2 (Kuning Tipis) */}
-                        <th className="p-3 border-b  bg-yellow-50 text-yellow-800 border-l border-yellow-100">
-                          Mat. Name 2
-                        </th>
-                        <th className="p-3 border-b border-gray-200 bg-yellow-50 text-yellow-800">
-                          Mat. No 2
-                        </th>
-
-                        <th className="p-3 border-b border-gray-200 bg-gray-100 border-l">
-                          HGS
-                        </th>
-                        <th className="p-3 border-b border-gray-200 bg-gray-100">
-                          FG
-                        </th>
-                        <th className="p-3 border-b border-gray-200 text-center w-20 bg-gray-100">
-                          QR
-                        </th>
-                        <th className="p-3 border-b border-gray-200 text-center w-20 bg-gray-100">
-                          Foto
-                        </th>
-                        <th className="p-3 border-b border-gray-200 text-center bg-gray-100 sticky right-0 z-30 shadow-l">
-                          Action
+                        <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center sticky right-0 z-30 shadow-l">
+                          Opsi
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+
+                    {/* BODY (Teks Hitam Semua) */}
+                    <tbody className="divide-y divide-gray-200">
                       {(() => {
                         const filteredData = Object.entries(masterDb)
                           .filter(([key, item]) => {
@@ -1210,9 +1243,7 @@ function App() {
                             const q = searchTerm.toLowerCase();
                             return (
                               item.partName.toLowerCase().includes(q) ||
-                              item.partNo.toLowerCase().includes(q) ||
-                              (item.materialName &&
-                                item.materialName.toLowerCase().includes(q))
+                              item.partNo.toLowerCase().includes(q)
                             );
                           })
                           .sort((a, b) =>
@@ -1224,128 +1255,142 @@ function App() {
                             <tr>
                               <td
                                 colSpan="12"
-                                className="p-10 text-center text-gray-400 italic bg-gray-50"
+                                className="p-12 text-center text-black italic"
                               >
-                                Data tidak ditemukan
+                                <div className="mb-2 text-2xl">📂</div>
+                                Belum ada data part yang tersimpan.
                               </td>
                             </tr>
                           );
                         }
 
-                        return filteredData.map(([key, item]) => (
-                          <tr
-                            key={key}
-                            className={`hover:bg-gray-50 transition-colors ${
-                              editingKey === key
-                                ? "bg-blue-100 hover:bg-blue-200"
-                                : ""
-                            }`}
-                          >
-                            <td className="p-3 font-bold align-middle text-slate-700">
-                              {item.partName}
-                            </td>
-                            <td className="p-3 align-middle">{item.model}</td>
-                            <td className="p-3 align-middle font-mono text-xs">
-                              {item.partNo}
-                            </td>
+                        return filteredData.map(([key, item], index) => {
+                          // Zebra: Ganjil Abu-abu, Genap Putih
+                          const isOddRow = index % 2 !== 0;
+                          const rowClass = isOddRow
+                            ? "bg-gray-100"
+                            : "bg-white"; // Saya gelapkan dikit abunya (gray-100) biar kontras sama putih
 
-                            <td>{item.weight}</td>
+                          return (
+                            <tr
+                              key={key}
+                              className={`${rowClass} hover:bg-blue-100 transition-colors group`}
+                            >
+                              {/* NO */}
+                              <td className="px-4 py-4 text-center text-black font-bold text-xs">
+                                {index + 1}
+                              </td>
 
-                            {/* Kolom Material 1 */}
-                            <td className="p-3 align-middle bg-blue-50/30 border-l border-blue-50 font-medium text-blue-900">
-                              {item.materialName}
-                            </td>
-                            <td className="p-3 align-middle bg-blue-50/30 text-xs font-mono text-blue-800">
-                              {item.partNoMaterial}
-                            </td>
+                              {/* UMUM */}
+                              <td className="px-4 py-4 font-bold text-black">
+                                {item.partName}
+                              </td>
+                              <td className="px-4 py-4 font-medium text-black">
+                                {item.partNo}
+                              </td>
+                              <td className="px-4 py-4 text-black">
+                                {item.model}
+                              </td>
 
-                            {/* Kolom Material 2 (Logika dash jika kosong) */}
-                            <td className="p-3 align-middle bg-yellow-50/30 border-l border-yellow-50 font-medium text-yellow-900">
-                              {item.materialName2 ? (
-                                item.materialName2
-                              ) : (
-                                <span className="text-gray-300">-</span>
+                              {/* MODE REQ */}
+                              {dbTableMode === "REQ" && (
+                                <>
+                                  <td className="px-4 py-4 text-black border-l border-gray-200">
+                                    {item.materialName || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black text-xs font-medium">
+                                    {item.partNoMaterial || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black border-l border-gray-200">
+                                    {item.materialName2 || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black text-xs font-medium">
+                                    {item.partNoMaterial2 || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
+                                    {item.weight ? item.weight : "-"}
+                                  </td>
+                                </>
                               )}
-                            </td>
-                            <td className="p-3 align-middle bg-yellow-50/30 text-xs font-mono text-yellow-800">
-                              {item.partNoMaterial2 ? (
-                                item.partNoMaterial2
-                              ) : (
-                                <span className="text-gray-300">-</span>
+
+                              {/* MODE LABEL */}
+                              {dbTableMode === "LABEL" && (
+                                <>
+                                  <td className="px-4 py-4 text-black border-l border-gray-200">
+                                    {item.finishGood || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
+                                    {item.weight ? item.weight : "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-center">
+                                    {item.qrImage ? (
+                                      <div className="relative group/img inline-block">
+                                        <div className="w-8 h-8 border border-black rounded bg-white p-0.5 cursor-pointer mx-auto">
+                                          <img
+                                            src={item.qrImage}
+                                            className="w-full h-full object-contain"
+                                          />
+                                        </div>
+                                        {/* Hover Preview */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/img:block z-50 w-32 bg-white border border-black rounded-lg shadow-xl p-2">
+                                          <img
+                                            src={item.qrImage}
+                                            className="w-full"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      "-"
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-4 text-center">
+                                    {item.partImage ? (
+                                      <div className="relative group/img inline-block">
+                                        <div className="w-8 h-8 border border-black rounded bg-white p-0.5 cursor-pointer mx-auto">
+                                          <img
+                                            src={item.partImage}
+                                            className="w-full h-full object-contain"
+                                          />
+                                        </div>
+                                        {/* Hover Preview */}
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/img:block z-50 w-40 bg-white border border-black rounded-lg shadow-xl p-2">
+                                          <img
+                                            src={item.partImage}
+                                            className="w-full rounded"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      "-"
+                                    )}
+                                  </td>
+                                </>
                               )}
-                            </td>
 
-                            <td className="p-3 align-middle border-l">
-                              {item.partNoHgs}
-                            </td>
-                            <td className="p-3 align-middle">
-                              {item.finishGood}
-                            </td>
-
-                            <td className="p-3 text-center align-middle">
-                              {item.qrImage ? (
-                                <div className="flex justify-center group relative">
-                                  <img
-                                    src={item.qrImage}
-                                    alt="QR"
-                                    className="h-8 w-8 object-contain border bg-white rounded shadow-sm cursor-pointer"
-                                  />
-                                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-white border shadow-lg rounded p-1">
-                                    <img
-                                      src={item.qrImage}
-                                      className="w-full h-auto"
-                                    />
-                                  </div>
+                              {/* ACTION */}
+                              <td
+                                className={`px-4 py-4 text-center sticky right-0 z-10 shadow-l ${rowClass} group-hover:bg-blue-100`}
+                              >
+                                <div className="flex justify-center gap-2">
+                                  <button
+                                    onClick={() => handleEditDb(key)}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors p-1 font-bold"
+                                    title="Edit Data"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteDb(key)}
+                                    className="text-red-600 hover:text-red-800 transition-colors p-1 font-bold"
+                                    title="Hapus Data"
+                                  >
+                                    Hapus
+                                  </button>
                                 </div>
-                              ) : (
-                                <span className="text-gray-300 text-[10px] italic">
-                                  -
-                                </span>
-                              )}
-                            </td>
-
-                            <td className="p-3 text-center align-middle">
-                              {item.partImage ? (
-                                <div className="flex justify-center group relative">
-                                  <img
-                                    src={item.partImage}
-                                    alt="Part"
-                                    className="h-8 w-8 object-contain border bg-white rounded shadow-sm cursor-pointer"
-                                  />
-                                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 w-32 bg-white border shadow-lg rounded p-1">
-                                    <img
-                                      src={item.partImage}
-                                      className="w-full h-auto"
-                                    />
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-gray-300 text-[10px] italic">
-                                  -
-                                </span>
-                              )}
-                            </td>
-
-                            <td className="p-3 text-center align-middle sticky right-0 bg-white shadow-l z-10">
-                              <div className="flex justify-center gap-1">
-                                <button
-                                  onClick={() => handleEditDb(key)}
-                                  className="bg-blue-100 text-blue-600 p-1.5 rounded hover:bg-blue-200 transition-colors"
-                                  title="Edit"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteDb(key)}
-                                  className="bg-red-100 text-red-600 p-1.5 rounded hover:bg-red-200 transition-colors"
-                                  title="Hapus"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ));
+                              </td>
+                            </tr>
+                          );
+                        });
                       })()}
                     </tbody>
                   </table>
@@ -1862,6 +1907,13 @@ function App() {
       </div>
 
       <style>{`
+/* 1. IMPORT FONT WORK SANS DARI GOOGLE */
+        @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        /* 2. TERAPKAN KE SELURUH ELEMEN APLIKASI */
+        body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, span, div {
+          font-family: 'Work Sans', sans-serif !important;
+        }
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress { animation: progress 1.5s infinite linear; }
         @media print {
