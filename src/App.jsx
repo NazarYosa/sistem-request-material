@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { db } from "./firebase";
-import VuteqLogo from "./assets/img/vuteq-logo.png"
+import vuteqlogo from "../public/vuteq-logo.png"
 import {
   collection,
   getDocs,
@@ -1823,7 +1823,7 @@ function App() {
                   <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
                     <img
                       // GANTI URL INI DENGAN PATH GAMBAR LOGO ASLI MAS
-                      src={VuteqLogo}
+                      src={vuteqlogo}
                       alt="VuteQ Logo"
                       // w-full h-full: Memenuhi kotak
                       // object-contain: Menjaga rasio 768x249 agar tidak gepeng
@@ -1855,7 +1855,7 @@ function App() {
                         className="h-full w-full object-contain"
                       />
                     ) : (
-                      <p>-  </p>
+                      <p>- </p>
                     )}
                   </div>
 
