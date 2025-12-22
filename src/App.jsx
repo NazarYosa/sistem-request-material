@@ -919,7 +919,11 @@ function App() {
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
+                        <span className="text-[10px] text-gray-400 italic ml-1 leading-tight">
+                          *Gunakan titik (.) untuk desimal berat.
+                        </span>
                       </label>
+
                       <input
                         name="weight"
                         type="number"
@@ -965,12 +969,6 @@ function App() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
                       />
                     </div>
-                    <div className="flex items-end pb-2">
-                      <span className="text-[10px] text-gray-400 italic leading-tight">
-                        *Gunakan titik (.) untuk desimal berat.
-                      </span>
-                    </div>
-
                     {/* PEMISAH TIPIS */}
                     <div className="col-span-4 border-t border-gray-200 my-1"></div>
 
@@ -1119,30 +1117,9 @@ function App() {
                         : "bg-slate-800 hover:bg-slate-900"
                     }`}
                   >
-                    {editingKey ? "Update Data" : "+ Simpan Data"}
+                    {editingKey ? "Update Data" : "Simpan Data"}
                   </button>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveInput}
-                  className={`text-white font-bold py-2 px-6 rounded shadow-sm transition-all ${
-                    editingKey
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-emerald-600 hover:bg-emerald-700"
-                  }`}
-                >
-                  {editingKey ? "Update" : "Simpan"}
-                </button>
-
-                {editingKey && (
-                  <button
-                    onClick={handleCancelEdit}
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded shadow-sm transition-all"
-                  >
-                    Batal
-                  </button>
-                )}
               </div>
 
               {/* [INSERT TOMBOL DISINI] Tab Switcher */}
