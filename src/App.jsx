@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { db } from "./firebase";
+import VuteqLogo from "./assets/img/vuteq-logo.png"
 import {
   collection,
   getDocs,
@@ -1796,162 +1797,156 @@ function App() {
           </div>
         )}
 
+        {/* === PRINT 2: LABEL 2x5 (PORTRAIT - LOGO VUTEQ IMAGE) === */}
         {printType === "LABEL" && (
           <div className="w-full h-full bg-white text-black font-sans leading-none">
-            {/* Container A4 Landscape */}
             <div
-              className="grid grid-cols-2 gap-6 p-6"
-              style={{ width: "297mm", height: "210mm" }}
+              // Grid 2 Kolom, Konten Rata Atas (content-start), Gap 3mm
+              className="grid grid-cols-2 content-start"
+              style={{
+                width: "210mm",
+                minHeight: "297mm",
+                padding: "5mm",
+                gap: "3mm",
+              }}
             >
               {printData.map((lbl, idx) => (
-                // LABEL INDIVIDUAL
                 <div
                   key={idx}
-                  // Grid Setup: 5 Kolom x 7 Baris
-                  // Baris 1 (Header) fix 45px, sisanya (1fr) dibagi rata
-                  className="grid grid-cols-5 grid-rows-[45px_1fr_1fr_1fr_1fr_1fr_1fr] border-2 border-black box-border"
-                  style={{ width: "100%", height: "95mm" }}
+                  className="grid grid-cols-5 grid-rows-[0.6fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border page-break-inside-avoid"
+                  // Tinggi 54mm
+                  style={{ width: "100%", height: "54mm" }}
                 >
-                  {/* ================= BARIS 1: HEADER ================= */}
-                  {/* Area: . . . . . (Col Span 5) */}
-                  <div className="col-span-5 border-b-2 border-black flex items-center">
-                    {/* Logo */}
-                    <div className="w-[20%] h-full flex items-center justify-center border-r border-black pl-2">
-                      <span className="font-black italic text-2xl">VuteQ</span>
-                    </div>
-                    {/* Judul */}
-                    <div className="w-[30%] h-full flex items-center justify-center border-r border-black">
-                      <span className="border-2 border-black px-2 py-0.5 text-lg font-bold bg-black text-white">
-                        PART TAG
-                      </span>
-                    </div>
-                    {/* Model (Saya masukkan di header agar muat) */}
-                    <div className="w-[30%] h-full flex flex-col justify-center px-2 border-r border-black">
-                      <span className="text-[8px] font-bold">MODEL</span>
-                      <span className="text-lg font-black leading-none">
-                        {lbl.model}
-                      </span>
-                    </div>
-                    {/* Box No */}
-                    <div className="w-[20%] h-full flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center font-bold text-lg">
-                        {/* Asumsi ada data boxKe, jika tidak ada pakai index+1 */}
-                        {lbl.boxKe || idx + 1}
-                      </div>
-                    </div>
+                  {/* ================= BARIS 1 (Header) ================= */}
+
+                  {/* --- LOGO VUTEQ (GAMBAR) --- */}
+                  <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
+                    <img
+                      // GANTI URL INI DENGAN PATH GAMBAR LOGO ASLI MAS
+                      src={VuteqLogo}
+                      alt="VuteQ Logo"
+                      // w-full h-full: Memenuhi kotak
+                      // object-contain: Menjaga rasio 768x249 agar tidak gepeng
+                      className="w-full h-full object-contain"
+                    />
                   </div>
 
-                  {/* ================= BARIS 2-4: AREA TENGAH ================= */}
+                  {/* PART TAG */}
+                  <div className="col-start-2 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5">
+                    <span className="font-bold text-[8px] text-black px-1.5 py-0.5 rounded-sm">
+                      PART TAG
+                    </span>
+                  </div>
 
-                  {/* --- FOTO PART (KIRI) --- */}
-                  {/* Area: Foto Part (Row 2-4, Col 1-2) */}
-                  <div className="row-start-2 row-span-3 col-start-1 col-span-2 border-r-2 border-b-2 border-black flex items-center justify-center p-2 overflow-hidden">
-                    {lbl.image ? (
-                      <img
-                        src={lbl.image}
-                        alt="Part"
-                        className="w-full h-full object-contain"
-                      />
-                    ) : lbl.qr ? (
+                  {/* MODEL */}
+                  <div className="col-start-3 col-span-2 row-start-1 border-r border-b border-black flex flex-col items-center justify-center p-0.5">
+                    <span className="text-[6px] font-bold">MODEL</span>
+                    <span className="font-black text-sm uppercase">
+                      {lbl.model}
+                    </span>
+                  </div>
+
+                  {/* QR / BOX */}
+                  <div className="col-start-5 row-start-1 border-b border-black flex items-center justify-center p-0.5">
+                    {lbl.qr ? (
                       <img
                         src={lbl.qr}
                         alt="QR"
-                        className="w-full h-full object-contain"
+                        className="h-full w-full object-contain"
                       />
                     ) : (
-                      <span className="text-gray-300 font-bold">NO IMAGE</span>
+                      <p>-  </p>
                     )}
                   </div>
 
-                  {/* --- DATA PART (KANAN) --- */}
+                  {/* ================= BARIS 2-4 (Body Tengah) ================= */}
 
-                  {/* 1. Part Name */}
-                  {/* Label (Row 2, Col 3) */}
-                  <div className="row-start-2 col-start-3 border-r border-b border-black p-1 flex items-center bg-gray-50">
-                    <span className="text-[10px] font-bold">PART NAME</span>
+                  {/* FOTO PART (Span 3 Baris) */}
+                  <div className="col-start-1 col-span-2 row-start-2 row-span-3 border-r border-b border-black p-1 flex items-center justify-center overflow-hidden">
+                    {lbl.img ? (
+                      <img
+                        src={lbl.img}
+                        alt="Part"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-gray-300 font-bold text-[8px]">
+                        NO IMG
+                      </span>
+                    )}
                   </div>
-                  {/* Isi (Row 2, Col 4-5) */}
-                  <div className="row-start-2 col-start-4 col-span-2 border-b border-black p-1 flex items-center">
-                    <span className="font-bold text-lg uppercase leading-tight">
+
+                  {/* Part Name */}
+                  <div className="col-start-3 row-start-2 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
+                    <span className="text-[6px] font-bold">PART NAME</span>
+                  </div>
+                  <div className="col-start-4 col-span-2 row-start-2 border-b border-black p-0.5 flex items-center">
+                    <span className="font-bold text-[9px] uppercase leading-none line-clamp-2">
                       {lbl.partName}
                     </span>
                   </div>
 
-                  {/* 2. Part No HGS */}
-                  {/* Label (Row 3, Col 3) */}
-                  <div className="row-start-3 col-start-3 border-r border-b border-black p-1 flex items-center bg-gray-50">
-                    <span className="text-[10px] font-bold">PART NO HGS</span>
+                  {/* Part No HGS */}
+                  <div className="col-start-3 row-start-3 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
+                    <span className="text-[6px] font-bold">PART NO HGS</span>
                   </div>
-                  {/* Isi (Row 3, Col 4-5) */}
-                  <div className="row-start-3 col-start-4 col-span-2 border-b border-black p-1 flex items-center">
-                    <span className="font-black text-xl uppercase leading-none">
+                  <div className="col-start-4 col-span-2 row-start-3 border-b border-black p-0.5 flex items-center">
+                    <span className="font-black text-xs uppercase">
                       {lbl.partNo}
                     </span>
                   </div>
 
-                  {/* 3. Part No FG */}
-                  {/* Label (Row 4, Col 3) */}
-                  <div className="row-start-4 col-start-3 border-r border-b-2 border-black p-1 flex items-center bg-gray-50">
-                    <span className="text-[10px] font-bold">PART NO FG</span>
+                  {/* Part No FG */}
+                  <div className="col-start-3 row-start-4 border-r border-b border-black p-0.5 flex items-center bg-gray-50">
+                    <span className="text-[6px] font-bold">PART NO FG</span>
                   </div>
-                  {/* Isi (Row 4, Col 4-5) */}
-                  <div className="row-start-4 col-start-4 col-span-2 border-b-2 border-black p-1 flex items-center">
-                    <span className="font-bold text-md uppercase">
-                      {lbl.fg}
+                  <div className="col-start-4 col-span-2 row-start-4 border-b border-black p-0.5 flex items-center">
+                    <span className="font-bold text-[9px] uppercase">
+                      {lbl.fg || "-"}
                     </span>
                   </div>
 
-                  {/* ================= BARIS 5-7: AREA BAWAH ================= */}
+                  {/* ================= BARIS 5-7 (Footer) ================= */}
 
-                  {/* --- QTY (KIRI BAWAH) --- */}
-
-                  {/* Label QTY (Row 5, Col 1) */}
-                  <div className="row-start-5 col-start-1 border-r border-b border-black flex items-center justify-center bg-gray-100">
-                    <span className="text-xs font-bold">QTY</span>
+                  {/* QTY (Span 2 Baris) */}
+                  <div className="col-start-1 row-start-5 border-r border-b border-black flex items-center justify-center bg-gray-100">
+                    <span className="text-[8px] font-bold">QTY</span>
+                  </div>
+                  <div className="col-start-1 row-start-6 row-span-2 border-r border-black flex items-center justify-center">
+                    <span className="text-3xl font-black">{lbl.qty}</span>
                   </div>
 
-                  {/* Isi JUMLAH QTY (Row 6-7, Col 1 -> Span 2 Baris) */}
-                  <div className="row-start-6 row-span-2 col-start-1 border-r border-black flex items-center justify-center">
-                    <span className="text-5xl font-black">{lbl.qty}</span>
-                  </div>
+                  {/* Tabel Tanggal (Kanan Bawah) */}
 
-                  {/* --- TABEL TANGGAL (KANAN BAWAH) --- */}
-
-                  {/* Baris 5: TGL PROD */}
-                  <div className="row-start-5 col-start-2 border-r border-b border-black p-1 flex items-center">
-                    <span className="text-[9px] font-bold">TGL PROD</span>
+                  {/* TGL PROD */}
+                  <div className="col-start-2 row-start-5 border-r border-b border-black p-0.5 flex items-center">
+                    <span className="text-[6px] font-bold">TGL PROD</span>
                   </div>
-                  <div className="row-start-5 col-start-3 col-span-2 border-r border-b border-black p-1">
-                    {/* Kosong untuk stempel/tulis */}
-                  </div>
-                  <div className="row-start-5 col-start-5 border-b border-black p-1 relative">
-                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                  <div className="col-start-3 col-span-2 row-start-5 border-r border-b border-black p-0.5"></div>
+                  <div className="col-start-5 row-start-5 border-b border-black p-0.5 relative">
+                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
                       PIC
                     </span>
                   </div>
 
-                  {/* Baris 6: TGL ASSY */}
-                  <div className="row-start-6 col-start-2 border-r border-b border-black p-1 flex items-center">
-                    <span className="text-[9px] font-bold">TGL ASSY</span>
+                  {/* TGL ASSY */}
+                  <div className="col-start-2 row-start-6 border-r border-b border-black p-0.5 flex items-center">
+                    <span className="text-[6px] font-bold">TGL ASSY</span>
                   </div>
-                  <div className="row-start-6 col-start-3 col-span-2 border-r border-b border-black p-1">
-                    {/* Kosong */}
-                  </div>
-                  <div className="row-start-6 col-start-5 border-b border-black p-1 relative">
-                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                  <div className="col-start-3 col-span-2 row-start-6 border-r border-b border-black p-0.5"></div>
+                  <div className="col-start-5 row-start-6 border-b border-black p-0.5 relative">
+                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
                       PIC
                     </span>
                   </div>
 
-                  {/* Baris 7: TGL DLV */}
-                  <div className="row-start-7 col-start-2 border-r border-black p-1 flex items-center">
-                    <span className="text-[9px] font-bold">TGL DLV</span>
+                  {/* TGL DLV */}
+                  <div className="col-start-2 row-start-7 border-r border-black p-0.5 flex items-center">
+                    <span className="text-[6px] font-bold">TGL DLV</span>
                   </div>
-                  <div className="row-start-7 col-start-3 col-span-2 border-r border-black p-1">
-                    {/* Kosong */}
-                  </div>
-                  <div className="row-start-7 col-start-5 p-1 relative">
-                    <span className="absolute top-0 right-1 text-[8px] text-gray-400">
+                  <div className="col-start-3 col-span-2 row-start-7 border-r border-black p-0.5"></div>
+                  <div className="col-start-5 row-start-7 p-0.5 relative">
+                    <span className="absolute top-0 right-0.5 text-[5px] text-gray-400">
                       PIC
                     </span>
                   </div>
@@ -1980,6 +1975,22 @@ function App() {
           div {
             float: none !important;
           }
+
+
+        @media print {
+          /* Margin 5mm */
+          @page { size: A4 portrait; margin: 5mm; } 
+          
+          /* Grid 2 Kolom dengan Gap 2mm */
+          .print\\:grid-cols-2 { 
+             display: grid; 
+             grid-template-columns: repeat(2, 1fr); 
+             gap: 2mm; /* Ini kuncinya */
+          }
+          
+          body { -webkit-print-color-adjust: exact; }
+          .page-break-inside-avoid { page-break-inside: avoid; }
+        }
       `}</style>
     </div>
   );
