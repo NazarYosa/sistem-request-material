@@ -35,13 +35,21 @@ function App() {
   const [inputForm, setInputForm] = useState({
     partName: "",
     partNo: "",
-    // === DATA ASSY (ORANGE) ===
-    partAssyNumber: "", // Assy Gen
-    partAssyName: "", // Assy Gen
-    partAssyNumberLeft: "", // Assy Left (BARU)
-    partAssyNameLeft: "", // Assy Left (BARU)
-    partAssyNumberRight: "", // Assy Right (BARU)
-    partAssyNameRight: "", // Assy Right (BARU)
+    // === DATA ASSY (ORANGE - UPDATED) ===
+    // 1. General
+    partAssyName: "", // Nama Assy Umum
+    partAssyHgs: "", // No HGS Assy
+    partAssyFg: "", // No FG Assy
+
+    // 2. Left
+    partAssyNameLeft: "", // Nama Assy Kiri
+    partAssyHgsLeft: "", // No HGS Assy Kiri
+    partAssyFgLeft: "", // No FG Assy Kiri
+
+    // 3. Right
+    partAssyNameRight: "", // Nama Assy Kanan
+    partAssyHgsRight: "", // No HGS Assy Kanan
+    partAssyFgRight: "", // No FG Assy Kanan
 
     // === DATA LEFT/KIRI (KUNING) ===
     partNoHgsLeft: "",
@@ -55,6 +63,7 @@ function App() {
     finishGoodRight: "",
     finishGoodNameRight: "",
     // ====================================
+
     color: "",
     weight: "",
     materialName: "",
@@ -215,13 +224,17 @@ function App() {
       setInputForm({
         partName: "",
         partNo: "",
-        // Reset field baru lengkap
-        partAssyNumber: "",
+        // Reset Assy Lengkap
         partAssyName: "",
-        partAssyNumberLeft: "",
+        partAssyHgs: "",
+        partAssyFg: "",
         partAssyNameLeft: "",
-        partAssyNumberRight: "",
+        partAssyHgsLeft: "",
+        partAssyFgLeft: "",
         partAssyNameRight: "",
+        partAssyHgsRight: "",
+        partAssyFgRight: "",
+
         partNoHgsLeft: "",
         partNameHgsLeft: "",
         finishGoodLeft: "",
@@ -230,6 +243,7 @@ function App() {
         partNameHgsRight: "",
         finishGoodRight: "",
         finishGoodNameRight: "",
+
         color: "",
         materialName: "",
         partNoMaterial: "",
@@ -256,13 +270,16 @@ function App() {
     setInputForm({
       partName: "",
       partNo: "",
-      // Reset field baru lengkap
-      partAssyNumber: "",
+      // Reset Assy Lengkap
       partAssyName: "",
-      partAssyNumberLeft: "",
+      partAssyHgs: "",
+      partAssyFg: "",
       partAssyNameLeft: "",
-      partAssyNumberRight: "",
+      partAssyHgsLeft: "",
+      partAssyFgLeft: "",
       partAssyNameRight: "",
+      partAssyHgsRight: "",
+      partAssyFgRight: "",
       partNoHgsLeft: "",
       partNameHgsLeft: "",
       finishGoodLeft: "",
@@ -271,6 +288,7 @@ function App() {
       partNameHgsRight: "",
       finishGoodRight: "",
       finishGoodNameRight: "",
+
       color: "",
       materialName: "",
       partNoMaterial: "",
@@ -938,9 +956,6 @@ function App() {
               <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-5 mb-8">
                 <div className="grid grid-cols-12 gap-6">
                   {/* --- KOLOM KIRI: DATA TEKS --- */}
-                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
-                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
-                  {/* --- KOLOM KIRI: DATA TEKS --- */}
                   <div className="col-span-9 grid grid-cols-4 gap-4">
                     {/* BARIS 1: PART UTAMA */}
                     <div className="col-span-2">
@@ -984,21 +999,33 @@ function App() {
                         placeholder="Nama Assy Umum..."
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy No (Gen)
+                        Assy HGS (Gen)
                       </label>
                       <input
-                        name="partAssyNumber"
-                        value={inputForm.partAssyNumber || ""}
+                        name="partAssyHgs"
+                        value={inputForm.partAssyHgs || ""}
                         onChange={handleInputChange}
                         className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
-                        placeholder="No Assy Umum..."
+                        placeholder="No HGS..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy FG (Gen)
+                      </label>
+                      <input
+                        name="partAssyFg"
+                        value={inputForm.partAssyFg || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        placeholder="No FG..."
                       />
                     </div>
 
-                    {/* BARIS 3: ASSY LEFT & RIGHT (ORANGE MUDA) */}
-                    <div>
+                    {/* BARIS 3: ASSY LEFT (ORANGE MUDA) */}
+                    <div className="col-span-2">
                       <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
                         Assy Name (Left)
                       </label>
@@ -1012,17 +1039,31 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy No (Left)
+                        Assy HGS (Left)
                       </label>
                       <input
-                        name="partAssyNumberLeft"
-                        value={inputForm.partAssyNumberLeft || ""}
+                        name="partAssyHgsLeft"
+                        value={inputForm.partAssyHgsLeft || ""}
                         onChange={handleInputChange}
                         className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                        placeholder="Assy No (L)"
+                        placeholder="HGS No (L)"
                       />
                     </div>
                     <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy FG (Left)
+                      </label>
+                      <input
+                        name="partAssyFgLeft"
+                        value={inputForm.partAssyFgLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="FG No (L)"
+                      />
+                    </div>
+
+                    {/* BARIS 4: ASSY RIGHT (ORANGE MUDA) */}
+                    <div className="col-span-2">
                       <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
                         Assy Name (Right)
                       </label>
@@ -1036,21 +1077,33 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy No (Right)
+                        Assy HGS (Right)
                       </label>
                       <input
-                        name="partAssyNumberRight"
-                        value={inputForm.partAssyNumberRight || ""}
+                        name="partAssyHgsRight"
+                        value={inputForm.partAssyHgsRight || ""}
                         onChange={handleInputChange}
                         className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                        placeholder="Assy No (R)"
+                        placeholder="HGS No (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy FG (Right)
+                      </label>
+                      <input
+                        name="partAssyFgRight"
+                        value={inputForm.partAssyFgRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="FG No (R)"
                       />
                     </div>
 
                     {/* PEMISAH LEFT */}
                     <div className="col-span-4 border-t border-yellow-200 my-1"></div>
 
-                    {/* BARIS 4: HGS/FG LEFT (KUNING) */}
+                    {/* BARIS 5: HGS/FG LEFT (KUNING) */}
                     <div>
                       <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
                         HGS No (Left)
@@ -1103,7 +1156,7 @@ function App() {
                     {/* PEMISAH RIGHT */}
                     <div className="col-span-4 border-t border-sky-200 my-1"></div>
 
-                    {/* BARIS 5: HGS/FG RIGHT (BIRU MUDA) */}
+                    {/* BARIS 6: HGS/FG RIGHT (BIRU MUDA) */}
                     <div>
                       <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
                         HGS No (Right)
@@ -1156,7 +1209,7 @@ function App() {
                     {/* PEMISAH UMUM */}
                     <div className="col-span-4 border-t border-gray-200 my-1"></div>
 
-                    {/* BARIS 6: DETAIL LAIN */}
+                    {/* BARIS 7: DETAIL LAIN */}
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
@@ -1242,7 +1295,7 @@ function App() {
                         name="partNoMaterial2"
                         value={inputForm.partNoMaterial2 || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all placeholder:text-gray-300"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all placeholder:text-gray-300"
                         placeholder="Opsional"
                       />
                     </div>
@@ -1435,17 +1488,19 @@ function App() {
                     {/* === HEADER TABEL === */}
                     <thead className="bg-white text-black sticky top-0 z-20 shadow-sm ring-1 ring-black/5">
                       <tr className="uppercase text-xs tracking-wider font-extrabold">
-                        {/* 1. NO (SELALU MUNCUL) */}
+                        {/* 1. NO (SELALU ADA) */}
                         <th className="px-4 py-4 w-12 text-center bg-gray-50 border-b border-gray-200">
                           No
                         </th>
 
-                        {/* 2. IDENTITAS UTAMA (HANYA MUNCUL DI REQ) */}
+                        {/* 2. PART NAME UTAMA (SELALU ADA SEBAGAI KUNCI) */}
+                        <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
+                          Part Name (Key)
+                        </th>
+
+                        {/* 3. HEADER KHUSUS MODE REQ */}
                         {dbTableMode === "REQ" && (
                           <>
-                            <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
-                              Part Name (Utama)
-                            </th>
                             <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
                               Part No (Utama)
                             </th>
@@ -1467,7 +1522,7 @@ function App() {
                           </>
                         )}
 
-                        {/* 3. PART TAG GEN (TIDAK ADA NAMA KHUSUS, PAKAI HGS/FG AJA) */}
+                        {/* 4. HEADER KHUSUS MODE LABEL GEN */}
                         {dbTableMode === "LABEL_GEN" && (
                           <>
                             <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
@@ -1479,43 +1534,52 @@ function App() {
                           </>
                         )}
 
-                        {/* 4. MODE ASSY GEN */}
+                        {/* 5. HEADER KHUSUS MODE ASSY GEN */}
                         {dbTableMode === "LABEL_ASSY_GEN" && (
                           <>
                             <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
                               Assy Name (Gen)
                             </th>
                             <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
-                              Assy No (Gen)
+                              Assy HGS (Gen)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                              Assy FG (Gen)
                             </th>
                           </>
                         )}
 
-                        {/* 5. MODE ASSY LEFT */}
+                        {/* 6. HEADER KHUSUS MODE ASSY LEFT */}
                         {dbTableMode === "LABEL_ASSY_L" && (
                           <>
                             <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
                               Assy Name (L)
                             </th>
                             <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                              Assy No (L)
+                              Assy HGS (L)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy FG (L)
                             </th>
                           </>
                         )}
 
-                        {/* 6. MODE ASSY RIGHT */}
+                        {/* 7. HEADER KHUSUS MODE ASSY RIGHT */}
                         {dbTableMode === "LABEL_ASSY_R" && (
                           <>
                             <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
                               Assy Name (R)
                             </th>
                             <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                              Assy No (R)
+                              Assy HGS (R)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy FG (R)
                             </th>
                           </>
                         )}
 
-                        {/* 7. MODE LEFT (KUNING) */}
+                        {/* 8. HEADER KHUSUS MODE LEFT (KUNING) */}
                         {dbTableMode === "LABEL_L" && (
                           <>
                             <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
@@ -1533,7 +1597,7 @@ function App() {
                           </>
                         )}
 
-                        {/* 8. MODE RIGHT (BIRU) */}
+                        {/* 9. HEADER KHUSUS MODE RIGHT (BIRU) */}
                         {dbTableMode === "LABEL_R" && (
                           <>
                             <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
@@ -1551,8 +1615,7 @@ function App() {
                           </>
                         )}
 
-                        {/* KOLOM UMUM (BERAT & GAMBAR) - KECUALI REQ */}
-                        {/* Karena REQ beratnya sudah di atas, ini untuk mode label saja */}
+                        {/* 10. HEADER UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
                         {dbTableMode !== "REQ" && (
                           <>
                             <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
@@ -1614,17 +1677,19 @@ function App() {
                               key={key}
                               className={`${rowClass} hover:bg-blue-100 transition-colors group`}
                             >
-                              {/* 1. NO */}
+                              {/* 1. NO (SELALU ADA) */}
                               <td className="px-4 py-4 text-center text-black font-bold text-xs">
                                 {index + 1}
                               </td>
 
-                              {/* 2. ISI MODE REQ (ADA UTAMA) */}
+                              {/* 2. PART NAME UTAMA (SELALU ADA SEBAGAI KEY) */}
+                              <td className="px-4 py-4 font-bold text-black">
+                                {item.partName}
+                              </td>
+
+                              {/* 3. BODY MODE REQ */}
                               {dbTableMode === "REQ" && (
                                 <>
-                                  <td className="px-4 py-4 font-bold text-black">
-                                    {item.partName}
-                                  </td>
                                   <td className="px-4 py-4 font-medium text-black">
                                     {item.partNo}
                                   </td>
@@ -1646,11 +1711,11 @@ function App() {
                                 </>
                               )}
 
-                              {/* 3. ISI MODE GEN */}
+                              {/* 4. BODY MODE LABEL GEN */}
                               {dbTableMode === "LABEL_GEN" && (
                                 <>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
-                                    {item.partNo || "-"}
+                                    {item.partNoHgs || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
                                     {item.finishGood || "-"}
@@ -1658,43 +1723,52 @@ function App() {
                                 </>
                               )}
 
-                              {/* 4. ISI MODE ASSY GEN */}
+                              {/* 5. BODY MODE ASSY GEN */}
                               {dbTableMode === "LABEL_ASSY_GEN" && (
                                 <>
                                   <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
                                     {item.partAssyName || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
-                                    {item.partAssyNumber || "-"}
+                                    {item.partAssyHgs || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                    {item.partAssyFg || "-"}
                                   </td>
                                 </>
                               )}
 
-                              {/* 5. ISI MODE ASSY LEFT */}
+                              {/* 6. BODY MODE ASSY LEFT */}
                               {dbTableMode === "LABEL_ASSY_L" && (
                                 <>
                                   <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
                                     {item.partAssyNameLeft || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                    {item.partAssyNumberLeft || "-"}
+                                    {item.partAssyHgsLeft || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyFgLeft || "-"}
                                   </td>
                                 </>
                               )}
 
-                              {/* 6. ISI MODE ASSY RIGHT */}
+                              {/* 7. BODY MODE ASSY RIGHT */}
                               {dbTableMode === "LABEL_ASSY_R" && (
                                 <>
                                   <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
                                     {item.partAssyNameRight || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                    {item.partAssyNumberRight || "-"}
+                                    {item.partAssyHgsRight || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyFgRight || "-"}
                                   </td>
                                 </>
                               )}
 
-                              {/* 7. ISI MODE LEFT */}
+                              {/* 8. BODY MODE LEFT */}
                               {dbTableMode === "LABEL_L" && (
                                 <>
                                   <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
@@ -1712,7 +1786,7 @@ function App() {
                                 </>
                               )}
 
-                              {/* 8. ISI MODE RIGHT */}
+                              {/* 9. BODY MODE RIGHT */}
                               {dbTableMode === "LABEL_R" && (
                                 <>
                                   <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
@@ -1730,7 +1804,7 @@ function App() {
                                 </>
                               )}
 
-                              {/* ISI UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
+                              {/* 10. BODY UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
                               {dbTableMode !== "REQ" && (
                                 <>
                                   <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
