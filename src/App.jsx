@@ -35,10 +35,28 @@ function App() {
   const [inputForm, setInputForm] = useState({
     partName: "",
     partNo: "",
-    partNoHgs: "",
+    // === DATA ASSY (ORANGE) ===
+    partAssyNumber: "", // Assy Gen
+    partAssyName: "", // Assy Gen
+    partAssyNumberLeft: "", // Assy Left (BARU)
+    partAssyNameLeft: "", // Assy Left (BARU)
+    partAssyNumberRight: "", // Assy Right (BARU)
+    partAssyNameRight: "", // Assy Right (BARU)
+
+    // === DATA LEFT/KIRI (KUNING) ===
+    partNoHgsLeft: "",
+    partNameHgsLeft: "",
+    finishGoodLeft: "",
+    finishGoodNameLeft: "",
+
+    // === DATA RIGHT/KANAN (BIRU MUDA) ===
+    partNoHgsRight: "",
+    partNameHgsRight: "",
+    finishGoodRight: "",
+    finishGoodNameRight: "",
+    // ====================================
     color: "",
     weight: "",
-    finishGood: "",
     materialName: "",
     partNoMaterial: "",
     materialName2: "",
@@ -197,9 +215,22 @@ function App() {
       setInputForm({
         partName: "",
         partNo: "",
-        partNoHgs: "",
+        // Reset field baru lengkap
+        partAssyNumber: "",
+        partAssyName: "",
+        partAssyNumberLeft: "",
+        partAssyNameLeft: "",
+        partAssyNumberRight: "",
+        partAssyNameRight: "",
+        partNoHgsLeft: "",
+        partNameHgsLeft: "",
+        finishGoodLeft: "",
+        finishGoodNameLeft: "",
+        partNoHgsRight: "",
+        partNameHgsRight: "",
+        finishGoodRight: "",
+        finishGoodNameRight: "",
         color: "",
-        finishGood: "",
         materialName: "",
         partNoMaterial: "",
         model: "",
@@ -225,9 +256,22 @@ function App() {
     setInputForm({
       partName: "",
       partNo: "",
-      partNoHgs: "",
+      // Reset field baru lengkap
+      partAssyNumber: "",
+      partAssyName: "",
+      partAssyNumberLeft: "",
+      partAssyNameLeft: "",
+      partAssyNumberRight: "",
+      partAssyNameRight: "",
+      partNoHgsLeft: "",
+      partNameHgsLeft: "",
+      finishGoodLeft: "",
+      finishGoodNameLeft: "",
+      partNoHgsRight: "",
+      partNameHgsRight: "",
+      finishGoodRight: "",
+      finishGoodNameRight: "",
       color: "",
-      finishGood: "",
       materialName: "",
       partNoMaterial: "",
       model: "",
@@ -894,21 +938,24 @@ function App() {
               <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-5 mb-8">
                 <div className="grid grid-cols-12 gap-6">
                   {/* --- KOLOM KIRI: DATA TEKS --- */}
+                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
+                  {/* --- KOLOM KIRI: DATA TEKS (Lebar 9/12) --- */}
+                  {/* --- KOLOM KIRI: DATA TEKS --- */}
                   <div className="col-span-9 grid grid-cols-4 gap-4">
-                    {/* BARIS 1: IDENTITAS UTAMA & HGS */}
+                    {/* BARIS 1: PART UTAMA */}
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                        Part Name
+                        Part Name (Utama)
                       </label>
                       <input
                         name="partName"
                         value={inputForm.partName}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
-                        placeholder="Paste Nama Part..."
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+                        placeholder="Nama Part Raw/Material..."
                       />
                     </div>
-                    <div>
+                    <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Part No (Utama)
                       </label>
@@ -916,26 +963,202 @@ function App() {
                         name="partNo"
                         value={inputForm.partNo}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
-                        placeholder="No. System/Material"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                        Part No HGS
-                      </label>
-                      <input
-                        name="partNoHgs"
-                        value={inputForm.partNoHgs || ""}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold  focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all shadow-sm"
-                        placeholder="Untuk Label Tag"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+                        placeholder="No System/Material..."
                       />
                     </div>
 
-                    {/* BARIS 2: BERAT & DETAIL */}
+                    {/* PEMISAH ASSY */}
+                    <div className="col-span-4 border-t border-orange-200 my-1"></div>
+
+                    {/* BARIS 2: ASSY GENERAL (ORANGE) */}
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy Name (Gen)
+                      </label>
+                      <input
+                        name="partAssyName"
+                        value={inputForm.partAssyName || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        placeholder="Nama Assy Umum..."
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy No (Gen)
+                      </label>
+                      <input
+                        name="partAssyNumber"
+                        value={inputForm.partAssyNumber || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        placeholder="No Assy Umum..."
+                      />
+                    </div>
+
+                    {/* BARIS 3: ASSY LEFT & RIGHT (ORANGE MUDA) */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy Name (Left)
+                      </label>
+                      <input
+                        name="partAssyNameLeft"
+                        value={inputForm.partAssyNameLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="Assy Name (L)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy No (Left)
+                      </label>
+                      <input
+                        name="partAssyNumberLeft"
+                        value={inputForm.partAssyNumberLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="Assy No (L)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy Name (Right)
+                      </label>
+                      <input
+                        name="partAssyNameRight"
+                        value={inputForm.partAssyNameRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="Assy Name (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                        Assy No (Right)
+                      </label>
+                      <input
+                        name="partAssyNumberRight"
+                        value={inputForm.partAssyNumberRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        placeholder="Assy No (R)"
+                      />
+                    </div>
+
+                    {/* PEMISAH LEFT */}
+                    <div className="col-span-4 border-t border-yellow-200 my-1"></div>
+
+                    {/* BARIS 4: HGS/FG LEFT (KUNING) */}
+                    <div>
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
+                        HGS No (Left)
+                      </label>
+                      <input
+                        name="partNoHgsLeft"
+                        value={inputForm.partNoHgsLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        placeholder="No HGS (L)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
+                        HGS Name (Left)
+                      </label>
+                      <input
+                        name="partNameHgsLeft"
+                        value={inputForm.partNameHgsLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        placeholder="Nama HGS (L)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
+                        FG No (Left)
+                      </label>
+                      <input
+                        name="finishGoodLeft"
+                        value={inputForm.finishGoodLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        placeholder="No FG (L)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
+                        FG Name (Left)
+                      </label>
+                      <input
+                        name="finishGoodNameLeft"
+                        value={inputForm.finishGoodNameLeft || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        placeholder="Nama FG (L)"
+                      />
+                    </div>
+
+                    {/* PEMISAH RIGHT */}
+                    <div className="col-span-4 border-t border-sky-200 my-1"></div>
+
+                    {/* BARIS 5: HGS/FG RIGHT (BIRU MUDA) */}
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        HGS No (Right)
+                      </label>
+                      <input
+                        name="partNoHgsRight"
+                        value={inputForm.partNoHgsRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        placeholder="No HGS (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        HGS Name (Right)
+                      </label>
+                      <input
+                        name="partNameHgsRight"
+                        value={inputForm.partNameHgsRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        placeholder="Nama HGS (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        FG No (Right)
+                      </label>
+                      <input
+                        name="finishGoodRight"
+                        value={inputForm.finishGoodRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        placeholder="No FG (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        FG Name (Right)
+                      </label>
+                      <input
+                        name="finishGoodNameRight"
+                        value={inputForm.finishGoodNameRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        placeholder="Nama FG (R)"
+                      />
+                    </div>
+
+                    {/* PEMISAH UMUM */}
+                    <div className="col-span-4 border-t border-gray-200 my-1"></div>
+
+                    {/* BARIS 6: DETAIL LAIN */}
+                    <div>
+                      <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
                       </label>
                       <input
@@ -944,7 +1167,7 @@ function App() {
                         step="0.001"
                         value={inputForm.weight}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold  focus:outline-none focus:ring-2 focus:ring-blue-500  bg-white transition-all shadow-sm "
+                        className="w-full border border-emerald-400 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm"
                         placeholder="0.00"
                       />
                     </div>
@@ -956,7 +1179,7 @@ function App() {
                         name="model"
                         value={inputForm.model}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       />
                     </div>
                     <div>
@@ -967,25 +1190,16 @@ function App() {
                         name="color"
                         value={inputForm.color}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                        Finish Good
-                      </label>
-                      <input
-                        name="finishGood"
-                        value={inputForm.finishGood}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
-                      />
+                    <div className="flex items-end">
+                      <span className="text-[10px] text-gray-400 italic">
+                        Input Material di bawah...
+                      </span>
                     </div>
 
-                    {/* PEMISAH */}
-                    <div className="col-span-4 border-t border-gray-200 my-1"></div>
-
-                    {/* BARIS 3: MATERIAL */}
+                    {/* MATERIAL LAMA TETAP SAMA */}
                     <div>
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Mat. Name 1
@@ -1135,27 +1349,82 @@ function App() {
                 </div>
               </div>
 
-              {/* [INSERT TOMBOL DISINI] Tab Switcher */}
-              <div className=" bg-slate-100 p-1.5 rounded-lg my-5 inline-flex border border-slate-200">
+              {/* === TAB SWITCHER === */}
+              <div className="bg-slate-100 p-1.5 rounded-lg my-5 inline-flex flex-wrap gap-1 border border-slate-200">
                 <button
                   onClick={() => setDbTableMode("REQ")}
-                  className={`px-5 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
                     dbTableMode === "REQ"
                       ? "bg-white text-slate-800 ring-1 ring-black/5"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 shadow-none"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                   }`}
                 >
                   REQ MATERIAL
                 </button>
+
                 <button
-                  onClick={() => setDbTableMode("LABEL")}
-                  className={`px-5 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
-                    dbTableMode === "LABEL"
+                  onClick={() => setDbTableMode("LABEL_GEN")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_GEN"
                       ? "bg-white text-slate-800 ring-1 ring-black/5"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 shadow-none"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                   }`}
                 >
-                  Part Tag
+                  Part Tag (Gen)
+                </button>
+
+                {/* ASSY GROUP (ORANGE) */}
+                <button
+                  onClick={() => setDbTableMode("LABEL_ASSY_GEN")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_ASSY_GEN"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Assy Gen
+                </button>
+                <button
+                  onClick={() => setDbTableMode("LABEL_ASSY_L")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_ASSY_L"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Assy L
+                </button>
+                <button
+                  onClick={() => setDbTableMode("LABEL_ASSY_R")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_ASSY_R"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Assy R
+                </button>
+
+                {/* LEFT & RIGHT GROUP */}
+                <button
+                  onClick={() => setDbTableMode("LABEL_L")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_L"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Tag L
+                </button>
+                <button
+                  onClick={() => setDbTableMode("LABEL_R")}
+                  className={`px-4 py-2 text-xs font-bold rounded-md transition-all shadow-sm ${
+                    dbTableMode === "LABEL_R"
+                      ? "bg-white text-slate-800 ring-1 ring-black/5"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  Tag R
                 </button>
               </div>
 
@@ -1163,61 +1432,137 @@ function App() {
               <div className="overflow-hidden border border-black/10 rounded-xl shadow-sm bg-white">
                 <div className="overflow-x-auto h-[500px]">
                   <table className="w-full text-sm text-left border-collapse whitespace-nowrap font-sans">
-                    {/* HEADER (Teks Hitam) */}
+                    {/* === HEADER TABEL === */}
                     <thead className="bg-white text-black sticky top-0 z-20 shadow-sm ring-1 ring-black/5">
                       <tr className="uppercase text-xs tracking-wider font-extrabold">
+                        {/* 1. NO (SELALU MUNCUL) */}
                         <th className="px-4 py-4 w-12 text-center bg-gray-50 border-b border-gray-200">
                           No
                         </th>
-                        <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
-                          Part Name
-                        </th>
-                        <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                          Part No (Utama)
-                        </th>
-                        <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                          Model
-                        </th>
 
-                        {/* MODE REQ */}
+                        {/* 2. IDENTITAS UTAMA (HANYA MUNCUL DI REQ) */}
                         {dbTableMode === "REQ" && (
                           <>
-                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
+                            <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
+                              Part Name (Utama)
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                              Part No (Utama)
+                            </th>
+                            <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
                               Material 1
                             </th>
                             <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
                               No. Mat 1
                             </th>
-                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
+                            <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
                               Material 2
                             </th>
                             <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
                               No. Mat 2
                             </th>
-                            <th className="px-4 py-4 bg-gray-50 border-b  text-center border-l border-gray-200">
-                              Berat (Kg)
+                            <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
+                              Berat
                             </th>
                           </>
                         )}
 
-                        {/* MODE LABEL */}
-                        {dbTableMode === "LABEL" && (
+                        {/* 3. PART TAG GEN (TIDAK ADA NAMA KHUSUS, PAKAI HGS/FG AJA) */}
+                        {dbTableMode === "LABEL_GEN" && (
                           <>
-                            {/* NEW: KOLOM HGS */}
-                            <th className="px-4 py-4 bg-gray-50  border-b border-l border-gray-200">
-                              Part No HGS
+                            <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                              Part No HGS (Gen)
                             </th>
-                            <th className="px-4 py-4 bg-gray-50 border-b  border-l border-gray-200">
-                              Part No FG
+                            <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                              FG (Gen)
                             </th>
-                            <th className="px-4 py-4 bg-gray-50 border-b  text-center border-l border-gray-200">
-                              Berat (Kg)
+                          </>
+                        )}
+
+                        {/* 4. MODE ASSY GEN */}
+                        {dbTableMode === "LABEL_ASSY_GEN" && (
+                          <>
+                            <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                              Assy Name (Gen)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                              Assy No (Gen)
+                            </th>
+                          </>
+                        )}
+
+                        {/* 5. MODE ASSY LEFT */}
+                        {dbTableMode === "LABEL_ASSY_L" && (
+                          <>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy Name (L)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy No (L)
+                            </th>
+                          </>
+                        )}
+
+                        {/* 6. MODE ASSY RIGHT */}
+                        {dbTableMode === "LABEL_ASSY_R" && (
+                          <>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy Name (R)
+                            </th>
+                            <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                              Assy No (R)
+                            </th>
+                          </>
+                        )}
+
+                        {/* 7. MODE LEFT (KUNING) */}
+                        {dbTableMode === "LABEL_L" && (
+                          <>
+                            <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                              HGS Name (Left)
+                            </th>
+                            <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                              HGS No (Left)
+                            </th>
+                            <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                              FG Name (Left)
+                            </th>
+                            <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                              FG No (Left)
+                            </th>
+                          </>
+                        )}
+
+                        {/* 8. MODE RIGHT (BIRU) */}
+                        {dbTableMode === "LABEL_R" && (
+                          <>
+                            <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                              HGS Name (Right)
+                            </th>
+                            <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                              HGS No (Right)
+                            </th>
+                            <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                              FG Name (Right)
+                            </th>
+                            <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                              FG No (Right)
+                            </th>
+                          </>
+                        )}
+
+                        {/* KOLOM UMUM (BERAT & GAMBAR) - KECUALI REQ */}
+                        {/* Karena REQ beratnya sudah di atas, ini untuk mode label saja */}
+                        {dbTableMode !== "REQ" && (
+                          <>
+                            <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
+                              Berat
                             </th>
                             <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
-                              QR Code
+                              QR
                             </th>
                             <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
-                              Foto Part
+                              Foto
                             </th>
                           </>
                         )}
@@ -1228,6 +1573,7 @@ function App() {
                       </tr>
                     </thead>
 
+                    {/* === BODY TABEL === */}
                     <tbody className="divide-y divide-gray-200">
                       {(() => {
                         const filteredData = Object.entries(masterDb)
@@ -1250,15 +1596,14 @@ function App() {
                                 colSpan="12"
                                 className="p-12 text-center text-black italic"
                               >
-                                <div className="mb-2 text-2xl">📂</div>
-                                Belum ada data part yang tersimpan.
+                                <div className="mb-2 text-2xl">📂</div>Belum ada
+                                data part yang tersimpan.
                               </td>
                             </tr>
                           );
                         }
 
                         return filteredData.map(([key, item], index) => {
-                          // Zebra: Ganjil Abu-abu, Genap Putih
                           const isOddRow = index % 2 !== 0;
                           const rowClass = isOddRow
                             ? "bg-gray-100"
@@ -1269,25 +1614,20 @@ function App() {
                               key={key}
                               className={`${rowClass} hover:bg-blue-100 transition-colors group`}
                             >
-                              {/* NO */}
+                              {/* 1. NO */}
                               <td className="px-4 py-4 text-center text-black font-bold text-xs">
                                 {index + 1}
                               </td>
 
-                              {/* UMUM */}
-                              <td className="px-4 py-4 font-bold text-black">
-                                {item.partName}
-                              </td>
-                              <td className="px-4 py-4 font-medium text-black">
-                                {item.partNo}
-                              </td>
-                              <td className="px-4 py-4 text-black">
-                                {item.model}
-                              </td>
-
-                              {/* MODE REQ */}
+                              {/* 2. ISI MODE REQ (ADA UTAMA) */}
                               {dbTableMode === "REQ" && (
                                 <>
+                                  <td className="px-4 py-4 font-bold text-black">
+                                    {item.partName}
+                                  </td>
+                                  <td className="px-4 py-4 font-medium text-black">
+                                    {item.partNo}
+                                  </td>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
                                     {item.materialName || "-"}
                                   </td>
@@ -1301,62 +1641,111 @@ function App() {
                                     {item.partNoMaterial2 || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
-                                    {item.weight ? item.weight : "-"}
+                                    {item.weight || "-"}
                                   </td>
                                 </>
                               )}
 
-                              {/* MODE LABEL */}
-                              {dbTableMode === "LABEL" && (
+                              {/* 3. ISI MODE GEN */}
+                              {dbTableMode === "LABEL_GEN" && (
                                 <>
-                                  {/* NEW: DATA PART NO HGS */}
-                                  <td className="px-4 py-4  font-bold border-l border-purple-100">
-                                    {item.partNoHgs || "-"}
+                                  <td className="px-4 py-4 text-black border-l border-gray-200">
+                                    {item.partNo || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-black border-l border-gray-200">
                                     {item.finishGood || "-"}
                                   </td>
+                                </>
+                              )}
+
+                              {/* 4. ISI MODE ASSY GEN */}
+                              {dbTableMode === "LABEL_ASSY_GEN" && (
+                                <>
+                                  <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                    {item.partAssyName || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                    {item.partAssyNumber || "-"}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* 5. ISI MODE ASSY LEFT */}
+                              {dbTableMode === "LABEL_ASSY_L" && (
+                                <>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyNameLeft || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyNumberLeft || "-"}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* 6. ISI MODE ASSY RIGHT */}
+                              {dbTableMode === "LABEL_ASSY_R" && (
+                                <>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyNameRight || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                    {item.partAssyNumberRight || "-"}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* 7. ISI MODE LEFT */}
+                              {dbTableMode === "LABEL_L" && (
+                                <>
+                                  <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
+                                    {item.partNameHgsLeft || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
+                                    {item.partNoHgsLeft || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black border-l border-yellow-100">
+                                    {item.finishGoodNameLeft || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black border-l border-yellow-100">
+                                    {item.finishGoodLeft || "-"}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* 8. ISI MODE RIGHT */}
+                              {dbTableMode === "LABEL_R" && (
+                                <>
+                                  <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
+                                    {item.partNameHgsRight || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
+                                    {item.partNoHgsRight || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black border-l border-sky-100">
+                                    {item.finishGoodNameRight || "-"}
+                                  </td>
+                                  <td className="px-4 py-4 text-black border-l border-sky-100">
+                                    {item.finishGoodRight || "-"}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* ISI UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
+                              {dbTableMode !== "REQ" && (
+                                <>
                                   <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
-                                    {item.weight ? item.weight : "-"}
+                                    {item.weight || "-"}
                                   </td>
                                   <td className="px-4 py-4 text-center">
                                     {item.qrImage ? (
-                                      <div className="relative group/img inline-block">
-                                        <div className="w-8 h-8 border border-black rounded bg-white p-0.5 cursor-pointer mx-auto">
-                                          <img
-                                            src={item.qrImage}
-                                            className="w-full h-full object-contain"
-                                          />
-                                        </div>
-                                        {/* Hover Preview */}
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/img:block z-50 w-32 bg-white border border-black rounded-lg shadow-xl p-2">
-                                          <img
-                                            src={item.qrImage}
-                                            className="w-full"
-                                          />
-                                        </div>
-                                      </div>
+                                      <span className="text-xs">✅</span>
                                     ) : (
                                       "-"
                                     )}
                                   </td>
                                   <td className="px-4 py-4 text-center">
                                     {item.partImage ? (
-                                      <div className="relative group/img inline-block">
-                                        <div className="w-8 h-8 border border-black rounded bg-white p-0.5 cursor-pointer mx-auto">
-                                          <img
-                                            src={item.partImage}
-                                            className="w-full h-full object-contain"
-                                          />
-                                        </div>
-                                        {/* Hover Preview */}
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/img:block z-50 w-40 bg-white border border-black rounded-lg shadow-xl p-2">
-                                          <img
-                                            src={item.partImage}
-                                            className="w-full rounded"
-                                          />
-                                        </div>
-                                      </div>
+                                      <span className="text-xs">✅</span>
                                     ) : (
                                       "-"
                                     )}
@@ -1991,8 +2380,6 @@ function App() {
       <style>{`
         /* 1. IMPORT FONT WORK SANS DARI GOOGLE */
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
-
-        /* 2. TERAPKAN KE SELURUH ELEMEN APLIKASI */
         body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, span, div {
           font-family: 'Work Sans', sans-serif !important;
         }
@@ -2004,9 +2391,7 @@ function App() {
           float: none !important;
         }
 
-        /* === 3. LOGIKA PRINT DINAMIS === */
         @media print {
-          /* ATUR KERTAS BERDASARKAN printType */
           @page { 
             /* Jika printType = REQ maka Landscape, Jika LABEL maka Portrait */
             size: A4 ${printType === "REQ" ? "landscape" : "portrait"}; 
@@ -2015,8 +2400,6 @@ function App() {
           
           body { -webkit-print-color-adjust: exact; }
           .page-break-inside-avoid { page-break-inside: avoid; }
-
-          /* KHUSUS REQ (Landscape 3 Kolom) */
           ${
             printType === "REQ"
               ? `
@@ -2029,7 +2412,6 @@ function App() {
               : ""
           }
 
-          /* KHUSUS LABEL (Portrait 2 Kolom) */
           ${
             printType === "LABEL"
               ? `
