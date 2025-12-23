@@ -18,6 +18,7 @@ function App() {
   const [editingKey, setEditingKey] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [viewMode, setViewMode] = useState("scan");
   const [dbTableMode, setDbTableMode] = useState("REQ");
 
@@ -96,7 +97,6 @@ function App() {
 
     fetchData();
   }, []);
-
 
   // === HELPER: BERSIHKAN KEY (Ganti / jadi _ agar Database terima) ===
   const generateKey = (name) => {
@@ -809,9 +809,9 @@ function App() {
   //   setPrintData(labels);
   // };
 
-  // === 6. PRINT ENGINE 2: LABEL (INPUT DB) ===
-  const handlePrintLabel = (item) => {
-    // Cari Data DB pakai Key Aman (_)
+  // === 6. PRINT ENGINE 2: LABEL (SELECTOR LOGIC) ===
+  const handlePrintLabel = (item, type) => {
+    // 1. Cari Data DB
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey];
 
@@ -820,6 +820,63 @@ function App() {
       return;
     }
 
+    // 2. Tentukan Data Berdasarkan Tipe Pilihan
+    let targetName = "";
+    let targetHgs = "";
+    let targetFg = "";
+
+    switch (type) {
+      case "GEN": // Part Tag (General)
+        targetName = extraData.partName; // Nama Utama
+        targetHgs = extraData.partNoHgs; // HGS General
+        targetFg = extraData.finishGood; // FG General
+        break;
+
+      case "ASSY_GEN": // Assy General
+        targetName = extraData.partAssyName;
+        targetHgs = extraData.partAssyHgs;
+        targetFg = extraData.partAssyFg;
+        break;
+
+      case "ASSY_L": // Assy Left
+        targetName = extraData.partAssyNameLeft;
+        targetHgs = extraData.partAssyHgsLeft;
+        targetFg = extraData.partAssyFgLeft;
+        break;
+
+      case "ASSY_R": // Assy Right
+        targetName = extraData.partAssyNameRight;
+        targetHgs = extraData.partAssyHgsRight;
+        targetFg = extraData.partAssyFgRight;
+        break;
+
+      case "TAG_L": // Tag Left (Material HGS)
+        targetName = extraData.partNameHgsLeft;
+        targetHgs = extraData.partNoHgsLeft;
+        targetFg = extraData.finishGoodLeft;
+        break;
+
+      case "TAG_R": // Tag Right (Material HGS)
+        targetName = extraData.partNameHgsRight;
+        targetHgs = extraData.partNoHgsRight;
+        targetFg = extraData.finishGoodRight;
+        break;
+
+      default:
+        return;
+    }
+
+    // Validasi Sederhana: Kalau data kosong, peringatkan (Opsional)
+    if (!targetName && !targetHgs) {
+      if (
+        !window.confirm(
+          `Data untuk tipe ${type} kosong/belum diinput. Tetap print?`
+        )
+      )
+        return;
+    }
+
+    // 3. Generate Labels
     const totalQty = item.totalQty;
     const totalBox = Math.ceil(totalQty / 13) || 1;
     const labels = [];
@@ -829,15 +886,15 @@ function App() {
       const currentQty = Math.min(13, remaining);
       labels.push({
         machine: item.machine,
-        // Data dari DB (Masih asli ada /)
-        partName: extraData.partName,
-        partNo: extraData.partNo,
-        color: extraData.color,
-        hgs: extraData.partNoHgs,
-        fg: extraData.finishGood,
-        material: extraData.materialName,
+
+        // MAPPING DATA DINAMIS DISINI
+        partName: targetName || extraData.partName, // Fallback ke nama utama kalau kosong
+        hgs: targetHgs || "-",
+        fg: targetFg || "-",
+
+        // Data Pendukung Tetap
+        partNo: extraData.partNo, // System No (tetap yang utama)
         model: extraData.model,
-        matNo: extraData.partNoMaterial,
         qr: extraData.qrImage,
         img: extraData.partImage,
 
@@ -848,6 +905,8 @@ function App() {
       remaining -= currentQty;
     }
 
+    // 4. Tutup Dropdown & Set Print
+    setActiveDropdown(null);
     setPrintType("LABEL");
     setPrintData(labels);
   };
@@ -2031,12 +2090,20 @@ function App() {
                                       >
                                         📄 REQ
                                       </button>
-                                      <button
-                                        onClick={() => handlePrintLabel(item)}
-                                        className="bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 text-[10px] font-bold py-1.5 px-2 rounded shadow-sm flex items-center gap-1"
-                                      >
-                                        🏷️ LABEL
-                                      </button>
+                                      {/* === DROPDOWN PRINT LABEL (FIX Z-INDEX) === */}
+                                      <div className="relative inline-block text-left">
+                                        {/* === TOMBOL PEMBUKA MENU PRINT === */}
+                                        <div className="flex justify-center">
+                                          <button
+                                            onClick={() =>
+                                              setActiveDropdown(item.id)
+                                            } // Simpan ID item yang diklik
+                                            className="bg-blue-50 border border-blue-200 hover:bg-blue-600 hover:text-white text-blue-700 text-[10px] font-bold py-1.5 px-3 rounded shadow-sm flex items-center gap-1 transition-all"
+                                          >
+                                            🏷️ LABEL
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
                                   </td>
                                 </tr>
@@ -2451,6 +2518,155 @@ function App() {
         )}
       </div>
 
+      {/* ================================================================= */}
+      {/* === MODAL POPUP PRINT MENU (ANTI KETUTUPAN TABEL) === */}
+      {/* ================================================================= */}
+      {activeDropdown && (
+        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all">
+          {/* Kotak Menu Putih */}
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100 ring-1 ring-gray-200">
+            {/* Header Menu */}
+            <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  Pilih Tipe Label
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Part:{" "}
+                  <span className="font-bold text-blue-600">
+                    {/* Ambil Nama Part dari ID yang aktif */}
+                    {dataMaterial.find((d) => d.id === activeDropdown)
+                      ?.partName || "Item"}
+                  </span>
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveDropdown(null)}
+                className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Isi Pilihan Menu */}
+            <div className="p-2 grid gap-1 max-h-[60vh] overflow-y-auto">
+              {/* 1. GENERAL */}
+              <button
+                onClick={() => {
+                  const item = dataMaterial.find(
+                    (d) => d.id === activeDropdown
+                  );
+                  handlePrintLabel(item, "GEN");
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-slate-50 rounded-xl group transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-lg group-hover:bg-white group-hover:shadow-sm">
+                  🏷️
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-slate-700">
+                    Part Tag General
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    Label standar tanpa spesifikasi
+                  </div>
+                </div>
+              </button>
+
+              <div className="border-t border-dashed border-slate-200 my-1 mx-4"></div>
+
+              {/* 2. ASSY GROUP */}
+              <div className="grid grid-cols-1 gap-1">
+                <button
+                  onClick={() => {
+                    const item = dataMaterial.find(
+                      (d) => d.id === activeDropdown
+                    );
+                    handlePrintLabel(item, "ASSY_GEN");
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-2.5 text-left hover:bg-orange-50 rounded-xl group transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold">
+                    📦
+                  </div>
+                  <div className="text-sm font-bold text-slate-700 group-hover:text-orange-700">
+                    Assy General
+                  </div>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2 px-2">
+                  <button
+                    onClick={() => {
+                      const item = dataMaterial.find(
+                        (d) => d.id === activeDropdown
+                      );
+                      handlePrintLabel(item, "ASSY_L");
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-50/50 hover:bg-orange-100 text-orange-800 rounded-lg text-xs font-bold border border-orange-100 transition-colors"
+                  >
+                    ⬅️ Assy Left
+                  </button>
+                  <button
+                    onClick={() => {
+                      const item = dataMaterial.find(
+                        (d) => d.id === activeDropdown
+                      );
+                      handlePrintLabel(item, "ASSY_R");
+                    }}
+                    className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-50/50 hover:bg-orange-100 text-orange-800 rounded-lg text-xs font-bold border border-orange-100 transition-colors"
+                  >
+                    Assy Right ➡️
+                  </button>
+                </div>
+              </div>
+
+              <div className="border-t border-dashed border-slate-200 my-1 mx-4"></div>
+
+              {/* 3. PART TAG SPECIFIC (L/R) */}
+              <div className="grid grid-cols-2 gap-2 px-2 pb-2">
+                <button
+                  onClick={() => {
+                    const item = dataMaterial.find(
+                      (d) => d.id === activeDropdown
+                    );
+                    handlePrintLabel(item, "TAG_L");
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 px-3 py-3 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-300 border border-transparent rounded-xl transition-all"
+                >
+                  <span className="text-xl">🟡</span>
+                  <span className="text-xs font-bold text-yellow-800">
+                    Tag Left (L)
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    const item = dataMaterial.find(
+                      (d) => d.id === activeDropdown
+                    );
+                    handlePrintLabel(item, "TAG_R");
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 px-3 py-3 bg-sky-50 hover:bg-sky-100 hover:border-sky-300 border border-transparent rounded-xl transition-all"
+                >
+                  <span className="text-xl">🔵</span>
+                  <span className="text-xs font-bold text-sky-800">
+                    Tag Right (R)
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer Batal */}
+            <div className="bg-gray-50 p-2 border-t border-gray-100">
+              <button
+                onClick={() => setActiveDropdown(null)}
+                className="w-full py-2 text-xs font-bold text-gray-500 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`
         /* 1. IMPORT FONT WORK SANS DARI GOOGLE */
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
