@@ -288,7 +288,6 @@ function App() {
       partNameHgsRight: "",
       finishGoodRight: "",
       finishGoodNameRight: "",
-
       color: "",
       materialName: "",
       partNoMaterial: "",
@@ -526,44 +525,7 @@ function App() {
     return results;
   };
 
-  // === 3. AGGREGASI ===
-  // const aggregateData = (rawData) => {
-  //   const grouped = {};
-  //   rawData.forEach((item) => {
-  //     const key = `${item.machine}__${item.partName}`;
-  //     if (!grouped[key]) {
-  //       grouped[key] = {
-  //         machine: item.machine,
-  //         no: item.no,
-  //         partName: item.partName,
-  //         partNo: item.partNo,
-  //         totalRawSak: 0,
-  //         totalRawKg: 0,
-  //       };
-  //     }
-  //     grouped[key].totalRawSak += item.rawSak;
-  //     grouped[key].totalRawKg += item.rawKg;
-  //   });
-
-  //   return Object.values(grouped).map((item) => {
-  //     const totalQty = Math.ceil(item.totalRawSak);
-  //     const jmlLabel = Math.ceil(totalQty / 13);
-  //     return {
-  //       id: Math.random().toString(36),
-  //       machine: item.machine,
-  //       no: item.no,
-  //       partName: item.partName,
-  //       partNo: item.partNo,
-  //       inputSak: item.totalRawSak,
-  //       inputKg: item.totalRawKg,
-  //       totalQty: totalQty,
-  //       jmlLabel: jmlLabel,
-  //       recycleInput: 0,
-  //     };
-  //   });
-  // };
-
-  // === 3. AGGREGASI: FINAL (PLAN HITUNGAN + SAK BULAT KE ATAS) ===
+  // === 3. AGGREGASI: (PLAN HITUNGAN + SAK BULAT KE ATAS) ===
   const aggregateData = (rawData) => {
     // A. Grouping Data
     const grouped = {};
@@ -1016,7 +978,7 @@ function App() {
                 <div className="grid grid-cols-12 gap-6">
                   {/* --- KOLOM KIRI: DATA TEKS --- */}
                   <div className="col-span-9 grid grid-cols-4 gap-4">
-                    {/* BARIS 1: PART UTAMA */}
+                    {/* BARIS 1: PART UTAMA (DEFAULT) */}
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Part Name (Utama)
@@ -1042,125 +1004,116 @@ function App() {
                       />
                     </div>
 
-                    {/* PEMISAH ASSY */}
-                    <div className="col-span-4 border-t border-orange-200 my-1"></div>
+                    {/* PEMISAH HGS GEN */}
+                    <div className="col-span-4 border-t border-gray-200 my-1"></div>
 
-                    {/* BARIS 2: ASSY GENERAL (ORANGE) */}
+                    {/* BARIS 2: PART TAG GENERAL (DEFAULT) */}
                     <div className="col-span-2">
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Part No HGS (Gen)
+                      </label>
+                      <input
+                        name="partNoHgs"
+                        value={inputForm.partNoHgs || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+                        placeholder="No HGS Umum..."
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                        Part No FG (Gen)
+                      </label>
+                      <input
+                        name="finishGood"
+                        value={inputForm.finishGood || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
+                        placeholder="No FG Umum..."
+                      />
+                    </div>
+
+                    {/* PEMISAH ASSY */}
+                    <div className="col-span-4 border-t border-gray-200 my-1"></div>
+
+                    {/* BARIS 3: ASSY GENERAL (DEFAULT) */}
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Assy Name (Gen)
                       </label>
                       <input
                         name="partAssyName"
                         value={inputForm.partAssyName || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
                         placeholder="Nama Assy Umum..."
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Assy HGS (Gen)
                       </label>
                       <input
                         name="partAssyHgs"
                         value={inputForm.partAssyHgs || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
                         placeholder="No HGS..."
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                         Assy FG (Gen)
                       </label>
                       <input
                         name="partAssyFg"
                         value={inputForm.partAssyFg || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
                         placeholder="No FG..."
                       />
                     </div>
 
-                    {/* BARIS 3: ASSY LEFT (ORANGE MUDA) */}
+                    {/* PEMISAH ASSY LEFT */}
+                    <div className="col-span-4 border-t border-yellow-200 my-1"></div>
+
+                    {/* BARIS 4: ASSY LEFT (KUNING) */}
                     <div className="col-span-2">
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
                         Assy Name (Left)
                       </label>
                       <input
                         name="partAssyNameLeft"
                         value={inputForm.partAssyNameLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="Assy Name (L)"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
                         Assy HGS (Left)
                       </label>
                       <input
                         name="partAssyHgsLeft"
                         value={inputForm.partAssyHgsLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="HGS No (L)"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
+                      <label className="block text-xs font-bold text-yellow-700 uppercase mb-1">
                         Assy FG (Left)
                       </label>
                       <input
                         name="partAssyFgLeft"
                         value={inputForm.partAssyFgLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="FG No (L)"
                       />
                     </div>
-
-                    {/* BARIS 4: ASSY RIGHT (ORANGE MUDA) */}
-                    <div className="col-span-2">
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy Name (Right)
-                      </label>
-                      <input
-                        name="partAssyNameRight"
-                        value={inputForm.partAssyNameRight || ""}
-                        onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                        placeholder="Assy Name (R)"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy HGS (Right)
-                      </label>
-                      <input
-                        name="partAssyHgsRight"
-                        value={inputForm.partAssyHgsRight || ""}
-                        onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                        placeholder="HGS No (R)"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-orange-600 uppercase mb-1">
-                        Assy FG (Right)
-                      </label>
-                      <input
-                        name="partAssyFgRight"
-                        value={inputForm.partAssyFgRight || ""}
-                        onChange={handleInputChange}
-                        className="w-full border border-orange-300 rounded-lg px-3 py-2 text-sm font-bold text-orange-700 bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
-                        placeholder="FG No (R)"
-                      />
-                    </div>
-
-                    {/* PEMISAH LEFT */}
-                    <div className="col-span-4 border-t border-yellow-200 my-1"></div>
 
                     {/* BARIS 5: HGS/FG LEFT (KUNING) */}
                     <div>
@@ -1171,7 +1124,7 @@ function App() {
                         name="partNoHgsLeft"
                         value={inputForm.partNoHgsLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="No HGS (L)"
                       />
                     </div>
@@ -1183,7 +1136,7 @@ function App() {
                         name="partNameHgsLeft"
                         value={inputForm.partNameHgsLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="Nama HGS (L)"
                       />
                     </div>
@@ -1195,7 +1148,7 @@ function App() {
                         name="finishGoodLeft"
                         value={inputForm.finishGoodLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="No FG (L)"
                       />
                     </div>
@@ -1207,15 +1160,53 @@ function App() {
                         name="finishGoodNameLeft"
                         value={inputForm.finishGoodNameLeft || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm"
+                        className="w-full border border-yellow-400 rounded-lg px-3 py-2 text-sm font-bold text-yellow-900 bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 shadow-sm placeholder:text-yellow-700/50"
                         placeholder="Nama FG (L)"
                       />
                     </div>
 
-                    {/* PEMISAH RIGHT */}
+                    {/* PEMISAH ASSY RIGHT */}
                     <div className="col-span-4 border-t border-sky-200 my-1"></div>
 
-                    {/* BARIS 6: HGS/FG RIGHT (BIRU MUDA) */}
+                    {/* BARIS 6: ASSY RIGHT (BIRU MUDA/SKY) */}
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        Assy Name (Right)
+                      </label>
+                      <input
+                        name="partAssyNameRight"
+                        value={inputForm.partAssyNameRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
+                        placeholder="Assy Name (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        Assy HGS (Right)
+                      </label>
+                      <input
+                        name="partAssyHgsRight"
+                        value={inputForm.partAssyHgsRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
+                        placeholder="HGS No (R)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
+                        Assy FG (Right)
+                      </label>
+                      <input
+                        name="partAssyFgRight"
+                        value={inputForm.partAssyFgRight || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
+                        placeholder="FG No (R)"
+                      />
+                    </div>
+
+                    {/* BARIS 7: HGS/FG RIGHT (BIRU MUDA/SKY) */}
                     <div>
                       <label className="block text-xs font-bold text-sky-700 uppercase mb-1">
                         HGS No (Right)
@@ -1224,7 +1215,7 @@ function App() {
                         name="partNoHgsRight"
                         value={inputForm.partNoHgsRight || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
                         placeholder="No HGS (R)"
                       />
                     </div>
@@ -1236,7 +1227,7 @@ function App() {
                         name="partNameHgsRight"
                         value={inputForm.partNameHgsRight || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
                         placeholder="Nama HGS (R)"
                       />
                     </div>
@@ -1248,7 +1239,7 @@ function App() {
                         name="finishGoodRight"
                         value={inputForm.finishGoodRight || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
                         placeholder="No FG (R)"
                       />
                     </div>
@@ -1260,7 +1251,7 @@ function App() {
                         name="finishGoodNameRight"
                         value={inputForm.finishGoodNameRight || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"
+                        className="w-full border border-sky-400 rounded-lg px-3 py-2 text-sm font-bold text-sky-900 bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm placeholder:text-sky-700/50"
                         placeholder="Nama FG (R)"
                       />
                     </div>
@@ -1268,7 +1259,7 @@ function App() {
                     {/* PEMISAH UMUM */}
                     <div className="col-span-4 border-t border-gray-200 my-1"></div>
 
-                    {/* BARIS 7: DETAIL LAIN */}
+                    {/* BARIS 8: DETAIL LAIN (DEFAULT) */}
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
                         Berat (Kg)
@@ -1342,7 +1333,7 @@ function App() {
                         name="materialName2"
                         value={inputForm.materialName2 || ""}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-all placeholder:text-gray-300"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all placeholder:text-gray-300"
                         placeholder="Opsional"
                       />
                     </div>
@@ -2518,9 +2509,7 @@ function App() {
         )}
       </div>
 
-      {/* ================================================================= */}
-      {/* === MODAL POPUP PRINT MENU (ANTI KETUTUPAN TABEL) === */}
-      {/* ================================================================= */}
+      {/* POP UP PART TAG */}
       {activeDropdown && (
         <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all">
           {/* Kotak Menu Putih */}
