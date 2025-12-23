@@ -1989,38 +1989,58 @@ function App() {
       </div>
 
       <style>{`
-/* 1. IMPORT FONT WORK SANS DARI GOOGLE */
+        /* 1. IMPORT FONT WORK SANS DARI GOOGLE */
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
 
         /* 2. TERAPKAN KE SELURUH ELEMEN APLIKASI */
         body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, span, div {
           font-family: 'Work Sans', sans-serif !important;
         }
+        
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress { animation: progress 1.5s infinite linear; }
-        @media print {
-          @page { size: A4 landscape; margin: 5mm; }
-          .print\\:grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
-          body { -webkit-print-color-adjust: exact; }
+        
+        div {
+          float: none !important;
         }
-          div {
-            float: none !important;
-          }
 
-
+        /* === 3. LOGIKA PRINT DINAMIS === */
         @media print {
-          /* Margin 5mm */
-          @page { size: A4 portrait; margin: 5mm; } 
-          
-          /* Grid 2 Kolom dengan Gap 2mm */
-          .print\\:grid-cols-2 { 
-             display: grid; 
-             grid-template-columns: repeat(2, 1fr); 
-             gap: 2mm; /* Ini kuncinya */
+          /* ATUR KERTAS BERDASARKAN printType */
+          @page { 
+            /* Jika printType = REQ maka Landscape, Jika LABEL maka Portrait */
+            size: A4 ${printType === "REQ" ? "landscape" : "portrait"}; 
+            margin: 5mm; 
           }
           
           body { -webkit-print-color-adjust: exact; }
           .page-break-inside-avoid { page-break-inside: avoid; }
+
+          /* KHUSUS REQ (Landscape 3 Kolom) */
+          ${
+            printType === "REQ"
+              ? `
+            .print\\:grid-cols-3 { 
+              display: grid; 
+              grid-template-columns: repeat(3, 1fr); 
+              gap: 5mm; 
+            }
+          `
+              : ""
+          }
+
+          /* KHUSUS LABEL (Portrait 2 Kolom) */
+          ${
+            printType === "LABEL"
+              ? `
+            .print\\:grid-cols-2 { 
+               display: grid; 
+               grid-template-columns: repeat(2, 1fr); 
+               gap: 2mm; 
+            }
+          `
+              : ""
+          }
         }
       `}</style>
     </div>
