@@ -36,8 +36,8 @@ function App() {
   const [inputForm, setInputForm] = useState({
     partName: "",
     partNo: "",
-    // === DATA ASSY (ORANGE - UPDATED) ===
-
+    weight: "",
+    stdQty: "",
     partNameHgs: "",
     partNoHgs: "",
     finishGood: "",
@@ -181,7 +181,9 @@ function App() {
       setInputForm({
         partName: "",
         partNo: "",
-        partNameHgs: "", // <--- Reset ini juga
+        weight: "",
+        stdQty: "",
+        partNameHgs: "",
         partNoHgs: "",
         finishGood: "",
         // Reset Assy Lengkap
@@ -236,6 +238,8 @@ function App() {
     setInputForm({
       partName: "",
       partNo: "",
+      weight: "",
+      stdQty: "",
       partNameHgs: "", // <--- Reset ini juga
       partNoHgs: "",
       finishGood: "",
@@ -702,43 +706,7 @@ function App() {
     setPrintData(allLabelsAccumulated);
   };
 
-  // === 6. PRINT ENGINE 2: LABEL (INPUT DB) ===
-  // const handlePrintLabel = (item) => {
-  //   const dbKey = item.partName.trim().toUpperCase();
-  //   const extraData = masterDb[dbKey];
-
-  //   if (!extraData) {
-  //     alert("Data Part ini belum diinput di menu INPUT! Silakan input dulu.");
-  //     return;
-  //   }
-
-  //   const totalQty = item.totalQty;
-  //   const totalBox = Math.ceil(totalQty / 13) || 1;
-  //   const labels = [];
-  //   let remaining = totalQty;
-
-  //   for (let i = 1; i <= totalBox; i++) {
-  //     const currentQty = Math.min(13, remaining);
-  //     labels.push({
-  //       machine: item.machine,
-  //       partName: extraData.partName,
-  //       partNo: extraData.partNo,
-  //       color: extraData.color,
-  //       hgs: extraData.partNoHgs,
-  //       fg: extraData.finishGood,
-  //       material: extraData.materialName,
-  //       model: extraData.model,
-  //       qty: currentQty,
-  //       boxKe: i,
-  //       totalBox: totalBox,
-  //     });
-  //     remaining -= currentQty;
-  //   }
-
-  //   setPrintType("LABEL");
-  //   setPrintData(labels);
-  // };
-
+  
   // === 6. PRINT ENGINE 2: LABEL (SELECTOR LOGIC) ===
   const handlePrintLabel = (item, type) => {
     // 1. Cari Data DB
@@ -807,33 +775,45 @@ function App() {
         return;
     }
 
-    // 3. Generate Labels
-    const totalQty = item.totalQty;
-    const totalBox = Math.ceil(totalQty / 13) || 1;
+    // 3. Generate Labels (LOGIC: ALWAYS STD PACK / FLAT QTY)
+
+    // Ambil Plan
+    const totalQtyPlan = parseInt(item.inputPlan) || 0; // Contoh: 300
+
+    // Ambil Std Qty (Jika kosong default 1)
+    const stdPack = parseInt(extraData.stdQty) || 1; // Contoh: 45
+
+    // Hitung Jumlah Kartu yang dibutuhkan
+    // 300 / 45 = 6.66 -> Dibulatkan ke atas jadi 7 Kartu
+    const totalBox = Math.ceil(totalQtyPlan / stdPack) || 1;
+
     const labels = [];
-    let remaining = totalQty;
 
     for (let i = 1; i <= totalBox; i++) {
-      const currentQty = Math.min(13, remaining);
+      // LOGIC BARU:
+      // Qty yang diprint SELALU SAMA dengan Qty/Box (Std Pack).
+      // Tidak peduli itu kartu terakhir atau bukan, nilainya tetap 45.
+      const currentQty = stdPack;
+
       labels.push({
         machine: item.machine,
 
-        // MAPPING DATA DINAMIS DISINI
-        partName: targetName || "-", // Fallback ke nama utama kalau kosong
+        // Data Dinamis
+        partName: targetName || "-",
         hgs: targetHgs || "-",
         fg: targetFg || "-",
 
-        // Data Pendukung Tetap
-        partNo: extraData.partNo, // System No (tetap yang utama)
+        // Data Master
+        partNo: extraData.partNo,
         model: extraData.model,
         qr: extraData.qrImage,
         img: extraData.partImage,
 
-        qty: currentQty,
+        // Data Hitungan
+        qty: currentQty, // Selalu 45 (Sesuai request)
         boxKe: i,
         totalBox: totalBox,
       });
-      remaining -= currentQty;
     }
 
     // 4. Tutup Dropdown & Set Print
@@ -1312,6 +1292,19 @@ function App() {
                       />
                     </div>
                     <div>
+                      <label className="block text-xs font-bold text-indigo-700 uppercase mb-1">
+                        Qty / Box (Std)
+                      </label>
+                      <input
+                        name="stdQty"
+                        type="number"
+                        value={inputForm.stdQty || ""}
+                        onChange={handleInputChange}
+                        className="w-full border border-indigo-400 rounded-lg px-3 py-2 text-sm font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm"
+                        placeholder="Cth: 45"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                         Model
                       </label>
@@ -1641,6 +1634,9 @@ function App() {
                         {/* 10. HEADER UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
                         {dbTableMode !== "REQ" && (
                           <>
+                            <th className="px-4 py-4 bg-indigo-50 text-indigo-900 border-b border-l border-indigo-200 text-center w-24">
+                              Qty/Box
+                            </th>
                             <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
                               Berat
                             </th>
@@ -1833,6 +1829,9 @@ function App() {
                               {/* 10. BODY UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
                               {dbTableMode !== "REQ" && (
                                 <>
+                                  <td className="px-4 py-4 text-center font-black text-indigo-700 border-l border-indigo-100 bg-indigo-50/30 text-lg">
+                                    {item.stdQty || "-"}
+                                  </td>
                                   <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
                                     {item.weight || "-"}
                                   </td>
