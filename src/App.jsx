@@ -2331,10 +2331,13 @@ function App() {
               {printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-5 grid-rows-[0.6fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border page-break-inside-avoid"
+                  // PERUBAHAN BESAR DI SINI:
+                  // grid-rows-[1.4fr_...] -> Baris pertama dibuat SANGAT TINGGI (1.4 banding 1)
+                  // Sisanya tetap 1fr biar tidak gepeng
+                  className="grid grid-cols-5 grid-rows-[1.4fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border page-break-inside-avoid"
                   style={{ width: "100%", height: "54mm" }}
                 >
-                  {/* ================= BARIS 1 (Header) ================= */}
+                  {/* ================= BARIS 1 (Header - SUPER LEGA) ================= */}
 
                   {/* LOGO VUTEQ */}
                   <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
@@ -2347,36 +2350,36 @@ function App() {
 
                   {/* PART TAG */}
                   <div className="col-start-2 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5">
-                    <span className="font-bold text-[8px] text-black px-1.5 py-0.5 rounded-sm">
+                    {/* Saya besarkan font-nya dikit jadi text-[9px] biar imbang sama kotak yg gede */}
+                    <span className="font-bold text-[9px] text-black px-1 py-0.5 text-center leading-tight">
                       PART TAG
                     </span>
                   </div>
 
                   {/* MODEL */}
                   <div className="col-start-3 col-span-2 row-start-1 border-r border-b border-black flex flex-col items-center justify-center p-0.5">
-                    <span className="text-[6px] font-bold">MODEL</span>
-                    <span className="font-black text-sm uppercase">
+                    <span className="text-[7px] font-bold">MODEL</span>
+                    {/* Font Model dibesarkan jadi text-base (16px) biar makin jelas */}
+                    <span className="font-black text-base uppercase">
                       {lbl.model}
                     </span>
                   </div>
 
-                  {/* QR / BOX */}
-                  <div className="col-start-5 row-start-1 border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
+                  {/* QR / BOX (YANG JADI UTAMA) */}
+                  <div className="col-start-5 row-start-1 border-b border-black flex items-center justify-center p-0 overflow-hidden bg-white">
                     {lbl.qr ? (
                       <img
                         src={lbl.qr}
                         alt="QR"
-                        // Ganti Style jadi responsif tapi dibatasi ukurannya
                         className="object-contain"
+                        // Wajib 95% - 100% biar dia menuhin ruangan barunya yg lega
                         style={{
-                          maxWidth: "100%", // Biar gak nabrak pinggir
-                          maxHeight: "100%", // Biar gak nabrak atas-bawah
-                          width: "50px", // Ukuran ideal (lebih kecil dari 68px tadi)
-                          height: "auto", // Tinggi menyesuaikan
+                          width: "95%",
+                          height: "95%",
                         }}
                       />
                     ) : (
-                      <span className="text-[8px]">-</span>
+                      <span className="text-[10px]">-</span>
                     )}
                   </div>
 
