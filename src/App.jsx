@@ -816,8 +816,7 @@ function App() {
     setPrintData(allLabelsAccumulated);
   };
 
-  
-  // === 6. PRINT ENGINE 2: LABEL (SELECTOR LOGIC) ===
+  // === 6. PRINT ENGINE 2: LABEL (SELECTOR LOGIC - UPDATED IMAGE) ===
   const handlePrintLabel = (item, type) => {
     // 1. Cari Data DB
     const dbKey = generateKey(item.partName);
@@ -829,98 +828,104 @@ function App() {
     }
 
     // 2. Tentukan Data Berdasarkan Tipe Pilihan
+    // Siapkan variable penampung (Text & Gambar)
     let targetName = "";
     let targetHgs = "";
     let targetFg = "";
+    let targetQr = ""; // <--- VARIABLE BARU
+    let targetImg = ""; // <--- VARIABLE BARU
 
     switch (type) {
       case "GEN": // Part Tag (General)
-        // Ambil dari variable khusus General (HGS)
         targetName = extraData.partNameHgs;
         targetHgs = extraData.partNoHgs;
         targetFg = extraData.finishGood;
+        // Ambil Gambar General / HGS
+        targetQr = extraData.qrHgs;
+        targetImg = extraData.imgHgs;
         break;
 
       case "ASSY_GEN": // Assy General
         targetName = extraData.partAssyName;
         targetHgs = extraData.partAssyHgs;
         targetFg = extraData.partAssyFg;
+        // Ambil Gambar Assy Gen
+        targetQr = extraData.qrAssy;
+        targetImg = extraData.imgAssy;
         break;
 
       case "ASSY_L": // Assy Left
         targetName = extraData.partAssyNameLeft;
         targetHgs = extraData.partAssyHgsLeft;
         targetFg = extraData.partAssyFgLeft;
+        // Ambil Gambar Assy Left
+        targetQr = extraData.qrAssyL;
+        targetImg = extraData.imgAssyL;
         break;
 
       case "ASSY_R": // Assy Right
         targetName = extraData.partAssyNameRight;
         targetHgs = extraData.partAssyHgsRight;
         targetFg = extraData.partAssyFgRight;
+        // Ambil Gambar Assy Right
+        targetQr = extraData.qrAssyR;
+        targetImg = extraData.imgAssyR;
         break;
 
-      case "TAG_L": // Tag Left (Material HGS)
+      case "TAG_L": // Tag Left
         targetName = extraData.partNameHgsLeft;
         targetHgs = extraData.partNoHgsLeft;
         targetFg = extraData.finishGoodLeft;
+        // Ambil Gambar Tag Left
+        targetQr = extraData.qrTagL;
+        targetImg = extraData.imgTagL;
         break;
 
-      case "TAG_R": // Tag Right (Material HGS)
+      case "TAG_R": // Tag Right
         targetName = extraData.partNameHgsRight;
         targetHgs = extraData.partNoHgsRight;
         targetFg = extraData.finishGoodRight;
+        // Ambil Gambar Tag Right
+        targetQr = extraData.qrTagR;
+        targetImg = extraData.imgTagR;
         break;
 
       default:
         return;
     }
 
-    // Validasi Sederhana: Kalau data kosong, peringatkan (Opsional)
+    // Validasi Sederhana
     if (!targetName && !targetHgs) {
-      if (
-        !window.confirm(
-          `Data untuk tipe ${type} kosong/belum diinput. Tetap print?`
-        )
-      )
+      if (!window.confirm(`Data teks untuk tipe ${type} kosong. Tetap print?`))
         return;
     }
 
-    // 3. Generate Labels (LOGIC: ALWAYS STD PACK / FLAT QTY)
-
-    // Ambil Plan
-    const totalQtyPlan = parseInt(item.inputPlan) || 0; // Contoh: 300
-
-    // Ambil Std Qty (Jika kosong default 1)
-    const stdPack = parseInt(extraData.stdQty) || 1; // Contoh: 45
-
-    // Hitung Jumlah Kartu yang dibutuhkan
-    // 300 / 45 = 6.66 -> Dibulatkan ke atas jadi 7 Kartu
+    // 3. Generate Labels (LOGIC: ALWAYS STD PACK)
+    const totalQtyPlan = parseInt(item.inputPlan) || 0;
+    const stdPack = parseInt(extraData.stdQty) || 1;
     const totalBox = Math.ceil(totalQtyPlan / stdPack) || 1;
 
     const labels = [];
 
     for (let i = 1; i <= totalBox; i++) {
-      // LOGIC BARU:
-      // Qty yang diprint SELALU SAMA dengan Qty/Box (Std Pack).
-      // Tidak peduli itu kartu terakhir atau bukan, nilainya tetap 45.
       const currentQty = stdPack;
 
       labels.push({
         machine: item.machine,
 
-        // Data Dinamis
+        // Data Dinamis (Text & Gambar Sesuai Pilihan)
         partName: targetName || "-",
         hgs: targetHgs || "-",
         fg: targetFg || "-",
+        qr: targetQr, // <--- Pakai QR hasil switch tadi
+        img: targetImg, // <--- Pakai Img hasil switch tadi
 
-        // Data Master
+        // Data Master (Tetap)
         partNo: extraData.partNo,
         model: extraData.model,
-        qr: extraData.qrImage,
-        img: extraData.partImage,
 
         // Data Hitungan
-        qty: currentQty, // Selalu 45 (Sesuai request)
+        qty: currentQty,
         boxKe: i,
         totalBox: totalBox,
       });
