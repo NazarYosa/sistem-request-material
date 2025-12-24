@@ -10,6 +10,108 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
+
+// ==========================================
+// KOMPONEN HELPER: IMAGE DROP ZONE (SMART)
+// Fitur: Drag & Drop, Paste (Ctrl+V), Preview, Color Theme
+// ==========================================
+const ImageDropZone = ({ label, value, onUpload, onRemove, colorTheme = "gray" }) => {
+  const [isDragging, setIsDragging] = React.useState(false); // Pakai React.useState kalau error, atau useState aja
+
+  // Mapping Warna Tema (Border, Background, Text)
+  const themeClasses = {
+    gray:   { border: "border-gray-300", active: "border-gray-500 ring-gray-200", bg: "bg-gray-50", text: "text-gray-500", badge: "bg-gray-600" },
+    orange: { border: "border-orange-300", active: "border-orange-500 ring-orange-200", bg: "bg-orange-50", text: "text-orange-600", badge: "bg-orange-600" },
+    yellow: { border: "border-yellow-400", active: "border-yellow-600 ring-yellow-200", bg: "bg-yellow-50", text: "text-yellow-700", badge: "bg-yellow-600" },
+    sky:    { border: "border-sky-300", active: "border-sky-500 ring-sky-200", bg: "bg-sky-50", text: "text-sky-600", badge: "bg-sky-600" },
+  };
+
+  const theme = themeClasses[colorTheme] || themeClasses.gray;
+
+  // --- LOGIC HANDLE FILE ---
+  const processFile = (file) => {
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => { onUpload(reader.result); };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Hanya file gambar yang diperbolehkan!");
+    }
+  };
+
+  // 1. Drag & Drop
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFile(e.dataTransfer.files[0]);
+  };
+
+  // 2. Paste (Ctrl+V)
+  const handlePaste = (e) => {
+    const items = e.clipboardData.items;
+    for (let item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        processFile(item.getAsFile());
+        break;
+      }
+    }
+  };
+
+  return (
+    <div
+      className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl transition-all h-32 w-full group cursor-pointer outline-none
+        ${theme.bg} 
+        ${isDragging ? "scale-105 shadow-lg border-solid " + theme.active : ""}
+        ${value ? "border-solid border-gray-200" : theme.border}
+        focus:ring-2 focus:border-solid ${theme.active} 
+      `}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      tabIndex="0" // Wajib ada biar bisa di-Paste
+      onPaste={handlePaste}
+      onClick={() => !value && document.getElementById(`file-${label}`)?.click()}
+      title="Klik untuk upload atau Paste (Ctrl+V) gambar di sini"
+    >
+      {value ? (
+        // TAMPILAN JIKA ADA GAMBAR
+        <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-white p-1">
+          <img src={value} alt="Preview" className="w-full h-full object-contain" />
+          
+          {/* Label Kecil di Pojok (Biar tau ini gambar apa) */}
+          <div className={`absolute top-0 left-0 px-2 py-1 text-[9px] font-bold text-white rounded-br-lg opacity-90 shadow-sm ${theme.badge}`}>
+            {label}
+          </div>
+
+          {/* Tombol Hapus */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-transform hover:scale-110 z-10"
+          >
+            ✕
+          </button>
+        </div>
+      ) : (
+        // TAMPILAN KOSONG (Placeholder)
+        <>
+          <div className={`text-2xl mb-1 ${theme.text} opacity-50 group-hover:scale-110 transition-transform`}>📷</div>
+          <span className={`text-[10px] font-bold uppercase text-center px-2 ${theme.text}`}>{label}</span>
+          <span className="text-[8px] text-gray-400 mt-1">Klik / Paste / Drag</span>
+          <input
+            id={`file-${label}`}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => processFile(e.target.files[0])}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const [dataMaterial, setDataMaterial] = useState([]);
   const [printData, setPrintData] = useState(null);
@@ -196,7 +298,6 @@ function App() {
         partAssyNameRight: "",
         partAssyHgsRight: "",
         partAssyFgRight: "",
-
         partNoHgsLeft: "",
         partNameHgsLeft: "",
         finishGoodLeft: "",
@@ -205,7 +306,6 @@ function App() {
         partNameHgsRight: "",
         finishGoodRight: "",
         finishGoodNameRight: "",
-
         color: "",
         materialName: "",
         partNoMaterial: "",
@@ -264,8 +364,18 @@ function App() {
       materialName: "",
       partNoMaterial: "",
       model: "",
-      qrImage: "",
-      partImage: "",
+      qrHgs: "",
+      imgHgs: "",
+      qrAssy: "",
+      imgAssy: "",
+      qrAssyL: "",
+      imgAssyL: "",
+      qrAssyR: "",
+      imgAssyR: "",
+      qrTagL: "",
+      imgTagL: "",
+      qrTagR: "",
+      imgTagR: "",
     });
     setEditingKey(null);
   };
@@ -922,14 +1032,15 @@ function App() {
                 Input Master Data Part
               </h3>
 
-              {/* === FORM INPUT (UPDATED: ADA HGS) === */}
+              {/* === FORM INPUT (UPDATED: TEXT FULL WIDTH + DASHBOARD IMAGE) === */}
               <div
                 ref={inputFormRef}
                 className="bg-gray-50/50 border border-gray-200 rounded-xl p-5 mb-8"
               >
+                {/* BAGIAN A: INPUT TEKS (GABUNGAN KODE LAMA) */}
+                {/* Note: Saya ubah col-span-9 jadi col-span-12 agar memenuhi lebar container */}
                 <div className="grid grid-cols-12 gap-6">
-                  {/* --- KOLOM KIRI: DATA TEKS --- */}
-                  <div className="col-span-9 grid grid-cols-4 gap-4">
+                  <div className="col-span-12 grid grid-cols-4 gap-4">
                     {/* BARIS 1: PART UTAMA (DEFAULT) */}
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
@@ -960,7 +1071,6 @@ function App() {
                     <div className="col-span-4 border-t border-gray-300 my-1"></div>
 
                     {/* BARIS 2: PART TAG GENERAL (NETRAL / GRAY) */}
-
                     {/* 1. Nama HGS General (Lebar) */}
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
@@ -1276,6 +1386,7 @@ function App() {
                         placeholder="Opsional"
                       />
                     </div>
+
                     {/* BARIS 8: DETAIL LAIN (DEFAULT) */}
                     <div>
                       <label className="block text-xs font-bold text-emerald-700 uppercase mb-1">
@@ -1327,86 +1438,215 @@ function App() {
                       />
                     </div>
                   </div>
+                </div>
 
-                  {/* --- KOLOM KANAN: GAMBAR --- */}
-                  <div className="col-span-3 flex flex-col gap-3">
-                    {/* QR Code */}
-                    <div
-                      className="flex-1 border-2 border-dashed border-gray-300 rounded-xl hover:bg-white hover:border-blue-400 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-gray-50 min-h-[100px] group"
-                      onClick={() => qrInputRef.current.click()}
-                      onPaste={(e) => handlePasteImage(e, "qrImage")}
-                    >
-                      {inputForm.qrImage ? (
-                        <div className="relative w-full h-full p-2 flex items-center justify-center">
-                          <img
-                            src={inputForm.qrImage}
-                            className="max-h-[90px] object-contain"
-                            alt="QR"
-                          />
-                          <button
-                            onClick={(e) =>
-                              handleRemoveImage(e, "qrImage", qrInputRef)
-                            }
-                            className="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border hover:bg-red-50"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-xs text-center group-hover:text-blue-500 transition-colors">
-                          <span className="text-2xl mb-1 block">📷</span> Upload
-                          QR
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        ref={qrInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, "qrImage")}
+                {/* BAGIAN B: DASHBOARD GAMBAR BARU (Di Bawah Teks) */}
+                <div className="mt-8 pt-6 border-t-2 border-dashed border-gray-200">
+                  <h3 className="text-sm font-bold text-slate-700 uppercase mb-4 flex items-center gap-2">
+                    <span>🖼️</span> Upload Gambar & QR (Drag & Drop / Ctrl+V
+                    Supported)
+                  </h3>
+
+                  {/* --- ZONA 1: GENERAL (ABU-ABU) --- */}
+                  <div className="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 relative">
+                    <div className="absolute -top-3 left-4 bg-slate-600 text-white px-3 py-1 text-[10px] font-bold rounded-full uppercase shadow-sm">
+                      1. General / HGS
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <ImageDropZone
+                        label="QR GENERAL"
+                        colorTheme="gray"
+                        value={inputForm.qrHgs}
+                        onUpload={(v) =>
+                          setInputForm((prev) => ({ ...prev, qrHgs: v }))
+                        }
+                        onRemove={() =>
+                          setInputForm((prev) => ({ ...prev, qrHgs: "" }))
+                        }
+                      />
+                      <ImageDropZone
+                        label="FOTO PART GENERAL"
+                        colorTheme="gray"
+                        value={inputForm.imgHgs}
+                        onUpload={(v) =>
+                          setInputForm((prev) => ({ ...prev, imgHgs: v }))
+                        }
+                        onRemove={() =>
+                          setInputForm((prev) => ({ ...prev, imgHgs: "" }))
+                        }
                       />
                     </div>
+                  </div>
 
-                    {/* Foto Part */}
-                    <div
-                      className="flex-1 border-2 border-dashed border-gray-300 rounded-xl hover:bg-white hover:border-blue-400 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-gray-50 min-h-[100px] group"
-                      onClick={() => partImgInputRef.current.click()}
-                      onPaste={(e) => handlePasteImage(e, "partImage")}
-                    >
-                      {inputForm.partImage ? (
-                        <div className="relative w-full h-full p-2 flex items-center justify-center">
-                          <img
-                            src={inputForm.partImage}
-                            className="max-h-[90px] object-contain rounded"
-                            alt="Part"
-                          />
-                          <button
-                            onClick={(e) =>
-                              handleRemoveImage(e, "partImage", partImgInputRef)
+                  {/* --- ZONA 2: ASSY GROUP (ORANGE) --- */}
+                  <div className="mb-6 bg-orange-50 p-4 rounded-2xl border border-orange-200 relative">
+                    <div className="absolute -top-3 left-4 bg-orange-600 text-white px-3 py-1 text-[10px] font-bold rounded-full uppercase shadow-sm">
+                      2. Assy Group
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                      {/* Assy Gen */}
+                      <div className="bg-white p-2 rounded-xl shadow-sm border border-orange-100">
+                        <p className="text-[10px] font-bold text-center text-orange-800 mb-2 uppercase">
+                          Assy General
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                          <ImageDropZone
+                            label="QR ASSY GEN"
+                            colorTheme="orange"
+                            value={inputForm.qrAssy}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, qrAssy: v }))
                             }
-                            className="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md border hover:bg-red-50"
-                          >
-                            ✕
-                          </button>
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, qrAssy: "" }))
+                            }
+                          />
+                          <ImageDropZone
+                            label="IMG ASSY GEN"
+                            colorTheme="orange"
+                            value={inputForm.imgAssy}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, imgAssy: v }))
+                            }
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, imgAssy: "" }))
+                            }
+                          />
                         </div>
-                      ) : (
-                        <div className="text-gray-400 text-xs text-center group-hover:text-blue-500 transition-colors">
-                          <span className="text-2xl mb-1 block">🖼️</span> Upload
-                          Foto
+                      </div>
+
+                      {/* Assy Left */}
+                      <div className="bg-white p-2 rounded-xl shadow-sm border border-orange-100">
+                        <p className="text-[10px] font-bold text-center text-orange-800 mb-2 uppercase">
+                          Assy Left (L)
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                          <ImageDropZone
+                            label="QR ASSY L"
+                            colorTheme="orange"
+                            value={inputForm.qrAssyL}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, qrAssyL: v }))
+                            }
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, qrAssyL: "" }))
+                            }
+                          />
+                          <ImageDropZone
+                            label="IMG ASSY L"
+                            colorTheme="orange"
+                            value={inputForm.imgAssyL}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, imgAssyL: v }))
+                            }
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, imgAssyL: "" }))
+                            }
+                          />
                         </div>
-                      )}
-                      <input
-                        type="file"
-                        ref={partImgInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload(e, "partImage")}
-                      />
+                      </div>
+
+                      {/* Assy Right */}
+                      <div className="bg-white p-2 rounded-xl shadow-sm border border-orange-100">
+                        <p className="text-[10px] font-bold text-center text-orange-800 mb-2 uppercase">
+                          Assy Right (R)
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                          <ImageDropZone
+                            label="QR ASSY R"
+                            colorTheme="orange"
+                            value={inputForm.qrAssyR}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, qrAssyR: v }))
+                            }
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, qrAssyR: "" }))
+                            }
+                          />
+                          <ImageDropZone
+                            label="IMG ASSY R"
+                            colorTheme="orange"
+                            value={inputForm.imgAssyR}
+                            onUpload={(v) =>
+                              setInputForm((p) => ({ ...p, imgAssyR: v }))
+                            }
+                            onRemove={() =>
+                              setInputForm((p) => ({ ...p, imgAssyR: "" }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* --- ZONA 3: TAG GROUP (KUNING & BIRU) --- */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                    {/* Tag Left */}
+                    <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-200 relative pt-6">
+                      <div className="absolute -top-3 left-4 bg-yellow-600 text-white px-3 py-1 text-[10px] font-bold rounded-full uppercase shadow-sm">
+                        3. Tag Left (L)
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <ImageDropZone
+                          label="QR TAG L"
+                          colorTheme="yellow"
+                          value={inputForm.qrTagL}
+                          onUpload={(v) =>
+                            setInputForm((p) => ({ ...p, qrTagL: v }))
+                          }
+                          onRemove={() =>
+                            setInputForm((p) => ({ ...p, qrTagL: "" }))
+                          }
+                        />
+                        <ImageDropZone
+                          label="IMG TAG L"
+                          colorTheme="yellow"
+                          value={inputForm.imgTagL}
+                          onUpload={(v) =>
+                            setInputForm((p) => ({ ...p, imgTagL: v }))
+                          }
+                          onRemove={() =>
+                            setInputForm((p) => ({ ...p, imgTagL: "" }))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tag Right */}
+                    <div className="bg-sky-50 p-4 rounded-2xl border border-sky-200 relative pt-6">
+                      <div className="absolute -top-3 left-4 bg-sky-600 text-white px-3 py-1 text-[10px] font-bold rounded-full uppercase shadow-sm">
+                        4. Tag Right (R)
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <ImageDropZone
+                          label="QR TAG R"
+                          colorTheme="sky"
+                          value={inputForm.qrTagR}
+                          onUpload={(v) =>
+                            setInputForm((p) => ({ ...p, qrTagR: v }))
+                          }
+                          onRemove={() =>
+                            setInputForm((p) => ({ ...p, qrTagR: "" }))
+                          }
+                        />
+                        <ImageDropZone
+                          label="IMG TAG R"
+                          colorTheme="sky"
+                          value={inputForm.imgTagR}
+                          onUpload={(v) =>
+                            setInputForm((p) => ({ ...p, imgTagR: v }))
+                          }
+                          onRemove={() =>
+                            setInputForm((p) => ({ ...p, imgTagR: "" }))
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* TOMBOL ACTION */}
+                {/* TOMBOL ACTION (TIDAK BERUBAH) */}
                 <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-gray-200">
                   {editingKey && (
                     <button
