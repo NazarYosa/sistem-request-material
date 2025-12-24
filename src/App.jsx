@@ -2361,30 +2361,44 @@ function App() {
                   </div>
 
                   {/* QR / BOX */}
-                  <div className="col-start-5 row-start-1 border-b border-black flex items-center justify-center p-0.5">
+                  <div className="col-start-5 row-start-1 border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
                     {lbl.qr ? (
                       <img
                         src={lbl.qr}
                         alt="QR"
-                        className="h-full w-full object-contain"
+                        // Ganti Style jadi responsif tapi dibatasi ukurannya
+                        className="object-contain"
+                        style={{
+                          maxWidth: "100%", // Biar gak nabrak pinggir
+                          maxHeight: "100%", // Biar gak nabrak atas-bawah
+                          width: "50px", // Ukuran ideal (lebih kecil dari 68px tadi)
+                          height: "auto", // Tinggi menyesuaikan
+                        }}
                       />
                     ) : (
-                      <p>- </p>
+                      <span className="text-[8px]">-</span>
                     )}
                   </div>
 
                   {/* ================= BARIS 2-4 (Body Tengah) ================= */}
 
                   {/* FOTO PART */}
-                  <div className="col-start-1 col-span-2 row-start-2 row-span-3 border-r border-b border-black p-1 flex items-center justify-center overflow-hidden">
+                  <div className="col-start-1 col-span-2 row-start-2 row-span-3 border-r border-b border-black p-1 flex items-center justify-center overflow-hidden relative">
                     {lbl.img ? (
                       <img
                         src={lbl.img}
                         alt="Part"
-                        className="w-full h-full object-contain"
+                        // Ganti Style jadi responsif
+                        className="object-contain"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                          width: "auto", // Lebar ngikutin rasio gambar
+                          height: "110px", // Tinggi kita batasi (lebih kecil dari 153px tadi)
+                        }}
                       />
                     ) : (
-                      <span className="text-gray-300 font-bold text-[8px]">
+                      <span className="text-gray-300 font-bold text-[8px] text-center">
                         NO IMG
                       </span>
                     )}
@@ -2485,9 +2499,7 @@ function App() {
         )}
       </div>
 
-      {/* ================================================================= */}
       {/* === MODAL POPUP PRINT MENU (STRICT MODE & EMPTY STATE) === */}
-      {/* ================================================================= */}
       {activeDropdown &&
         (() => {
           // 1. Ambil Item
