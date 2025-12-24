@@ -1894,8 +1894,7 @@ function App() {
                         </th>
                       </tr>
                     </thead>
-
-                    {/* === BODY TABEL === */}
+                    {/* === BODY TABEL (UPDATED: SMART IMAGE PREVIEW) === */}
                     <tbody className="divide-y divide-gray-200">
                       {(() => {
                         const filteredData = Object.entries(masterDb)
@@ -1931,6 +1930,42 @@ function App() {
                             ? "bg-gray-100"
                             : "bg-white";
 
+                          // --- LOGIC: TENTUKAN GAMBAR APA YANG MUNCUL DI TABEL ---
+                          let displayQr = "";
+                          let displayImg = "";
+
+                          switch (dbTableMode) {
+                            case "LABEL_GEN":
+                              displayQr = item.qrHgs;
+                              displayImg = item.imgHgs;
+                              break;
+                            case "LABEL_ASSY_GEN":
+                              displayQr = item.qrAssy;
+                              displayImg = item.imgAssy;
+                              break;
+                            case "LABEL_ASSY_L":
+                              displayQr = item.qrAssyL;
+                              displayImg = item.imgAssyL;
+                              break;
+                            case "LABEL_ASSY_R":
+                              displayQr = item.qrAssyR;
+                              displayImg = item.imgAssyR;
+                              break;
+                            case "LABEL_L":
+                              displayQr = item.qrTagL;
+                              displayImg = item.imgTagL;
+                              break;
+                            case "LABEL_R":
+                              displayQr = item.qrTagR;
+                              displayImg = item.imgTagR;
+                              break;
+                            default:
+                              // Default (Misal saat baru buka/General)
+                              displayQr = item.qrHgs;
+                              displayImg = item.imgHgs;
+                              break;
+                          }
+
                           return (
                             <tr
                               key={key}
@@ -1946,7 +1981,7 @@ function App() {
                                 {item.partName}
                               </td>
 
-                              {/* 3. BODY MODE REQ */}
+                              {/* 3. BODY MODE REQ (NO IMAGE) */}
                               {dbTableMode === "REQ" && (
                                 <>
                                   <td className="px-4 py-4 font-medium text-black">
@@ -1970,7 +2005,7 @@ function App() {
                                 </>
                               )}
 
-                              {/* 4. BODY MODE LABEL GEN (UPDATE: ADA NAME) */}
+                              {/* 4. BODY MODE LABEL GEN */}
                               {dbTableMode === "LABEL_GEN" && (
                                 <>
                                   <td className="px-4 py-4 text-black border-l border-gray-200 font-bold">
@@ -2066,7 +2101,7 @@ function App() {
                                 </>
                               )}
 
-                              {/* 10. BODY UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
+                              {/* 10. BODY UMUM (PREVIEW GAMBAR DINAMIS) */}
                               {dbTableMode !== "REQ" && (
                                 <>
                                   <td className="px-4 py-4 text-center font-black text-indigo-700 border-l border-indigo-100 bg-indigo-50/30 text-lg">
@@ -2075,19 +2110,41 @@ function App() {
                                   <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
                                     {item.weight || "-"}
                                   </td>
+
+                                  {/* KOLOM QR PREVIEW */}
                                   <td className="px-4 py-4 text-center">
-                                    {item.qrImage ? (
-                                      <span className="text-xs">✅</span>
-                                    ) : (
-                                      "-"
-                                    )}
+                                    <div className="flex justify-center">
+                                      {displayQr ? (
+                                        <img
+                                          src={displayQr}
+                                          alt="QR"
+                                          className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
+                                          title="QR Preview"
+                                        />
+                                      ) : (
+                                        <span className="text-gray-300 text-xs">
+                                          -
+                                        </span>
+                                      )}
+                                    </div>
                                   </td>
+
+                                  {/* KOLOM FOTO PREVIEW */}
                                   <td className="px-4 py-4 text-center">
-                                    {item.partImage ? (
-                                      <span className="text-xs">✅</span>
-                                    ) : (
-                                      "-"
-                                    )}
+                                    <div className="flex justify-center">
+                                      {displayImg ? (
+                                        <img
+                                          src={displayImg}
+                                          alt="Part"
+                                          className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
+                                          title="Foto Part Preview"
+                                        />
+                                      ) : (
+                                        <span className="text-gray-300 text-xs">
+                                          -
+                                        </span>
+                                      )}
+                                    </div>
                                   </td>
                                 </>
                               )}
