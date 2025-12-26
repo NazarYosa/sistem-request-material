@@ -457,7 +457,6 @@ function App() {
         };
       });
     }, 800);
-    e.target.value = "";
   };
 
   // === 2. CORE LOGIC ===
