@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { db } from "./firebase";
+import jsQR from "jsqr";
 import vuteqlogo from "../public/vuteq-logo.png"
 import {
   collection,
@@ -11,44 +12,93 @@ import {
 } from "firebase/firestore";
 
 
-// ==========================================
-// KOMPONEN HELPER: IMAGE DROP ZONE (SMART)
-// Fitur: Drag & Drop, Paste (Ctrl+V), Preview, Color Theme
-// ==========================================
-const ImageDropZone = ({ label, value, onUpload, onRemove, colorTheme = "gray" }) => {
-  const [isDragging, setIsDragging] = React.useState(false); // Pakai React.useState kalau error, atau useState aja
+const scanQRCodeFromImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        // Ambil data pixel untuk dibaca jsQR
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        // Resolve teksnya kalau ketemu, atau null kalau gagal
+        resolve(code ? code.data : null);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const ImageDropZone = ({
+  label,
+  value,
+  onUpload,
+  onRemove,
+  colorTheme = "gray",
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [scannedText, setScannedText] = useState(null);
 
   // Mapping Warna Tema (Border, Background, Text)
   const themeClasses = {
-    gray:   { border: "border-gray-300", active: "border-gray-500 ring-gray-200", bg: "bg-gray-50", text: "text-gray-500", badge: "bg-gray-600" },
-    orange: { border: "border-orange-300", active: "border-orange-500 ring-orange-200", bg: "bg-orange-50", text: "text-orange-600", badge: "bg-orange-600" },
-    yellow: { border: "border-yellow-400", active: "border-yellow-600 ring-yellow-200", bg: "bg-yellow-50", text: "text-yellow-700", badge: "bg-yellow-600" },
-    sky:    { border: "border-sky-300", active: "border-sky-500 ring-sky-200", bg: "bg-sky-50", text: "text-sky-600", badge: "bg-sky-600" },
+    gray: {
+      border: "border-gray-300",
+      active: "border-gray-500 ring-gray-200",
+      bg: "bg-gray-50",
+      text: "text-gray-500",
+      badge: "bg-gray-600",
+    },
+    orange: {
+      border: "border-orange-300",
+      active: "border-orange-500 ring-orange-200",
+      bg: "bg-orange-50",
+      text: "text-orange-600",
+      badge: "bg-orange-600",
+    },
+    yellow: {
+      border: "border-yellow-400",
+      active: "border-yellow-600 ring-yellow-200",
+      bg: "bg-yellow-50",
+      text: "text-yellow-700",
+      badge: "bg-yellow-600",
+    },
+    sky: {
+      border: "border-sky-300",
+      active: "border-sky-500 ring-sky-200",
+      bg: "bg-sky-50",
+      text: "text-sky-600",
+      badge: "bg-sky-600",
+    },
   };
 
   const theme = themeClasses[colorTheme] || themeClasses.gray;
 
   // --- LOGIC HANDLE FILE ---
-  const processFile = (file) => {
+  const processFile = async (file) => {
     if (file && file.type.startsWith("image/")) {
+      // 1. Scan QR dulu
+      const resultText = await scanQRCodeFromImage(file);
+      setScannedText(resultText); // Kalau null ya null, kalau teks ya teks
+
+      // 2. Upload Gambar
       const reader = new FileReader();
-      reader.onloadend = () => { onUpload(reader.result); };
+      reader.onloadend = () => {
+        onUpload(reader.result);
+      };
       reader.readAsDataURL(file);
     } else {
       alert("Hanya file gambar yang diperbolehkan!");
     }
   };
 
-  // 1. Drag & Drop
-  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
-  const handleDragLeave = () => setIsDragging(false);
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    processFile(e.dataTransfer.files[0]);
-  };
-
-  // 2. Paste (Ctrl+V)
   const handlePaste = (e) => {
     const items = e.clipboardData.items;
     for (let item of items) {
@@ -57,6 +107,22 @@ const ImageDropZone = ({ label, value, onUpload, onRemove, colorTheme = "gray" }
         break;
       }
     }
+  };
+
+  const handleRemoveWrapper = () => {
+    setScannedText(null);
+    onRemove();
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFile(e.dataTransfer.files[0]);
   };
 
   return (
@@ -70,24 +136,53 @@ const ImageDropZone = ({ label, value, onUpload, onRemove, colorTheme = "gray" }
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      tabIndex="0" // Wajib ada biar bisa di-Paste
+      tabIndex="0"
       onPaste={handlePaste}
-      onClick={() => !value && document.getElementById(`file-${label}`)?.click()}
+      onClick={() =>
+        !value && document.getElementById(`file-${label}`)?.click()
+      }
       title="Klik untuk upload atau Paste (Ctrl+V) gambar di sini"
     >
       {value ? (
         // TAMPILAN JIKA ADA GAMBAR
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-white p-1">
-          <img src={value} alt="Preview" className="w-full h-full object-contain" />
-          
-          {/* Label Kecil di Pojok (Biar tau ini gambar apa) */}
-          <div className={`absolute top-0 left-0 px-2 py-1 text-[9px] font-bold text-white rounded-br-lg opacity-90 shadow-sm ${theme.badge}`}>
+        <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden rounded-xl bg-white p-1">
+          {/* LOGIC CSS: 
+             Jika scannedText ADA (QR) -> Tinggi Gambar 70% (Sisanya buat teks)
+             Jika scannedText KOSONG (Foto Biasa) -> Tinggi Gambar 100% (Full)
+          */}
+          <img
+            src={value}
+            alt="Preview"
+            className={`w-full object-contain ${
+              scannedText ? "h-[70%]" : "h-full"
+            }`}
+          />
+
+          {/* HASIL SCAN (Hanya Muncul Jika QR Terdeteksi) */}
+          {scannedText && (
+            <div className="h-[30%] w-full flex items-center justify-center bg-gray-50 border-t border-gray-100">
+              <span
+                className="text-xl font-mono font-bold text-emerald-600 truncate px-2"
+                title={scannedText}
+              >
+                {scannedText}
+              </span>
+            </div>
+          )}
+
+          {/* Label Kecil di Pojok */}
+          <div
+            className={`absolute top-0 left-0 px-2 py-1 text-[9px] font-bold text-white rounded-br-lg opacity-90 shadow-sm ${theme.badge}`}
+          >
             {label}
           </div>
 
           {/* Tombol Hapus */}
           <button
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveWrapper();
+            }}
             className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-transform hover:scale-110 z-10"
           >
             ✕
@@ -96,9 +191,19 @@ const ImageDropZone = ({ label, value, onUpload, onRemove, colorTheme = "gray" }
       ) : (
         // TAMPILAN KOSONG (Placeholder)
         <>
-          <div className={`text-2xl mb-1 ${theme.text} opacity-50 group-hover:scale-110 transition-transform`}>📷</div>
-          <span className={`text-[10px] font-bold uppercase text-center px-2 ${theme.text}`}>{label}</span>
-          <span className="text-[8px] text-gray-400 mt-1">Klik / Paste / Drag</span>
+          <div
+            className={`text-2xl mb-1 ${theme.text} opacity-50 group-hover:scale-110 transition-transform`}
+          >
+            📷
+          </div>
+          <span
+            className={`text-[10px] font-bold uppercase text-center px-2 ${theme.text}`}
+          >
+            {label}
+          </span>
+          <span className="text-[8px] text-gray-400 mt-1">
+            Klik / Paste / Drag
+          </span>
           <input
             id={`file-${label}`}
             type="file"
