@@ -10,7 +10,6 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
-
 const scanQRCodeFromImage = (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -227,6 +226,7 @@ function App() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [viewMode, setViewMode] = useState("scan");
   const [dbTableMode, setDbTableMode] = useState("REQ");
+  const [orientation, setOrientation] = useState("PORTRAIT"); // "PORTRAIT" atau "LANDSCAPE"
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-CA")
@@ -2725,10 +2725,14 @@ function App() {
         {printType === "LABEL" && (
           <div className="w-full h-full bg-white text-black font-sans leading-none">
             <div
-              className="grid grid-cols-2 content-start"
+              // LOGIC GRID: Kalau Portrait 2 Kolom, Kalau Landscape 3 Kolom
+              className={`grid content-start ${
+                orientation === "PORTRAIT" ? "grid-cols-2" : "grid-cols-3"
+              }`}
               style={{
-                width: "210mm",
-                minHeight: "297mm",
+                // LOGIC UKURAN KERTAS (Kira-kira A4 margin aman)
+                width: orientation === "PORTRAIT" ? "210mm" : "297mm",
+                minHeight: orientation === "PORTRAIT" ? "297mm" : "210mm",
                 padding: "5mm",
                 gap: "3mm",
               }}
@@ -2736,11 +2740,14 @@ function App() {
               {printData.map((lbl, idx) => (
                 <div
                   key={idx}
-                  // PERUBAHAN BESAR DI SINI:
-                  // grid-rows-[1.4fr_...] -> Baris pertama dibuat SANGAT TINGGI (1.4 banding 1)
-                  // Sisanya tetap 1fr biar tidak gepeng
                   className="grid grid-cols-5 grid-rows-[1.4fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border page-break-inside-avoid"
-                  style={{ width: "100%", height: "54mm" }}
+                  // LOGIC TINGGI KOTAK:
+                  // Portrait: 54mm (muat 5 baris)
+                  // Landscape: 65mm (muat 3 baris lebih lega)
+                  style={{
+                    width: "100%",
+                    height: orientation === "PORTRAIT" ? "54mm" : "65mm",
+                  }}
                 >
                   {/* ================= BARIS 1 (Header - SUPER LEGA) ================= */}
 
@@ -2977,6 +2984,33 @@ function App() {
                   </button>
                 </div>
 
+                {/* === TAMBAHAN 2: TOMBOL PILIH ORIENTASI === */}
+                <div className="px-4 pt-3 pb-1">
+                  <div className="bg-gray-100 p-1 rounded-lg flex w-full">
+                    <button
+                      onClick={() => setOrientation("PORTRAIT")}
+                      className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${
+                        orientation === "PORTRAIT"
+                          ? "bg-white shadow text-blue-600"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <span className="text-sm">📄</span> Potrait (2x5)
+                    </button>
+                    <button
+                      onClick={() => setOrientation("LANDSCAPE")}
+                      className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${
+                        orientation === "LANDSCAPE"
+                          ? "bg-white shadow text-purple-600"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <span className="text-sm transform rotate-90">📄</span>{" "}
+                      Landscape (3x3)
+                    </button>
+                  </div>
+                </div>
+
                 {/* Isi Menu */}
                 <div className="p-2 grid gap-1 max-h-[60vh] overflow-y-auto min-h-[150px]">
                   {/* KONDISI 1: JIKA DATA KOSONG SEMUA */}
@@ -3121,12 +3155,14 @@ function App() {
         })()}
 
       <style>{`
-        /* 1. IMPORT FONT WORK SANS DARI GOOGLE */
+        /* 1. IMPORT FONT WORK SANS (TETAP SAMA) */
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
+        
         body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, span, div {
           font-family: 'Work Sans', sans-serif !important;
         }
         
+        /* 2. ANIMASI LOADING (TETAP SAMA) */
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-progress { animation: progress 1.5s infinite linear; }
         
@@ -3134,37 +3170,40 @@ function App() {
           float: none !important;
         }
 
+        /* 3. SETTINGAN PRINT (UPDATE DINAMIS DISINI) */
         @media print {
           @page { 
-            /* Jika printType = REQ maka Landscape, Jika LABEL maka Portrait */
-            size: A4 ${printType === "REQ" ? "landscape" : "portrait"}; 
+            /* LOGIC BARU: 
+               - Jika tipe REQ -> Selalu Landscape
+               - Jika tipe LABEL -> Cek tombol pilihan (orientation): Portrait atau Landscape
+            */
+            size: A4 ${
+              printType === "REQ" ||
+              (printType === "LABEL" && orientation === "LANDSCAPE")
+                ? "landscape"
+                : "portrait"
+            }; 
+            
             margin: 5mm; 
           }
           
           body { -webkit-print-color-adjust: exact; }
           .page-break-inside-avoid { page-break-inside: avoid; }
-          ${
-            printType === "REQ"
-              ? `
-            .print\\:grid-cols-3 { 
-              display: grid; 
-              grid-template-columns: repeat(3, 1fr); 
-              gap: 5mm; 
-            }
-          `
-              : ""
+
+          /* DEFINISI GRID MANUAL (Biar layout tetap rapi walau Tailwind gak ke-load saat print) */
+          
+          /* Untuk Portrait (2 Kolom) */
+          .grid-cols-2 { 
+             display: grid; 
+             grid-template-columns: repeat(2, 1fr); 
+             gap: 3mm; 
           }
 
-          ${
-            printType === "LABEL"
-              ? `
-            .print\\:grid-cols-2 { 
-               display: grid; 
-               grid-template-columns: repeat(2, 1fr); 
-               gap: 2mm; 
-            }
-          `
-              : ""
+          /* Untuk Landscape (3 Kolom) */
+          .grid-cols-3 { 
+             display: grid; 
+             grid-template-columns: repeat(3, 1fr); 
+             gap: 5mm; 
           }
         }
       `}</style>
