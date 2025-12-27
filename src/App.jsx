@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { db } from "./firebase";
 import jsQR from "jsqr";
-import vuteqlogo from "../public/vuteq-logo.png"
 import {
   collection,
   getDocs,
@@ -2748,7 +2747,7 @@ function App() {
                   {/* LOGO VUTEQ */}
                   <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
                     <img
-                      src={vuteqlogo}
+                      src="/vuteq-logo.png"
                       alt="VuteQ Logo"
                       className="w-full h-full object-contain"
                     />
