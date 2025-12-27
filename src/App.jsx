@@ -1332,12 +1332,6 @@ function App() {
                           );
                           setCurrentFileName(simpleName);
 
-                          let msg = `✅ FILE BERHASIL DIGANTI!\n\n📄: ${simpleName}`;
-                          if (isDefaultChecked) {
-                            msg += `\n💾 (Disimpan sebagai Default untuk besok)`;
-                          }
-                          alert(msg);
-
                           handleReloadData();
                         }
                       } else {
