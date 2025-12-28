@@ -24,7 +24,13 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadURL("http://localhost:5173");
+  if (app.isPackaged) {
+    // Mode EXE: Baca file hasil build
+    mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
+  } else {
+    // Mode Coding: Baca localhost
+    mainWindow.loadURL("http://localhost:5173");
+  }
 
   // Saat aplikasi siap, Load Config dulu, baru baca file
   mainWindow.webContents.on("did-finish-load", () => {
