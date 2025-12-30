@@ -9,6 +9,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.removeListener("excel-update-otomatis", subscription);
   },
 
+  // === TAMBAHKAN 3 BARIS INI ===
+  loadLocalDb: () => ipcRenderer.invoke("db-load"),
+  saveLocalDb: (data) => ipcRenderer.invoke("db-save", data),
+  importLocalDb: (data) => ipcRenderer.invoke("db-import", data),
+
   // 2. Dengar Info Path (Nama File yang sedang aktif saat start)
   onPathUpdate: (callback) => {
     const subscription = (event, value) => callback(event, value);

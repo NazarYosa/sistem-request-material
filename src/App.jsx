@@ -4,15 +4,7 @@ import React, {
   useRef,
 } from "react";
 import * as XLSX from "xlsx";
-import { db } from "./firebase";
 import jsQR from "jsqr";
-import {
-  collection,
-  getDocs,
-  setDoc,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
 
 const scanQRCodeFromImage = (file) => {
   return new Promise((resolve) => {
@@ -397,26 +389,29 @@ function App() {
     }
   }, [selectedDate, masterDb, isDateConfirmed]); // Tambahkan isDateConfirmed di sini
 
+  // === GANTI JADI LOAD LOCAL DB ===
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchLocalData = async () => {
       setIsLoadingDb(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, "master_parts"));
-        const data = {};
-        querySnapshot.forEach((doc) => {
-          // Key dokumen adalah Part Name Uppercase
-          data[doc.id] = doc.data();
-        });
-        setMasterDb(data);
-      } catch (error) {
-        console.error("Error connecting to Firebase:", error);
-        alert("Gagal mengambil data database! Cek internet.");
-      } finally {
-        setIsLoadingDb(false);
+
+      // Pastikan ini jalan di Electron
+      if (window.electronAPI) {
+        try {
+          const localData = await window.electronAPI.loadLocalDb();
+          setMasterDb(localData || {});
+          console.log("📂 Database Lokal Terhubung!");
+        } catch (err) {
+          console.error("Gagal load DB lokal", err);
+        }
+      } else {
+        // Fallback kalau dibuka di browser biasa (kosong)
+        console.warn("Mode Browser: Database Offline tidak aktif.");
+        setMasterDb({});
       }
+      setIsLoadingDb(false);
     };
 
-    fetchData();
+    fetchLocalData();
   }, []);
 
   // === HELPER: BERSIHKAN KEY (Ganti / jadi _ agar Database terima) ===
@@ -466,72 +461,82 @@ function App() {
     if (ref.current) ref.current.value = ""; // Reset input file
   };
 
-  // --- SIMPAN KE FIREBASE (AUTO REPLACE / JADI _) ---
+  // === GANTI JADI SAVE LOCAL ===
   const handleSaveInput = async () => {
     if (!inputForm.partName) return alert("Part Name wajib diisi!");
 
-    // GENERATE KEY AMAN (CONTOH: "TRIM R/L" JADI "TRIM R_L")
     const newKey = generateKey(inputForm.partName);
 
-    try {
-      // 1. Jika mode EDIT dan Nama Part diganti, hapus data lama
-      if (editingKey && editingKey !== newKey) {
-        await deleteDoc(doc(db, "master_parts", editingKey));
-        setMasterDb((prev) => {
-          const temp = { ...prev };
-          delete temp[editingKey];
-          return temp;
+    // 1. Logic Update State (Sama kayak dulu)
+    const updatedDb = { ...masterDb };
+
+    // Hapus key lama kalau ganti nama
+    if (editingKey && editingKey !== newKey) {
+      delete updatedDb[editingKey];
+    }
+
+    // Masukkan data baru
+    updatedDb[newKey] = inputForm;
+
+    // 2. SIMPAN PERMANEN KE FILE (Lewat Electron)
+    if (window.electronAPI) {
+      const result = await window.electronAPI.saveLocalDb(updatedDb);
+
+      if (result.success) {
+        setMasterDb(updatedDb); // Update layar
+
+        // Reset Form (Sama kayak dulu)
+        setInputForm({
+          partName: "",
+          partNo: "",
+          weight: "",
+          stdQty: "",
+          partNameHgs: "",
+          partNoHgs: "",
+          finishGood: "",
+          partAssyName: "",
+          partAssyHgs: "",
+          partAssyFg: "",
+          partAssyNameLeft: "",
+          partAssyHgsLeft: "",
+          partAssyFgLeft: "",
+          partAssyNameRight: "",
+          partAssyHgsRight: "",
+          partAssyFgRight: "",
+          partNoHgsLeft: "",
+          partNameHgsLeft: "",
+          finishGoodLeft: "",
+          finishGoodNameLeft: "",
+          partNoHgsRight: "",
+          partNameHgsRight: "",
+          finishGoodRight: "",
+          finishGoodNameRight: "",
+          color: "",
+          materialName: "",
+          partNoMaterial: "",
+          materialName2: "",
+          partNoMaterial2: "",
+          model: "",
+          qrHgs: "",
+          imgHgs: "",
+          qrAssy: "",
+          imgAssy: "",
+          qrAssyL: "",
+          imgAssyL: "",
+          qrAssyR: "",
+          imgAssyR: "",
+          qrTagL: "",
+          imgTagL: "",
+          qrTagR: "",
+          imgTagR: "",
         });
+        setEditingKey(null);
+        alert("✅ Data Tersimpan di Komputer (Offline)!");
+      } else {
+        alert("❌ Gagal menyimpan: " + result.error);
       }
-
-      // 2. Simpan ke Firebase (ID pakai _, tapi isi inputForm tetap asli ada /)
-      await setDoc(doc(db, "master_parts", newKey), inputForm);
-
-      // 3. Update State Lokal
-      setMasterDb((prev) => ({
-        ...prev,
-        [newKey]: inputForm,
-      }));
-
-      // 4. Reset Form
-      setInputForm({
-        partName: "",
-        partNo: "",
-        weight: "",
-        stdQty: "",
-        partNameHgs: "",
-        partNoHgs: "",
-        finishGood: "",
-        // Reset Assy Lengkap
-        partAssyName: "",
-        partAssyHgs: "",
-        partAssyFg: "",
-        partAssyNameLeft: "",
-        partAssyHgsLeft: "",
-        partAssyFgLeft: "",
-        partAssyNameRight: "",
-        partAssyHgsRight: "",
-        partAssyFgRight: "",
-        partNoHgsLeft: "",
-        partNameHgsLeft: "",
-        finishGoodLeft: "",
-        finishGoodNameLeft: "",
-        partNoHgsRight: "",
-        partNameHgsRight: "",
-        finishGoodRight: "",
-        finishGoodNameRight: "",
-        color: "",
-        materialName: "",
-        partNoMaterial: "",
-        model: "",
-        qrImage: "",
-        partImage: "",
-      });
-      setEditingKey(null);
-      alert("Data berhasil disimpan ke Cloud!");
-    } catch (error) {
-      console.error("Error saving: ", error);
-      alert("Gagal menyimpan data.");
+    } else {
+      alert("Simpan gagal: Fitur ini khusus Desktop App.");
     }
   };
 
@@ -594,26 +599,49 @@ function App() {
     setEditingKey(null);
   };
 
-  // --- HAPUS DARI FIREBASE ---
+  // === GANTI JADI DELETE LOCAL ===
   const handleDeleteDb = async (key) => {
-    if (window.confirm("Hapus data ini permanen?")) {
-      try {
-        // Hapus di Cloud
-        await deleteDoc(doc(db, "master_parts", key));
+    if (window.confirm("Hapus data ini dari komputer?")) {
+      const updatedDb = { ...masterDb };
+      delete updatedDb[key]; // Hapus dari memori
 
-        // Hapus di Lokal
-        setMasterDb((prev) => {
-          const newDb = { ...prev };
-          delete newDb[key];
-          return newDb;
-        });
-
+      if (window.electronAPI) {
+        // Timpa file dengan data yang sudah dihapus
+        await window.electronAPI.saveLocalDb(updatedDb);
+        setMasterDb(updatedDb); // Update layar
         if (editingKey === key) handleCancelEdit();
-      } catch (error) {
-        console.error("Error deleting: ", error);
-        alert("Gagal menghapus data.");
       }
     }
+  };
+
+  // === FITUR BARU: IMPORT DATABASE ===
+  const handleImportJson = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        const jumlahData = Object.keys(importedData).length;
+
+        if (
+          window.confirm(
+            `Ditemukan ${jumlahData} data.\nTimpa database komputer saat ini dengan data baru?`
+          )
+        ) {
+          if (window.electronAPI) {
+            await window.electronAPI.importLocalDb(importedData); // Save ke file system
+            setMasterDb(importedData); // Update layar
+            alert("✅ Import Berhasil! Database sudah diperbarui.");
+          }
+        }
+      } catch (err) {
+        alert("Format file salah! Pastikan file JSON.");
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const getMarkersFromDate = (dateString) => {
@@ -1293,6 +1321,15 @@ function App() {
                 >
                   INPUT DB
                 </button>
+                <label className="ml-2 bg-green-600 text-white px-4 py-1.5 text-xs font-bold rounded-md cursor-pointer hover:bg-green-700 flex items-center gap-2 transition-all shadow-sm">
+                  <span>📥</span> Import DB
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportJson}
+                  />
+                </label>
               </div>
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">

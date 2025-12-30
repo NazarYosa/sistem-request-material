@@ -38,6 +38,8 @@ function createWindow() {
   });
 }
 
+
+
 // === FUNGSI PENGENDALI WATCHER ===
 function startWatchingFile(filePath) {
   // 1. Matikan watcher lama jika ada
@@ -165,6 +167,48 @@ app.whenReady().then(() => {
 
     return { success: true, path: newPath };
   });
+});
+
+
+// File akan disimpan di folder aman user (AppData)
+const dbPath = path.join(app.getPath('userData'), 'vuteq_offline_db.json');
+
+// 1. LOAD DATA (Saat aplikasi dibuka)
+ipcMain.handle('db-load-local', async () => {
+  try {
+    // Kalau file belum ada, kita buat file kosong dulu
+    if (!fs.existsSync(dbPath)) {
+      fs.writeFileSync(dbPath, JSON.stringify({}, null, 2), 'utf-8');
+      return {};
+    }
+    const data = fs.readFileSync(dbPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Gagal load DB:", err);
+    return {};
+  }
+});
+
+// 2. SAVE DATA (Saat user simpan/hapus)
+ipcMain.handle('db-save-local', async (event, data) => {
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    console.error("Gagal save DB:", err);
+    return { success: false, error: err.message };
+  }
+});
+
+// 3. IMPORT DATA (Dari file JSON backup Firebase)
+ipcMain.handle('db-import-local', async (event, importedData) => {
+    try {
+        // Timpa file lokal dengan data baru
+        fs.writeFileSync(dbPath, JSON.stringify(importedData, null, 2), 'utf-8');
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
 });
 
 app.on("window-all-closed", () => {
