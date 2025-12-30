@@ -228,7 +228,7 @@ function App() {
   const [dbTableMode, setDbTableMode] = useState("REQ");
   const [orientation, setOrientation] = useState("PORTRAIT");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);// "PORTRAIT" atau "LANDSCAPE"
+  const [itemsPerPage, setItemsPerPage] = useState(10); // "PORTRAIT" atau "LANDSCAPE"
 
   const [selectedDate, setSelectedDate] = useState(
     new Date().toLocaleDateString("en-CA")
@@ -1049,6 +1049,43 @@ function App() {
     setPrintData(labels);
   };
 
+  // === FUNGSI EXPORT FIREBASE (SIMPLE) ===
+  const handleExportFirebase = async () => {
+    // 1. Konfirmasi dulu
+    setIsProcessing(true); // Munculkan loading biar user tau sistem bekerja
+
+    try {
+      // 2. Ambil data dari Firebase
+      const querySnapshot = await getDocs(collection(db, "master_parts"));
+      const allData = {};
+
+      querySnapshot.forEach((doc) => {
+        allData[doc.id] = doc.data();
+      });
+
+      // 3. Download jadi file JSON
+      const jsonString = JSON.stringify(allData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      // Nama file ada tanggalnya biar rapi
+      link.download = `VUTEQ_DB_BACKUP_${new Date()
+        .toISOString()
+        .slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert(`✅ Berhasil Export ${Object.keys(allData).length} Data!`);
+    } catch (error) {
+      console.error("Gagal export:", error);
+      alert("Gagal koneksi ke Firebase.");
+    } finally {
+      setIsProcessing(false); // Matikan loading
+    }
+  };
+
   useEffect(() => {
     if (printData) setTimeout(() => window.print(), 500);
   }, [printData]);
@@ -1149,9 +1186,21 @@ function App() {
         <div className="w-full mx-auto">
           {viewMode === "input" && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="font-bold text-lg text-slate-700 mb-4 border-b pb-2">
-                Input Master Data Part
-              </h3>
+              {/* HEADER INPUT + TOMBOL EXPORT */}
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 className="font-bold text-lg text-slate-700">
+                  Input Master Data Part
+                </h3>
+
+                {/* TOMBOL EXPORT FIREBASE */}
+                <button
+                  onClick={handleExportFirebase}
+                  className="flex items-center gap-2 bg-red-100 text-red-700 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-red-200"
+                  title="Download semua data cloud ke komputer"
+                >
+                  🔥 Export Firebase
+                </button>
+              </div>
 
               {/* === FORM INPUT (UPDATED: TEXT FULL WIDTH + DASHBOARD IMAGE) === */}
               <div
