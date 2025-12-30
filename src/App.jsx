@@ -861,7 +861,7 @@ function App() {
       const totalQty = Math.ceil(item.totalRawSak);
 
       // 4. Hitung Label (Background)
-      const jmlLabel = Math.ceil(totalQty / 13);
+      const jmlLabel = Math.ceil(totalQty / 11);
 
       return {
         id: Math.random().toString(36),
@@ -900,7 +900,7 @@ function App() {
     );
   };
 
-  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (UPDATE: SUPPORT 2 MATERIAL) ===
+  // === 5. PRINT ENGINE 1: REQUEST MATERIAL (PERBAIKAN BUG 12 PCS) ===
   const handlePrintRequest = (item) => {
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey] || {};
@@ -910,7 +910,11 @@ function App() {
     const totalRecycle = item.recycleInput;
     const netRequest = Math.max(0, totalPlan - totalRecycle);
 
-    let totalBox = Math.ceil(totalPlan / 13);
+    // === PERBAIKAN DISINI MAS ===
+    // Dulu 13, ganti jadi 11 biar sinkron sama isi box yang cuma muat 11
+    let totalBox = Math.ceil(totalPlan / 11);
+    // ===========================
+
     if (totalBox === 0 && totalPlan > 0) totalBox = 1;
 
     const recyclePerBox = Math.floor(totalRecycle / totalBox);
@@ -919,7 +923,9 @@ function App() {
     let remainingPlan = totalPlan;
 
     for (let i = 0; i < totalBox; i++) {
+      // Disini kan maksimal 11, jadi pembagi diatas wajib 11 juga
       const currentBoxTotal = Math.min(11, remainingPlan);
+
       let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
       if (currentRecycle > currentBoxTotal) currentRecycle = currentBoxTotal;
       const currentNet = currentBoxTotal - currentRecycle;
@@ -940,8 +946,8 @@ function App() {
         materialName: extraData.materialName || "-",
         partNoMaterial: extraData.partNoMaterial || "-",
 
-        // MATERIAL 2 (Opsional, ambil dari DB)
-        materialName2: extraData.materialName2 || "", // Kalo kosong string kosong
+        // MATERIAL 2
+        materialName2: extraData.materialName2 || "",
         partNoMaterial2: extraData.partNoMaterial2 || "",
 
         color: extraData.color || "BLACK",
