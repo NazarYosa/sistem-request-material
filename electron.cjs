@@ -3,10 +3,16 @@ const path = require("path");
 const chokidar = require("chokidar");
 const fs = require("fs");
 
-// --- LOKASI PENYIMPANAN CONFIG ---
-// Ini akan membuat file 'config.json' di folder AppData user (Aman & Persisten)
+// --- LOKASI PENYIMPANAN DATA AMAN (AppData) ---
 const USER_DATA_PATH = app.getPath("userData");
 const CONFIG_FILE = path.join(USER_DATA_PATH, "config.json");
+const DB_FILE = path.join(USER_DATA_PATH, "local_db_vuteq.json"); // File Database Offline
+ 
+// 🔥 TAMBAHKAN INI BIAR MUNCUL DI TERMINAL 🔥
+console.log("=================================================");
+console.log("📂 LOKASI DATABASE ADA DI SINI:");
+console.log(DB_FILE);
+console.log("=================================================");
 
 // --- VARIABLE GLOBAL ---
 let mainWindow;
@@ -25,50 +31,46 @@ function createWindow() {
   });
 
   if (app.isPackaged) {
-    // Mode EXE: Baca file hasil build
+    // Mode EXE
     mainWindow.loadFile(path.join(__dirname, "dist", "index.html"));
   } else {
-    // Mode Coding: Baca localhost
+    // Mode Dev
     mainWindow.loadURL("http://localhost:5173");
   }
 
-  // Saat aplikasi siap, Load Config dulu, baru baca file
+  // Saat aplikasi siap, Load Config dulu untuk cari path Excel terakhir
   mainWindow.webContents.on("did-finish-load", () => {
     loadConfigAndStart();
   });
 }
 
-
-
-// === FUNGSI PENGENDALI WATCHER ===
+// ==========================================
+// 1. FUNGSI PENGENDALI WATCHER EXCEL
+// ==========================================
 function startWatchingFile(filePath) {
-  // 1. Matikan watcher lama jika ada
-  if (watcher) {
-    watcher.close();
-  }
+  // Matikan watcher lama jika ada
+  if (watcher) watcher.close();
 
-  // === PERBAIKAN PENTING: CEK APAKAH PATH ADA ===
-  // Kalau filePath masih null (User belum pilih file), stop disini. Jangan error.
+  // Jika belum ada file dipilih
   if (!filePath) {
-     console.log("Menunggu user memilih file...");
-     if (mainWindow) {
-        // Kirim sinyal ke React supaya Header tulisannya "Belum Ada File"
-        mainWindow.webContents.send("info-path-update", "Belum Ada File Dipilih");
-     }
-     return;
-  }
-  // ===============================================
-
-  // 2. Cek file fisik ada atau tidak
-  if (!fs.existsSync(filePath)) {
-    console.error("File tidak ditemukan:", filePath);
-    if (mainWindow) {
-        mainWindow.webContents.send("excel-error", `File tidak ditemukan: ${filePath}`);
-    }
+    console.log("Menunggu user memilih file...");
+    if (mainWindow)
+      mainWindow.webContents.send("info-path-update", "Belum Ada File Dipilih");
     return;
   }
 
-  // 3. Baca File & Kirim ke React (Initial Load)
+  // Cek fisik file
+  if (!fs.existsSync(filePath)) {
+    console.error("File tidak ditemukan:", filePath);
+    if (mainWindow)
+      mainWindow.webContents.send(
+        "excel-error",
+        `File tidak ditemukan: ${filePath}`
+      );
+    return;
+  }
+
+  // Baca File Pertama Kali
   try {
     console.log(`Memulai memantau: ${filePath}`);
     const fileData = fs.readFileSync(filePath);
@@ -80,7 +82,7 @@ function startWatchingFile(filePath) {
     console.error("Gagal baca file:", err);
   }
 
-  // 4. Pasang Watcher
+  // Pasang Watcher (Auto Reload)
   watcher = chokidar.watch(filePath, {
     persistent: true,
     usePolling: true,
@@ -91,51 +93,92 @@ function startWatchingFile(filePath) {
     console.log("File berubah! Mengirim update...");
     try {
       const fileData = fs.readFileSync(path);
-      if (mainWindow) {
+      if (mainWindow)
         mainWindow.webContents.send("excel-update-otomatis", fileData);
-      }
     } catch (err) {
       console.error("Gagal baca update:", err);
     }
   });
 }
 
-// === FUNGSI: MEMBACA CONFIG DARI HARSDISK ===
+// ==========================================
+// 2. CONFIG LOAD/SAVE (Path Excel)
+// ==========================================
 function loadConfigAndStart() {
   try {
     if (fs.existsSync(CONFIG_FILE)) {
-      const rawData = fs.readFileSync(CONFIG_FILE);
-      const config = JSON.parse(rawData);
-
-      // Jika ada path tersimpan, pakai itu!
+      const config = JSON.parse(fs.readFileSync(CONFIG_FILE));
       if (config.lastFilePath && fs.existsSync(config.lastFilePath)) {
         console.log("📂 Menggunakan Path dari Config:", config.lastFilePath);
         currentExcelPath = config.lastFilePath;
       }
     }
   } catch (error) {
-    console.error("Gagal baca config, menggunakan default.", error);
+    console.error("Gagal baca config:", error);
   }
 
-  // Mulai memantau file (entah dari config atau default)
+  // Jalanin watcher (entah pathnya ada atau null)
   startWatchingFile(currentExcelPath);
 }
 
-// === FUNGSI: MENYIMPAN CONFIG KE HARDISK ===
 function savePathToConfig(newPath) {
   try {
-    const configData = { lastFilePath: newPath };
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(configData, null, 2));
-    console.log("💾 Path berhasil disimpan sebagai Default:", newPath);
+    fs.writeFileSync(
+      CONFIG_FILE,
+      JSON.stringify({ lastFilePath: newPath }, null, 2)
+    );
+    console.log("💾 Path disimpan:", newPath);
   } catch (error) {
-    console.error("Gagal menyimpan config:", error);
+    console.error("Gagal simpan config:", error);
   }
 }
 
+// ==========================================
+// 3. DATABASE LOKAL HANDLERS (OFFLINE)
+// ==========================================
 
+// Handler A: LOAD DATABASE
+ipcMain.handle("db-load", async () => {
+  try {
+    if (!fs.existsSync(DB_FILE)) {
+      // Bikin file kosong kalau belum ada
+      fs.writeFileSync(DB_FILE, JSON.stringify({}, null, 2), "utf-8");
+      return {};
+    }
+    return JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
+  } catch (err) {
+    console.error("Gagal load DB:", err);
+    return {};
+  }
+});
+
+// Handler B: SAVE DATABASE
+ipcMain.handle("db-save", async (event, data) => {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// Handler C: IMPORT DATABASE (Dari Backup)
+ipcMain.handle("db-import", async (event, importedData) => {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(importedData, null, 2), "utf-8");
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// ==========================================
+// 4. MAIN APP LISTENERS
+// ==========================================
 app.whenReady().then(() => {
   createWindow();
 
+  // Listener: Reload Excel Manual
   ipcMain.on("minta-reload-excel", () => {
     if (currentExcelPath && fs.existsSync(currentExcelPath)) {
       const fileData = fs.readFileSync(currentExcelPath);
@@ -143,72 +186,23 @@ app.whenReady().then(() => {
     }
   });
 
-  // === UPDATE LOGIC GANTI FILE ===
-  // Menerima parameter 'saveAsDefault' dari React
+  // Listener: Ganti File Sumber
   ipcMain.handle("ganti-file-sumber", async (event, saveAsDefault) => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ["openFile"],
       filters: [{ name: "Excel Files", extensions: ["xlsx", "xls"] }],
     });
 
-    if (result.canceled) {
-      return { success: false, message: "Dibatalkan user" };
-    }
+    if (result.canceled) return { success: false, message: "Dibatalkan user" };
 
     const newPath = result.filePaths[0];
     currentExcelPath = newPath;
 
-    // LOGIC UTAMA: Simpan ke Config jika user minta
-    if (saveAsDefault) {
-      savePathToConfig(newPath);
-    }
-
+    if (saveAsDefault) savePathToConfig(newPath);
     startWatchingFile(newPath);
 
     return { success: true, path: newPath };
   });
-});
-
-
-// File akan disimpan di folder aman user (AppData)
-const dbPath = path.join(app.getPath('userData'), 'vuteq_offline_db.json');
-
-// 1. LOAD DATA (Saat aplikasi dibuka)
-ipcMain.handle('db-load-local', async () => {
-  try {
-    // Kalau file belum ada, kita buat file kosong dulu
-    if (!fs.existsSync(dbPath)) {
-      fs.writeFileSync(dbPath, JSON.stringify({}, null, 2), 'utf-8');
-      return {};
-    }
-    const data = fs.readFileSync(dbPath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("Gagal load DB:", err);
-    return {};
-  }
-});
-
-// 2. SAVE DATA (Saat user simpan/hapus)
-ipcMain.handle('db-save-local', async (event, data) => {
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
-    return { success: true };
-  } catch (err) {
-    console.error("Gagal save DB:", err);
-    return { success: false, error: err.message };
-  }
-});
-
-// 3. IMPORT DATA (Dari file JSON backup Firebase)
-ipcMain.handle('db-import-local', async (event, importedData) => {
-    try {
-        // Timpa file lokal dengan data baru
-        fs.writeFileSync(dbPath, JSON.stringify(importedData, null, 2), 'utf-8');
-        return { success: true };
-    } catch (err) {
-        return { success: false, error: err.message };
-    }
 });
 
 app.on("window-all-closed", () => {
