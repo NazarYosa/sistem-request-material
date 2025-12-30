@@ -230,6 +230,8 @@ function App() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [viewMode, setViewMode] = useState("scan");
   const [dbTableMode, setDbTableMode] = useState("REQ");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [orientation, setOrientation] = useState("PORTRAIT");
   const [selectedDate, setSelectedDate] = useState(
@@ -1174,6 +1176,10 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   // === HANDLER: RELOAD / REFRESH DATA ===
   const handleReloadData = () => {
     // 1. Tampilkan loading biar user tau sistem bekerja
@@ -2091,446 +2097,531 @@ function App() {
 
                 {/* 2. Tabel Utama */}
                 <div className="overflow-hidden border border-black/10 rounded-xl shadow-sm bg-white">
-                  <div className="overflow-x-auto h-[500px]">
-                    <table className="w-full text-sm text-left border-collapse whitespace-nowrap font-sans">
-                      {/* === HEADER TABEL === */}
-                      <thead className="bg-white text-black sticky top-0 z-20 shadow-sm ring-1 ring-black/5">
-                        <tr className="uppercase text-xs tracking-wider font-extrabold">
-                          {/* 1. NO (SELALU ADA) */}
-                          <th className="px-4 py-4 w-12 text-center bg-gray-50 border-b border-gray-200">
-                            No
-                          </th>
+                  {/* === TABEL INPUT MASTER (FULL VERSION WITH PAGINATION) === */}
+                  <div className="overflow-hidden border border-black/10 rounded-xl shadow-sm bg-white flex flex-col">
+                    <div className="overflow-x-auto h-[600px] flex flex-col justify-between">
+                      <table className="w-full text-sm text-left border-collapse whitespace-nowrap font-sans mb-0">
+                        {/* === 1. HEADER TABEL === */}
+                        <thead className="bg-white text-black sticky top-0 z-20 shadow-sm ring-1 ring-black/5">
+                          <tr className="uppercase text-xs tracking-wider font-extrabold">
+                            {/* KOLOM TETAP */}
+                            <th className="px-4 py-4 w-12 text-center bg-gray-50 border-b border-gray-200">
+                              No
+                            </th>
+                            <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
+                              Part Name (Key)
+                            </th>
 
-                          {/* 2. PART NAME UTAMA (SELALU ADA SEBAGAI KEY) */}
-                          <th className="px-4 py-4 min-w-[220px] bg-gray-50 border-b border-gray-200">
-                            Part Name (Key)
-                          </th>
+                            {/* KOLOM KHUSUS REQ MATERIAL */}
+                            {dbTableMode === "REQ" && (
+                              <>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                                  Part No (Utama)
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                                  Material 1
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                                  No. Mat 1
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                                  Material 2
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+                                  No. Mat 2
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
+                                  Berat
+                                </th>
+                              </>
+                            )}
 
-                          {/* 3. HEADER KHUSUS MODE REQ */}
-                          {dbTableMode === "REQ" && (
-                            <>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                                Part No (Utama)
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
-                                Material 1
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                                No. Mat 1
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
-                                Material 2
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-                                No. Mat 2
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
-                                Berat
-                              </th>
-                            </>
-                          )}
+                            {/* KOLOM KHUSUS LABEL GEN */}
+                            {dbTableMode === "LABEL_GEN" && (
+                              <>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                                  Part Name HGS (Gen)
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                                  Part No HGS (Gen)
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
+                                  FG (Gen)
+                                </th>
+                              </>
+                            )}
 
-                          {/* 4. HEADER KHUSUS MODE LABEL GEN (UPDATE: ADA NAME) */}
-                          {dbTableMode === "LABEL_GEN" && (
-                            <>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
-                                Part Name HGS (Gen)
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
-                                Part No HGS (Gen)
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-l border-gray-200">
-                                FG (Gen)
-                              </th>
-                            </>
-                          )}
+                            {/* KOLOM KHUSUS LABEL ASSY */}
+                            {dbTableMode === "LABEL_ASSY_GEN" && (
+                              <>
+                                <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                                  Assy Name (Gen)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                                  Assy HGS (Gen)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
+                                  Assy FG (Gen)
+                                </th>
+                              </>
+                            )}
+                            {dbTableMode === "LABEL_ASSY_L" && (
+                              <>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy Name (L)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy HGS (L)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy FG (L)
+                                </th>
+                              </>
+                            )}
+                            {dbTableMode === "LABEL_ASSY_R" && (
+                              <>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy Name (R)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy HGS (R)
+                                </th>
+                                <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
+                                  Assy FG (R)
+                                </th>
+                              </>
+                            )}
 
-                          {/* 5. HEADER KHUSUS MODE ASSY GEN */}
-                          {dbTableMode === "LABEL_ASSY_GEN" && (
-                            <>
-                              <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
-                                Assy Name (Gen)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
-                                Assy HGS (Gen)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-50 text-orange-900 border-b border-l border-orange-200">
-                                Assy FG (Gen)
-                              </th>
-                            </>
-                          )}
+                            {/* KOLOM KHUSUS LABEL TAG */}
+                            {dbTableMode === "LABEL_L" && (
+                              <>
+                                <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                                  HGS Name (Left)
+                                </th>
+                                <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                                  HGS No (Left)
+                                </th>
+                                <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                                  FG Name (Left)
+                                </th>
+                                <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
+                                  FG No (Left)
+                                </th>
+                              </>
+                            )}
+                            {dbTableMode === "LABEL_R" && (
+                              <>
+                                <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                                  HGS Name (Right)
+                                </th>
+                                <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                                  HGS No (Right)
+                                </th>
+                                <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                                  FG Name (Right)
+                                </th>
+                                <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
+                                  FG No (Right)
+                                </th>
+                              </>
+                            )}
 
-                          {/* 6. HEADER KHUSUS MODE ASSY LEFT */}
-                          {dbTableMode === "LABEL_ASSY_L" && (
-                            <>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy Name (L)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy HGS (L)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy FG (L)
-                              </th>
-                            </>
-                          )}
+                            {/* KOLOM UMUM (NON-REQ) */}
+                            {dbTableMode !== "REQ" && (
+                              <>
+                                <th className="px-4 py-4 bg-indigo-50 text-indigo-900 border-b border-l border-indigo-200 text-center w-24">
+                                  Qty/Box
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
+                                  Berat
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
+                                  QR
+                                </th>
+                                <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
+                                  Foto
+                                </th>
+                              </>
+                            )}
 
-                          {/* 7. HEADER KHUSUS MODE ASSY RIGHT */}
-                          {dbTableMode === "LABEL_ASSY_R" && (
-                            <>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy Name (R)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy HGS (R)
-                              </th>
-                              <th className="px-4 py-4 bg-orange-100 text-orange-900 border-b border-l border-orange-300">
-                                Assy FG (R)
-                              </th>
-                            </>
-                          )}
+                            <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center sticky right-0 z-30 shadow-l">
+                              Opsi
+                            </th>
+                          </tr>
+                        </thead>
 
-                          {/* 8. HEADER KHUSUS MODE LEFT (KUNING) */}
-                          {dbTableMode === "LABEL_L" && (
-                            <>
-                              <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
-                                HGS Name (Left)
-                              </th>
-                              <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
-                                HGS No (Left)
-                              </th>
-                              <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
-                                FG Name (Left)
-                              </th>
-                              <th className="px-4 py-4 bg-yellow-50 text-yellow-900 border-b border-l border-yellow-200">
-                                FG No (Left)
-                              </th>
-                            </>
-                          )}
+                        {/* === 2. BODY TABEL (LOGIC PAGINATION) === */}
+                        <tbody className="divide-y divide-gray-200">
+                          {(() => {
+                            // A. Filter Search Global (VERSI SAKTI: BISA CARI APA SAJA)
+                            const filteredData = Object.entries(masterDb)
+                              .filter(([key, item]) => {
+                                if (!searchTerm) return true; // Kalau search kosong, tampilkan semua
+                                const q = searchTerm.toLowerCase();
 
-                          {/* 9. HEADER KHUSUS MODE RIGHT (BIRU) */}
-                          {dbTableMode === "LABEL_R" && (
-                            <>
-                              <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
-                                HGS Name (Right)
-                              </th>
-                              <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
-                                HGS No (Right)
-                              </th>
-                              <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
-                                FG Name (Right)
-                              </th>
-                              <th className="px-4 py-4 bg-sky-50 text-sky-900 border-b border-l border-sky-200">
-                                FG No (Right)
-                              </th>
-                            </>
-                          )}
+                                // === LOGIC BARU ===
+                                // Kita ambil SEMUA nilai yang ada di baris data itu (Nama, No, Berat, Model, Warna, dll)
+                                // Kita gabung jadi satu kalimat panjang, lalu kita cari kata kuncinya disitu.
+                                const allDataString = Object.values(item)
+                                  .map((val) => String(val || "").toLowerCase()) // Ubah semua jadi huruf kecil
+                                  .join(" "); // Gabung jadi satu spasi panjang
 
-                          {/* 10. HEADER UMUM (BERAT, QR, FOTO) - KECUALI REQ */}
-                          {dbTableMode !== "REQ" && (
-                            <>
-                              <th className="px-4 py-4 bg-indigo-50 text-indigo-900 border-b border-l border-indigo-200 text-center w-24">
-                                Qty/Box
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b text-center border-l border-gray-200">
-                                Berat
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
-                                QR
-                              </th>
-                              <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center">
-                                Foto
-                              </th>
-                            </>
-                          )}
-
-                          <th className="px-4 py-4 bg-gray-50 border-b border-gray-200 text-center sticky right-0 z-30 shadow-l">
-                            Opsi
-                          </th>
-                        </tr>
-                      </thead>
-                      {/* === BODY TABEL (UPDATED: SMART IMAGE PREVIEW) === */}
-                      <tbody className="divide-y divide-gray-200">
-                        {(() => {
-                          const filteredData = Object.entries(masterDb)
-                            .filter(([key, item]) => {
-                              if (!searchTerm) return true;
-                              const q = searchTerm.toLowerCase();
-                              return (
-                                item.partName.toLowerCase().includes(q) ||
-                                item.partNo.toLowerCase().includes(q)
+                                // Cek apakah kata kunci ada di dalam kalimat panjang itu?
+                                return allDataString.includes(q);
+                              })
+                              .sort((a, b) =>
+                                a[1].partName.localeCompare(b[1].partName)
                               );
-                            })
-                            .sort((a, b) =>
-                              a[1].partName.localeCompare(b[1].partName)
+
+                            // B. Logic Pagination
+                            const indexOfLastItem = currentPage * itemsPerPage;
+                            const indexOfFirstItem =
+                              indexOfLastItem - itemsPerPage;
+                            const currentItems = filteredData.slice(
+                              indexOfFirstItem,
+                              indexOfLastItem
+                            );
+                            const totalPages = Math.ceil(
+                              filteredData.length / itemsPerPage
                             );
 
-                          if (filteredData.length === 0) {
-                            return (
-                              <tr>
-                                <td
-                                  colSpan="12"
-                                  className="p-12 text-center text-black italic"
-                                >
-                                  <div className="mb-2 text-2xl">📂</div>Belum
-                                  ada data part yang tersimpan.
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          return filteredData.map(([key, item], index) => {
-                            const isOddRow = index % 2 !== 0;
-                            const rowClass = isOddRow
-                              ? "bg-gray-100"
-                              : "bg-white";
-
-                            // --- LOGIC: TENTUKAN GAMBAR APA YANG MUNCUL DI TABEL ---
-                            let displayQr = "";
-                            let displayImg = "";
-
-                            switch (dbTableMode) {
-                              case "LABEL_GEN":
-                                displayQr = item.qrHgs;
-                                displayImg = item.imgHgs;
-                                break;
-                              case "LABEL_ASSY_GEN":
-                                displayQr = item.qrAssy;
-                                displayImg = item.imgAssy;
-                                break;
-                              case "LABEL_ASSY_L":
-                                displayQr = item.qrAssyL;
-                                displayImg = item.imgAssyL;
-                                break;
-                              case "LABEL_ASSY_R":
-                                displayQr = item.qrAssyR;
-                                displayImg = item.imgAssyR;
-                                break;
-                              case "LABEL_L":
-                                displayQr = item.qrTagL;
-                                displayImg = item.imgTagL;
-                                break;
-                              case "LABEL_R":
-                                displayQr = item.qrTagR;
-                                displayImg = item.imgTagR;
-                                break;
-                              default:
-                                // Default (Misal saat baru buka/General)
-                                displayQr = item.qrHgs;
-                                displayImg = item.imgHgs;
-                                break;
+                            // C. Render Data Kosong
+                            if (filteredData.length === 0) {
+                              return (
+                                <tr>
+                                  <td
+                                    colSpan="100%"
+                                    className="p-12 text-center text-black italic"
+                                  >
+                                    <div className="mb-2 text-2xl">📂</div>
+                                    {searchTerm
+                                      ? "Tidak ada data yang cocok."
+                                      : "Belum ada data part yang tersimpan."}
+                                  </td>
+                                </tr>
+                              );
                             }
 
+                            // D. Render Items Per Halaman
                             return (
-                              <tr
-                                key={key}
-                                className={`${rowClass} hover:bg-blue-100 transition-colors group`}
-                              >
-                                {/* 1. NO */}
-                                <td className="px-4 py-4 text-center text-black font-bold text-xs">
-                                  {index + 1}
-                                </td>
+                              <>
+                                {currentItems.map(([key, item], index) => {
+                                  // Hitung Nomor Urut Asli (Lanjut terus walau beda page)
+                                  const realIndex =
+                                    indexOfFirstItem + index + 1;
+                                  const isOddRow = index % 2 !== 0;
+                                  const rowClass = isOddRow
+                                    ? "bg-gray-100"
+                                    : "bg-white";
 
-                                {/* 2. PART NAME UTAMA (KEY) */}
-                                <td className="px-4 py-4 font-bold text-black">
-                                  {item.partName}
-                                </td>
+                                  // Logic Gambar Dinamis
+                                  let displayQr = "";
+                                  let displayImg = "";
+                                  switch (dbTableMode) {
+                                    case "LABEL_GEN":
+                                      displayQr = item.qrHgs;
+                                      displayImg = item.imgHgs;
+                                      break;
+                                    case "LABEL_ASSY_GEN":
+                                      displayQr = item.qrAssy;
+                                      displayImg = item.imgAssy;
+                                      break;
+                                    case "LABEL_ASSY_L":
+                                      displayQr = item.qrAssyL;
+                                      displayImg = item.imgAssyL;
+                                      break;
+                                    case "LABEL_ASSY_R":
+                                      displayQr = item.qrAssyR;
+                                      displayImg = item.imgAssyR;
+                                      break;
+                                    case "LABEL_L":
+                                      displayQr = item.qrTagL;
+                                      displayImg = item.imgTagL;
+                                      break;
+                                    case "LABEL_R":
+                                      displayQr = item.qrTagR;
+                                      displayImg = item.imgTagR;
+                                      break;
+                                    default:
+                                      displayQr = item.qrHgs;
+                                      displayImg = item.imgHgs;
+                                      break;
+                                  }
 
-                                {/* 3. BODY MODE REQ (NO IMAGE) */}
-                                {dbTableMode === "REQ" && (
-                                  <>
-                                    <td className="px-4 py-4 font-medium text-black">
-                                      {item.partNo}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-gray-200">
-                                      {item.materialName || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black text-xs font-medium">
-                                      {item.partNoMaterial || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-gray-200">
-                                      {item.materialName2 || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black text-xs font-medium">
-                                      {item.partNoMaterial2 || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
-                                      {item.weight || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 4. BODY MODE LABEL GEN */}
-                                {dbTableMode === "LABEL_GEN" && (
-                                  <>
-                                    <td className="px-4 py-4 text-black border-l border-gray-200 font-bold">
-                                      {item.partNameHgs || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-gray-200">
-                                      {item.partNoHgs || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-gray-200">
-                                      {item.finishGood || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 5. BODY MODE ASSY GEN */}
-                                {dbTableMode === "LABEL_ASSY_GEN" && (
-                                  <>
-                                    <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
-                                      {item.partAssyName || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
-                                      {item.partAssyHgs || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
-                                      {item.partAssyFg || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 6. BODY MODE ASSY LEFT */}
-                                {dbTableMode === "LABEL_ASSY_L" && (
-                                  <>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyNameLeft || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyHgsLeft || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyFgLeft || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 7. BODY MODE ASSY RIGHT */}
-                                {dbTableMode === "LABEL_ASSY_R" && (
-                                  <>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyNameRight || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyHgsRight || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
-                                      {item.partAssyFgRight || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 8. BODY MODE LEFT */}
-                                {dbTableMode === "LABEL_L" && (
-                                  <>
-                                    <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
-                                      {item.partNameHgsLeft || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
-                                      {item.partNoHgsLeft || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-yellow-100">
-                                      {item.finishGoodNameLeft || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-yellow-100">
-                                      {item.finishGoodLeft || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 9. BODY MODE RIGHT */}
-                                {dbTableMode === "LABEL_R" && (
-                                  <>
-                                    <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
-                                      {item.partNameHgsRight || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
-                                      {item.partNoHgsRight || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-sky-100">
-                                      {item.finishGoodNameRight || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-black border-l border-sky-100">
-                                      {item.finishGoodRight || "-"}
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* 10. BODY UMUM (PREVIEW GAMBAR DINAMIS) */}
-                                {dbTableMode !== "REQ" && (
-                                  <>
-                                    <td className="px-4 py-4 text-center font-black text-indigo-700 border-l border-indigo-100 bg-indigo-50/30 text-lg">
-                                      {item.stdQty || "-"}
-                                    </td>
-                                    <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
-                                      {item.weight || "-"}
-                                    </td>
-
-                                    {/* KOLOM QR PREVIEW */}
-                                    <td className="px-4 py-4 text-center">
-                                      <div className="flex justify-center">
-                                        {displayQr ? (
-                                          <img
-                                            src={displayQr}
-                                            alt="QR"
-                                            className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
-                                            title="QR Preview"
-                                          />
-                                        ) : (
-                                          <span className="text-gray-300 text-xs">
-                                            -
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-
-                                    {/* KOLOM FOTO PREVIEW */}
-                                    <td className="px-4 py-4 text-center">
-                                      <div className="flex justify-center">
-                                        {displayImg ? (
-                                          <img
-                                            src={displayImg}
-                                            alt="Part"
-                                            className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
-                                            title="Foto Part Preview"
-                                          />
-                                        ) : (
-                                          <span className="text-gray-300 text-xs">
-                                            -
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-                                  </>
-                                )}
-
-                                {/* ACTION */}
-                                <td
-                                  className={`px-4 py-4 text-center sticky right-0 z-10 shadow-l ${rowClass} group-hover:bg-blue-100`}
-                                >
-                                  <div className="flex justify-center gap-2">
-                                    <button
-                                      onClick={() => handleEditDb(key)}
-                                      className="text-blue-600 hover:text-blue-800 transition-colors p-1 font-bold"
-                                      title="Edit Data"
+                                  return (
+                                    <tr
+                                      key={key}
+                                      className={`${rowClass} hover:bg-blue-100 transition-colors group`}
                                     >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteDb(key)}
-                                      className="text-red-600 hover:text-red-800 transition-colors p-1 font-bold"
-                                      title="Hapus Data"
-                                    >
-                                      Hapus
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
+                                      {/* 1. NO */}
+                                      <td className="px-4 py-4 text-center text-black font-bold text-xs">
+                                        {realIndex}
+                                      </td>
+
+                                      {/* 2. PART NAME UTAMA */}
+                                      <td className="px-4 py-4 font-bold text-black">
+                                        {item.partName}
+                                      </td>
+
+                                      {/* 3. ISI SESUAI MODE REQ */}
+                                      {dbTableMode === "REQ" && (
+                                        <>
+                                          <td className="px-4 py-4 font-medium text-black">
+                                            {item.partNo}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-gray-200">
+                                            {item.materialName || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black text-xs font-medium">
+                                            {item.partNoMaterial || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-gray-200">
+                                            {item.materialName2 || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black text-xs font-medium">
+                                            {item.partNoMaterial2 || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
+                                            {item.weight || "-"}
+                                          </td>
+                                        </>
+                                      )}
+
+                                      {/* 4. ISI SESUAI MODE LABEL */}
+                                      {dbTableMode === "LABEL_GEN" && (
+                                        <>
+                                          <td className="px-4 py-4 text-black border-l border-gray-200 font-bold">
+                                            {item.partNameHgs || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-gray-200">
+                                            {item.partNoHgs || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-gray-200">
+                                            {item.finishGood || "-"}
+                                          </td>
+                                        </>
+                                      )}
+                                      {dbTableMode === "LABEL_ASSY_GEN" && (
+                                        <>
+                                          <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                            {item.partAssyName || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                            {item.partAssyHgs || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-700 font-bold border-l border-orange-100 bg-orange-50/30">
+                                            {item.partAssyFg || "-"}
+                                          </td>
+                                        </>
+                                      )}
+                                      {dbTableMode === "LABEL_ASSY_L" && (
+                                        <>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyNameLeft || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyHgsLeft || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyFgLeft || "-"}
+                                          </td>
+                                        </>
+                                      )}
+                                      {dbTableMode === "LABEL_ASSY_R" && (
+                                        <>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyNameRight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyHgsRight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-orange-900 font-bold border-l border-orange-200 bg-orange-100/50">
+                                            {item.partAssyFgRight || "-"}
+                                          </td>
+                                        </>
+                                      )}
+                                      {dbTableMode === "LABEL_L" && (
+                                        <>
+                                          <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
+                                            {item.partNameHgsLeft || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-yellow-800 font-bold border-l border-yellow-100 bg-yellow-50/30">
+                                            {item.partNoHgsLeft || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-yellow-100">
+                                            {item.finishGoodNameLeft || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-yellow-100">
+                                            {item.finishGoodLeft || "-"}
+                                          </td>
+                                        </>
+                                      )}
+                                      {dbTableMode === "LABEL_R" && (
+                                        <>
+                                          <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
+                                            {item.partNameHgsRight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-sky-800 font-bold border-l border-sky-100 bg-sky-50/30">
+                                            {item.partNoHgsRight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-sky-100">
+                                            {item.finishGoodNameRight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-black border-l border-sky-100">
+                                            {item.finishGoodRight || "-"}
+                                          </td>
+                                        </>
+                                      )}
+
+                                      {/* 5. GAMBAR PREVIEW (NON REQ) */}
+                                      {dbTableMode !== "REQ" && (
+                                        <>
+                                          <td className="px-4 py-4 text-center font-black text-indigo-700 border-l border-indigo-100 bg-indigo-50/30 text-lg">
+                                            {item.stdQty || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-center font-bold text-black border-l border-gray-200">
+                                            {item.weight || "-"}
+                                          </td>
+                                          <td className="px-4 py-4 text-center">
+                                            <div className="flex justify-center">
+                                              {displayQr ? (
+                                                <img
+                                                  src={displayQr}
+                                                  alt="QR"
+                                                  className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
+                                                />
+                                              ) : (
+                                                <span className="text-gray-300 text-xs">
+                                                  -
+                                                </span>
+                                              )}
+                                            </div>
+                                          </td>
+                                          <td className="px-4 py-4 text-center">
+                                            <div className="flex justify-center">
+                                              {displayImg ? (
+                                                <img
+                                                  src={displayImg}
+                                                  alt="Part"
+                                                  className="h-10 w-10 object-contain border border-gray-300 rounded bg-white p-0.5 hover:scale-150 transition-transform shadow-sm"
+                                                />
+                                              ) : (
+                                                <span className="text-gray-300 text-xs">
+                                                  -
+                                                </span>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </>
+                                      )}
+
+                                      {/* 6. TOMBOL AKSI */}
+                                      <td
+                                        className={`px-4 py-4 text-center sticky right-0 z-10 shadow-l ${rowClass} group-hover:bg-blue-100`}
+                                      >
+                                        <div className="flex justify-center gap-2">
+                                          <button
+                                            onClick={() => handleEditDb(key)}
+                                            className="text-blue-600 hover:text-blue-800 transition-colors p-1 font-bold"
+                                            title="Edit Data"
+                                          >
+                                            Edit
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteDb(key)}
+                                            className="text-red-600 hover:text-red-800 transition-colors p-1 font-bold"
+                                            title="Hapus Data"
+                                          >
+                                            Hapus
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+
+                                {/* === 3. PAGINATION CONTROLS (DI DALAM TABEL BAGIAN BAWAH) === */}
+                                <tr className="bg-white sticky bottom-0 z-30 shadow-inner border-t-2 border-gray-100">
+                                  <td
+                                    colSpan="100%"
+                                    className="px-4 py-3 bg-gray-50/90 backdrop-blur-sm"
+                                  >
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                      {/* Info Halaman */}
+                                      <div className="text-xs text-gray-500 font-medium">
+                                        Menampilkan{" "}
+                                        <strong>{indexOfFirstItem + 1}</strong>{" "}
+                                        -{" "}
+                                        <strong>
+                                          {Math.min(
+                                            indexOfLastItem,
+                                            filteredData.length
+                                          )}
+                                        </strong>{" "}
+                                        dari{" "}
+                                        <strong>{filteredData.length}</strong>{" "}
+                                        data
+                                      </div>
+
+                                      {/* Tombol Kontrol */}
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex items-center bg-white border border-gray-300 rounded-md overflow-hidden shadow-sm">
+                                          <button
+                                            onClick={() =>
+                                              setCurrentPage((prev) =>
+                                                Math.max(prev - 1, 1)
+                                              )
+                                            }
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed border-r border-gray-200 transition-colors"
+                                          >
+                                            ◀ Prev
+                                          </button>
+                                          <span className="px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50">
+                                            {currentPage} / {totalPages}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              setCurrentPage((prev) =>
+                                                Math.min(prev + 1, totalPages)
+                                              )
+                                            }
+                                            disabled={
+                                              currentPage === totalPages
+                                            }
+                                            className="px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed border-l border-gray-200 transition-colors"
+                                          >
+                                            Next ▶
+                                          </button>
+                                        </div>
+
+                                        {/* Dropdown Jumlah Per Halaman */}
+                                        <select
+                                          value={itemsPerPage}
+                                          onChange={(e) => {
+                                            setItemsPerPage(
+                                              Number(e.target.value)
+                                            );
+                                            setCurrentPage(1); // Reset ke hal 1
+                                          }}
+                                          className="text-xs font-bold border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer"
+                                        >
+                                          <option value="5">5 baris</option>
+                                          <option value="10">10 baris</option>
+                                          <option value="20">20 baris</option>
+                                          <option value="50">50 baris</option>
+                                          <option value="100">100 baris</option>
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </>
                             );
-                          });
-                        })()}
-                      </tbody>
-                    </table>
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
