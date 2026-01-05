@@ -593,21 +593,38 @@ function App() {
           valStr === `0${markers.dayStr}` ||
           valStr.includes(markers.fullDate);
 
+        // === GANTI BLOK INI ===
         if (isDateMatch) {
-          headerRow = i;
-          dateColIndex = idx;
+          let foundSak = -1;
+          let foundKg = -1;
+
+          // Cek Baris i+1 dan i+2
           for (let r = 1; r <= 2; r++) {
-            if (!rows[i + r]) continue;
+            if (!rows[i + r]) continue; // Skip kalau baris bawahnya kosong
+
+            // Cek 5 kolom ke kanan dari posisi tanggal (idx)
             for (let off = 0; off <= 4; off++) {
               const subVal = String(rows[i + r][idx + off])
                 .toUpperCase()
                 .trim();
-              if (subVal.includes("SAK") || subVal === "SAK") offsetSak = off;
+
+              // Cari kata kunci SAK atau KG/MATERIAL
+              if (subVal === "SAK" || subVal.includes("SAK")) foundSak = off;
               else if (subVal.includes("KG") || subVal.includes("MATERIAL"))
-                offsetKg = off;
+                foundKg = off;
             }
           }
+
+          // KUNCI HEADER HANYA JIKA BAWAHNYA KETEMU "SAK" ATAU "KG"
+          // Kalau tidak ketemu, berarti itu cuma angka 6 nyasar (abaikan)
+          if (foundSak !== -1 || foundKg !== -1) {
+            headerRow = i;
+            dateColIndex = idx;
+            offsetSak = foundSak;
+            offsetKg = foundKg;
+          }
         }
+        // =======================
       });
       if (dateColIndex !== -1 && colPartName !== -1) break;
     }
