@@ -231,7 +231,7 @@ function App() {
   const [itemsPerPage, setItemsPerPage] = useState(10); // "PORTRAIT" atau "LANDSCAPE"
 
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toLocaleDateString("en-CA")
+    new Date().toLocaleDateString("en-CA"),
   );
 
   const [masterDb, setMasterDb] = useState({});
@@ -515,18 +515,23 @@ function App() {
     return { day, dayStr, fullDate: dateString };
   };
 
-  // === 1. HANDLE UPLOAD ===
+  // === 1. HANDLE UPLOAD (REVISI: SUPPORT EXCEL TERBUKA & RE-UPLOAD) ===
   const handleFileUpload = (e) => {
     const files = e.target.files;
-    if (!files.length) return;
+    if (!files || !files.length) return;
 
     const markers = getMarkersFromDate(selectedDate);
     setDataMaterial([]);
     setIsProcessing(true);
 
+    // Ambil referensi input file untuk di-reset nanti
+    const fileInput = e.target;
+
     setTimeout(() => {
       Array.from(files).forEach((file) => {
         const reader = new FileReader();
+
+        // KUNCI: Baca sebagai ArrayBuffer agar bisa menembus "File Lock" Excel
         reader.readAsArrayBuffer(file);
 
         reader.onload = (evt) => {
@@ -536,6 +541,7 @@ function App() {
             let extractedData = [];
 
             workbook.SheetNames.forEach((sheetName) => {
+              // Hanya baca sheet yang diawali huruf "M" (M50, M2500, dll)
               if (sheetName.trim().toUpperCase().startsWith("M")) {
                 const worksheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, {
@@ -556,16 +562,18 @@ function App() {
               setDataMaterial((prev) => [...prev, ...aggregated]);
             }
           } catch (error) {
-            console.error(error);
+            console.error("Error parsing Excel:", error);
+            alert("Gagal membaca file Excel. Pastikan format benar.");
           } finally {
             setIsProcessing(false);
+            // RESET INPUT: Supaya bisa upload file yang sama berulang kali setelah Save
+            fileInput.value = "";
           }
         };
       });
     }, 800);
   };
 
-  // === 2. CORE LOGIC ===
   const processSheet = (rows, sheetName, markers) => {
     let headerRow = -1;
     let colNo = -1;
@@ -584,47 +592,96 @@ function App() {
         if (val.includes("PART NO") || val.includes("PART NUMBER"))
           colPartNo = idx;
       });
-
       row.forEach((cell, idx) => {
         if (!cell) return;
+        if (dateColIndex !== -1) return; // Safety check
+
         const valStr = String(cell).trim();
         const isDateMatch =
           valStr === markers.dayStr ||
           valStr === `0${markers.dayStr}` ||
           valStr.includes(markers.fullDate);
 
-        // === GANTI BLOK INI ===
         if (isDateMatch) {
+          const nextDayStr = String(parseInt(markers.dayStr) + 1);
+
+          // 1. CEK JEBAKAN KOLOM NO (Vertikal) - Skip kalau bawahnya angka urut
+          if (rows[i + 1] && String(rows[i + 1][idx]).trim() === nextDayStr) {
+            return;
+          }
+
+          // 2. CEK TETANGGA (Horizontal) - Valid kalau kanannya tanggal besok
+          let isHorizontalSequence = false;
+          if (row[idx + 1]) {
+            const valRight = String(row[idx + 1]).trim();
+            if (valRight === nextDayStr || valRight.includes(nextDayStr))
+              isHorizontalSequence = true;
+          }
+
+          // 3. CARI HEADER SAK/KG (Context)
           let foundSak = -1;
+          let foundPlan = -1; // Tambahan variabel untuk PLAN
           let foundKg = -1;
 
-          // Cek Baris i+1 dan i+2
-          for (let r = 1; r <= 2; r++) {
-            if (!rows[i + r]) continue; // Skip kalau baris bawahnya kosong
-
-            // Cek 5 kolom ke kanan dari posisi tanggal (idx)
-            for (let off = 0; off <= 4; off++) {
-              const subVal = String(rows[i + r][idx + off])
+          for (let r = 0; r <= 8; r++) {
+            if (!rows[i + r]) continue;
+            for (let off = -1; off <= 5; off++) {
+              const checkIdx = idx + off;
+              if (checkIdx < 0 || !rows[i + r][checkIdx]) continue;
+              const subVal = String(rows[i + r][checkIdx])
                 .toUpperCase()
                 .trim();
 
-              // Cari kata kunci SAK atau KG/MATERIAL
-              if (subVal === "SAK" || subVal.includes("SAK")) foundSak = off;
-              else if (subVal.includes("KG") || subVal.includes("MATERIAL"))
+              // Deteksi SAK/BOX
+              if (["SAK", "BOX", "PACK"].some((k) => subVal.includes(k))) {
+                if (foundSak === -1) foundSak = off;
+              }
+              // Deteksi PLAN/QTY (Sebagai cadangan/pembanding)
+              else if (
+                ["PLAN", "QTY", "PCS", "PROD", "TARGET"].some((k) =>
+                  subVal.includes(k),
+                )
+              ) {
+                if (foundPlan === -1) foundPlan = off;
+              }
+              // Deteksi KG
+              else if (
+                ["KG", "BERAT", "MAT", "WEIGHT"].some((k) => subVal.includes(k))
+              ) {
                 foundKg = off;
+              }
             }
           }
 
-          // KUNCI HEADER HANYA JIKA BAWAHNYA KETEMU "SAK" ATAU "KG"
-          // Kalau tidak ketemu, berarti itu cuma angka 6 nyasar (abaikan)
-          if (foundSak !== -1 || foundKg !== -1) {
+          // === KEPUTUSAN FINAL ===
+          const isStrongFormat = valStr.length > 5 || valStr.includes("-");
+
+          // Header Valid Jika: (Ada SAK/PLAN) ATAU (Ada Tetangga) ATAU (Format Kuat)
+          if (
+            foundSak !== -1 ||
+            foundPlan !== -1 ||
+            foundKg !== -1 ||
+            isHorizontalSequence ||
+            isStrongFormat
+          ) {
             headerRow = i;
             dateColIndex = idx;
-            offsetSak = foundSak;
-            offsetKg = foundKg;
+
+            // === DISINI KUNCI PERBAIKANNYA ===
+            // Kalau ketemu kolom SAK, pakai itu (biar dapet 24.0).
+            // Kalau gak ketemu SAK, baru pake PLAN (dapet 240).
+            // Kalau dua-duanya gak ada, pake 0 (default).
+            if (foundSak !== -1) {
+              offsetSak = foundSak;
+            } else if (foundPlan !== -1) {
+              offsetSak = foundPlan;
+            } else {
+              offsetSak = 0;
+            }
+
+            offsetKg = foundKg !== -1 ? foundKg : -1;
           }
         }
-        // =======================
       });
       if (dateColIndex !== -1 && colPartName !== -1) break;
     }
@@ -705,13 +762,13 @@ function App() {
 
       if (offsetKg !== -1) {
         let val = parseFloat(
-          String(row[dateColIndex + offsetKg]).replace(",", ".")
+          String(row[dateColIndex + offsetKg]).replace(",", "."),
         );
         if (!isNaN(val) && val > 0) displayKg = val;
       }
       if (offsetSak !== -1) {
         let val = parseFloat(
-          String(row[dateColIndex + offsetSak]).replace(",", ".")
+          String(row[dateColIndex + offsetSak]).replace(",", "."),
         );
         if (!isNaN(val) && val > 0) finalSak = val;
       }
@@ -807,7 +864,7 @@ function App() {
           return { ...item, recycleInput: newVal, jmlLabel: newJmlLabel };
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -2096,7 +2153,7 @@ function App() {
                               return allDataString.includes(q);
                             })
                             .sort((a, b) =>
-                              a[1].partName.localeCompare(b[1].partName)
+                              a[1].partName.localeCompare(b[1].partName),
                             );
 
                           // B. Logic Pagination
@@ -2105,10 +2162,10 @@ function App() {
                             indexOfLastItem - itemsPerPage;
                           const currentItems = filteredData.slice(
                             indexOfFirstItem,
-                            indexOfLastItem
+                            indexOfLastItem,
                           );
                           const totalPages = Math.ceil(
-                            filteredData.length / itemsPerPage
+                            filteredData.length / itemsPerPage,
                           );
 
                           // C. Render Data Kosong
@@ -2379,7 +2436,7 @@ function App() {
                                       <strong>
                                         {Math.min(
                                           indexOfLastItem,
-                                          filteredData.length
+                                          filteredData.length,
                                         )}
                                       </strong>{" "}
                                       dari{" "}
@@ -2393,7 +2450,7 @@ function App() {
                                         <button
                                           onClick={() =>
                                             setCurrentPage((prev) =>
-                                              Math.max(prev - 1, 1)
+                                              Math.max(prev - 1, 1),
                                             )
                                           }
                                           disabled={currentPage === 1}
@@ -2407,7 +2464,7 @@ function App() {
                                         <button
                                           onClick={() =>
                                             setCurrentPage((prev) =>
-                                              Math.min(prev + 1, totalPages)
+                                              Math.min(prev + 1, totalPages),
                                             )
                                           }
                                           disabled={currentPage === totalPages}
@@ -2422,7 +2479,7 @@ function App() {
                                         value={itemsPerPage}
                                         onChange={(e) => {
                                           setItemsPerPage(
-                                            Number(e.target.value)
+                                            Number(e.target.value),
                                           );
                                           setCurrentPage(1); // Reset ke hal 1
                                         }}
@@ -2448,202 +2505,270 @@ function App() {
               </div>
             </div>
           )}
-
-          {/* VIEW SCAN */}
+          {/* VIEW SCAN (VERSI CLEAN: NO LOGO M & NO PARTS COUNT) */}
           {viewMode === "scan" && (
             <>
-              <div className="flex justify-between items-end mb-6">
-                <div>
-                  <h3 className="font-bold text-2xl text-slate-800">
-                    Data Material{" "}
-                    <span className="text-blue-600 text-xl font-medium border-b-2 border-blue-200 pb-1">
-                      {new Date(selectedDate).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </span>
+              {/* HEADER UTAMA */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-4">
+                  <h3 className="font-bold text-2xl text-slate-800 flex items-center gap-2">
+                    <span className="text-3xl">📅</span>
+                    {new Date(selectedDate).toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </h3>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Total
-                    <span className="font-bold text-blue-600">
-                      {dataMaterial.length}
-                    </span>
-                    item material ditemukan.
-                  </p>
+                  <span className="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1.5 rounded-lg border border-blue-200 shadow-sm">
+                    Total: {dataMaterial.length} Items
+                  </span>
                 </div>
                 {dataMaterial.length > 0 && (
                   <button
                     onClick={() => setDataMaterial([])}
-                    className="text-xs text-red-500 hover:text-red-700 font-bold tracking-wide uppercase transition-colors px-4 py-2 rounded-lg hover:bg-red-50"
+                    className="text-sm text-red-600 hover:text-red-800 font-bold hover:underline transition-all bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg"
                   >
-                    Reset Data
+                    RESET DATA
                   </button>
                 )}
               </div>
 
+              {/* KONTEN UTAMA */}
               {Object.keys(groupedUI).length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-80 text-slate-400 border border-dashed border-slate-300 rounded-2xl bg-white shadow-sm">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-3xl opacity-50">
-                    📊
-                  </div>
-                  <p className="font-medium text-slate-600">
-                    Belum ada data ditampilkan
+                <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/50 text-slate-400">
+                  <span className="text-6xl mb-4 opacity-50">📂</span>
+                  <p className="text-lg font-medium text-slate-500">
+                    Belum ada data. Upload Excel dulu ya!
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pb-20">
-                  {Object.keys(groupedUI).map((machine) => (
-                    <div
-                      key={machine}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                    >
-                      <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
-                          <span className="font-bold text-slate-700 text-sm uppercase tracking-wide">
-                            Mesin: {machine}
-                          </span>
+                // GRID 2 KOLOM
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-24 w-full items-start">
+                  {Object.keys(groupedUI).map((machine) => {
+                    const machineItems = groupedUI[machine];
+                    const totalPlanSak = machineItems.reduce(
+                      (acc, curr) => acc + curr.totalQty,
+                      0,
+                    );
+                    const totalPlanKg = machineItems.reduce(
+                      (acc, curr) => acc + (curr.inputKg || 0),
+                      0,
+                    );
+
+                    // LOGIC: Hapus huruf "M" di depan nama mesin (Case Insensitive)
+                    // Contoh: "M2500" -> "2500", "M50" -> "50"
+                    const machineNameClean = machine.replace(/^M/i, "");
+
+                    return (
+                      <div
+                        key={machine}
+                        className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col"
+                      >
+                        {/* HEADER MESIN (CLEAN STYLE) */}
+                        <div className="bg-gray-100 px-5 py-4 border-b border-gray-300 flex justify-between items-center">
+                          {/* Nama Mesin Besar */}
+                          <div className="flex items-center gap-3">
+                            <span className="font-black text-slate-800 text-3xl tracking-tighter">
+                              {machineNameClean}
+                            </span>
+                          </div>
+
+                          {/* SUMMARY (Tetap dipertahankan biar padat info) */}
+                          <div className="flex gap-4 text-xs">
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                PLAN SAK
+                              </span>
+                              <span className="font-black text-blue-700 text-base leading-none">
+                                {totalPlanSak.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="w-px bg-slate-300 h-8"></div>
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase">
+                                BEBAN KG
+                              </span>
+                              <span className="font-black text-emerald-700 text-base leading-none">
+                                {totalPlanKg.toLocaleString("id-ID", {
+                                  maximumFractionDigits: 0,
+                                })}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] font-bold bg-white border border-gray-200 px-3 py-1 rounded-full text-slate-500">
-                          {groupedUI[machine].length} PARTS
-                        </span>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                          <thead className="bg-white text-slate-500 border-b border-gray-100">
-                            <tr>
-                              <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider w-[30%]">
-                                Part Name
-                              </th>
-                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[10%] text-center text-blue-600">
-                                Plan
-                              </th>
-                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center text-gray-400">
-                                Total KG
-                              </th>
-                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[10%] text-center text-emerald-600">
-                                Recycle
-                              </th>
-                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[15%] text-center">
-                                Total Sak
-                              </th>
-                              <th className="px-2 py-3 font-semibold text-xs uppercase tracking-wider w-[25%] text-right">
-                                Action
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                            {groupedUI[machine]
-                              .sort((a, b) => a.no - b.no)
-                              .map((item, idx) => (
-                                <tr
-                                  key={idx}
-                                  className="hover:bg-blue-50/50 transition-colors duration-150 group"
-                                >
-                                  {/* PART NAME */}
-                                  <td className="px-4 py-3">
-                                    <div className="font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">
-                                      {item.partName}
-                                    </div>
-                                    {masterDb[generateKey(item.partName)] && (
-                                      <span className="text-[9px] bg-green-100 text-green-700 px-1.5 rounded ml-1">
-                                        ✓ DB
-                                      </span>
-                                    )}
-                                  </td>
 
-                                  <td className="px-2 py-3 text-center">
-                                    <span className="font-bold px-2 py-1 rounded text-xs border ">
-                                      {/* Tampilkan Plan Hasil Hitung */}
-                                      {item.inputPlan > 0
-                                        ? item.inputPlan
-                                        : "-"}
-                                    </span>
-                                  </td>
+                        {/* TABEL DATA */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-50 text-slate-600 font-extrabold border-b border-slate-200">
+                              <tr>
+                                <th className="px-4 py-3 w-[40%] uppercase text-xs">
+                                  Part Name / Material
+                                </th>
+                                <th className="px-2 py-3 text-center border-l border-slate-200 w-[10%] uppercase text-xs text-blue-700">
+                                  Plan
+                                </th>
+                                <th className="px-2 py-3 text-center border-l border-slate-200 w-[12%] uppercase text-xs text-slate-500">
+                                  Kg
+                                </th>
+                                <th className="px-2 py-3 text-center border-l border-slate-200 w-[10%] uppercase text-xs bg-emerald-50 text-emerald-700">
+                                  Rec
+                                </th>
+                                <th className="px-2 py-3 text-center border-l border-slate-200 w-[10%] uppercase text-xs">
+                                  Total
+                                </th>
+                                <th className="px-4 py-3 text-right w-[18%] uppercase text-xs">
+                                  Action
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {machineItems
+                                .sort((a, b) => a.no - b.no)
+                                .map((item, idx) => {
+                                  // AMBIL DATA DB
+                                  const dbKey = generateKey(item.partName);
+                                  const dbData = masterDb[dbKey];
+                                  return (
+                                    <tr
+                                      key={idx}
+                                      className="hover:bg-blue-50 transition-colors group"
+                                    >
+                                      {/* 1. Part Name & Materials */}
+                                      <td className="px-4 py-3 align-middle">
+                                        <div className="flex flex-col gap-1">
+                                          {/* NAMA PART (Full Text) */}
+                                          <span className="font-bold text-slate-800 text-sm wrap-break-word group-hover:text-blue-700 transition-colors leading-tight">
+                                            {item.partName}
+                                          </span>
 
-                                  {/* === TAMBAHAN: TOTAL KG (Raw Data) === */}
-                                  <td className="px-2 py-3 text-center">
-                                    <span className="font-medium text-black bg-gray-100 px-2 py-1 rounded text-xs border border-gray-200">
-                                      {item.inputKg > 0
-                                        ? item.inputKg.toLocaleString("id-ID", {
-                                            maximumFractionDigits: 2,
-                                          }) + " Kg"
-                                        : "-"}
-                                    </span>
-                                  </td>
+                                          {/* INDIKATOR DB */}
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {dbData ? (
+                                              <>
+                                                {/* Material 1 */}
+                                                {dbData.materialName && (
+                                                  <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 truncate max-w-full">
+                                                    M1: {dbData.materialName}
+                                                  </span>
+                                                )}
 
-                                  {/* RECYCLE INPUT */}
-                                  <td className="px-2 py-3 text-center">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      className="w-12 text-center text-xs font-bold text-emerald-700 border border-emerald-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                                      value={
-                                        item.recycleInput === 0
-                                          ? ""
-                                          : item.recycleInput
-                                      }
-                                      placeholder="0"
-                                      onChange={(e) =>
-                                        handleRecycleChange(
-                                          item.id,
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                  </td>
+                                                {/* Material 2 (Jika Ada) */}
+                                                {dbData.materialName2 && (
+                                                  <span className="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 truncate max-w-full">
+                                                    M2: {dbData.materialName2}
+                                                  </span>
+                                                )}
 
-                                  {/* TOTAL SAK (NET REQUEST & RAW INFO) */}
-                                  <td className="px-2 py-3 text-center">
-                                    <div className="inline-flex flex-col items-center">
-                                      {/* Angka Utama (Net Request setelah Recycle) */}
-                                      <span className="text-lg font-bold text-slate-800">
-                                        {item.totalQty}
-                                      </span>
-                                      {/* === TAMBAHAN: RAW SAK ASLI === */}
-                                      <span className="text-[10px] text-slate-400 font-medium italic">
-                                        (Raw:
-                                        {item.inputSak % 1 === 0
-                                          ? item.inputSak
-                                          : item.inputSak.toFixed(1)}
-                                        )
-                                      </span>
-                                    </div>
-                                  </td>
+                                                {!dbData.materialName &&
+                                                  !dbData.materialName2 && (
+                                                    <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 italic">
+                                                      No Material
+                                                    </span>
+                                                  )}
 
-                                  {/* ACTION BUTTONS */}
-                                  <td className="px-2 py-3 text-right">
-                                    <div className="flex justify-end gap-2">
-                                      <button
-                                        onClick={() => handlePrintRequest(item)}
-                                        className="bg-white border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 text-[10px] font-bold py-1.5 px-2 rounded shadow-sm flex items-center gap-1"
-                                      >
-                                        📄 REQ
-                                      </button>
-                                      {/* === DROPDOWN PRINT LABEL (FIX Z-INDEX) === */}
-                                      <div className="relative inline-block text-left">
-                                        {/* === TOMBOL PEMBUKA MENU PRINT === */}
-                                        <div className="flex justify-center">
+                                                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 ml-auto">
+                                                  <span>✓</span> DB
+                                                </span>
+                                              </>
+                                            ) : (
+                                              <span className="text-[10px] text-red-400 font-medium italic">
+                                                *Belum Input DB
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                      {/* 2. Plan */}
+                                      <td className="px-2 py-3 text-center border-l border-slate-100 align-middle">
+                                        {item.inputPlan > 0 ? (
+                                          <span className="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded text-sm">
+                                            {item.inputPlan}
+                                          </span>
+                                        ) : (
+                                          <span className="text-slate-300">
+                                            -
+                                          </span>
+                                        )}
+                                      </td>
+
+                                      {/* 3. Kg */}
+                                      <td className="px-2 py-3 text-center border-l border-slate-100 align-middle">
+                                        <span className="text-xs font-bold text-slate-500">
+                                          {item.inputKg > 0
+                                            ? item.inputKg.toLocaleString(
+                                                "id-ID",
+                                                { maximumFractionDigits: 1 },
+                                              )
+                                            : "-"}
+                                        </span>
+                                      </td>
+
+                                      {/* 4. Recycle */}
+                                      <td className="px-2 py-3 text-center border-l border-slate-100 align-middle bg-emerald-50/20">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          className="w-12 text-center text-sm font-bold text-emerald-700 border-2 border-emerald-100 rounded-md py-1 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white shadow-sm"
+                                          value={
+                                            item.recycleInput === 0
+                                              ? ""
+                                              : item.recycleInput
+                                          }
+                                          placeholder="0"
+                                          onChange={(e) =>
+                                            handleRecycleChange(
+                                              item.id,
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                      </td>
+
+                                      {/* 5. Total */}
+                                      <td className="px-2 py-3 text-center border-l border-slate-100 align-middle">
+                                        <span className="font-black text-slate-900 text-lg">
+                                          {item.totalQty}
+                                        </span>
+                                        {item.inputSak % 1 !== 0 && (
+                                          <span className="block text-[10px] text-slate-400 font-medium -mt-1">
+                                            ({item.inputSak.toFixed(1)})
+                                          </span>
+                                        )}
+                                      </td>
+
+                                      {/* 6. Action */}
+                                      <td className="px-4 py-3 text-right align-middle">
+                                        <div className="flex flex-col gap-1.5 items-end">
+                                          <button
+                                            onClick={() =>
+                                              handlePrintRequest(item)
+                                            }
+                                            className="bg-white border-2 border-slate-200 hover:border-blue-500 hover:text-blue-600 text-slate-600 text-xs font-bold px-3 py-1 rounded-md shadow-sm transition-all w-full max-w-20"
+                                          >
+                                            📄 REQ
+                                          </button>
                                           <button
                                             onClick={() =>
                                               setActiveDropdown(item.id)
-                                            } // Simpan ID item yang diklik
-                                            className="bg-blue-50 border border-blue-200 hover:bg-blue-600 hover:text-white text-blue-700 text-[10px] font-bold py-1.5 px-3 rounded shadow-sm flex items-center gap-1 transition-all"
+                                            }
+                                            className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-md shadow-md transition-all w-full max-w-20"
                                           >
-                                            🏷️ LABEL
+                                            🏷️ LBL
                                           </button>
                                         </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
@@ -3065,6 +3190,7 @@ function App() {
                     <span className="absolute top-0.5 left-0.5 text-[7px] text-black font-bold">
                       PIC
                     </span>
+                    x
                   </div>
                 </div>
               ))}
@@ -3078,7 +3204,7 @@ function App() {
         (() => {
           // 1. Ambil Item
           const selectedItem = dataMaterial.find(
-            (d) => d.id === activeDropdown
+            (d) => d.id === activeDropdown,
           );
 
           // 2. Ambil Data Master
