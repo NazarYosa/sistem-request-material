@@ -517,6 +517,7 @@ function App() {
 
   // === 1. HANDLE UPLOAD (REVISI: SUPPORT EXCEL TERBUKA & RE-UPLOAD) ===
   const handleFileUpload = (e) => {
+    e.target.value(""); //disini diubah
     const files = e.target.files;
     if (!files || !files.length) return;
 
