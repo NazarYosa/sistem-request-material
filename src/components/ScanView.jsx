@@ -402,7 +402,7 @@ const ScanView = ({
                                 )}
 
                                 <div className={`flex flex-col gap-1.5 py-3 ${isRegistered && !item.isExcluded ? "pl-5" : "pl-4"} pr-4`}>
-                                  <span className={`font-bold text-base break-words leading-tight transition-all ${item.isExcluded ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-700'}`}>
+                                  <span className={`font-bold text-base wrap-break-word leading-tight transition-all ${item.isExcluded ? 'text-slate-400 line-through' : 'text-slate-800 group-hover:text-blue-700'}`}>
                                     {item.partName}
                                   </span>
 
