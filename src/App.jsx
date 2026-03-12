@@ -533,8 +533,17 @@ function App() {
         totalQty: totalQty,
         jmlLabel: jmlLabel,
         recycleInput: 0,
+        isExcluded: false,
       };
     });
+  };
+
+  const toggleExcludePart = (id) => {
+    setDataMaterial((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isExcluded: !item.isExcluded } : item,
+      ),
+    );
   };
 
   const handleRecycleChange = (id, val) => {
@@ -598,20 +607,93 @@ function App() {
     setPrintData(labels);
   };
 
+  // const handlePrintAllRequest = () => {
+  //   if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
+  //   let allLabelsAccumulated = [];
+  //   dataMaterial.forEach((item) => {
+  //     if (item.totalQty > 0) {
+  //       const dbKey = generateKey(item.partName);
+  //       const extraData = masterDb[dbKey] || {};
+  //       const totalPlan = item.totalQty;
+  //       const totalRecycle = item.recycleInput || 0;
+  //       const netRequest = Math.max(0, totalPlan - totalRecycle);
+  //       if (netRequest === 0 && totalRecycle === 0) return;
+
+  //       let totalBox = Math.ceil(totalPlan / 11);
+  //       if (totalBox === 0 && totalPlan > 0) totalBox = 1;
+  //       const recyclePerBox = Math.floor(totalRecycle / totalBox);
+  //       const recycleRemainder = totalRecycle % totalBox;
+  //       let remainingPlan = totalPlan;
+
+  //       for (let i = 0; i < totalBox; i++) {
+  //         const currentBoxTotal = Math.min(11, remainingPlan);
+  //         let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
+  //         if (currentRecycle > currentBoxTotal)
+  //           currentRecycle = currentBoxTotal;
+  //         const currentNet = currentBoxTotal - currentRecycle;
+  //         let qtyDisplay = `${currentNet}`;
+  //         if (currentRecycle > 0)
+  //           qtyDisplay = `${currentNet} + ${currentRecycle}`;
+  //         let totalDisplay = `${netRequest}`;
+  //         if (totalRecycle > 0)
+  //           totalDisplay = `${netRequest} + ${totalRecycle}`;
+  //         else totalDisplay = `${totalPlan}`;
+
+  //         allLabelsAccumulated.push({
+  //           ...item,
+  //           partNameExcel: item.partName,
+  //           partNoMain: extraData.partNo || item.partNo,
+  //           materialName: extraData.materialName || "-",
+  //           partNoMaterial: extraData.partNoMaterial || "-",
+  //           materialName2: extraData.materialName2 || "",
+  //           partNoMaterial2: extraData.partNoMaterial2 || "",
+  //           color: extraData.color || "BLACK",
+  //           model: extraData.model || "-",
+  //           qtyDisplay: qtyDisplay,
+  //           totalDisplay: totalDisplay,
+  //           boxKe: i + 1,
+  //           totalBox: totalBox,
+  //         });
+  //         remainingPlan -= currentBoxTotal;
+  //       }
+  //     }
+  //   });
+
+  //   if (allLabelsAccumulated.length === 0) {
+  //     alert("Tidak ada data yang perlu di-print (Qty 0 semua).");
+  //     return;
+  //   }
+  //   setPrintType("REQ");
+  //   setPrintData(allLabelsAccumulated);
+  // };
+
+
+
+  // === 6. PRINT ENGINE 2: LABEL (Switch logic) ===
+  
   const handlePrintAllRequest = () => {
-    if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
+    if (
+      !window.confirm("Yakin ingin mencetak SEMUA data?")
+    )
+      return;
+
     let allLabelsAccumulated = [];
+
     dataMaterial.forEach((item) => {
-      if (item.totalQty > 0) {
+      // TAMBAHKAN KONDISI: && !item.isExcluded
+      if (item.totalQty > 0 && !item.isExcluded) {
         const dbKey = generateKey(item.partName);
         const extraData = masterDb[dbKey] || {};
+
         const totalPlan = item.totalQty;
         const totalRecycle = item.recycleInput || 0;
         const netRequest = Math.max(0, totalPlan - totalRecycle);
+
         if (netRequest === 0 && totalRecycle === 0) return;
 
         let totalBox = Math.ceil(totalPlan / 11);
         if (totalBox === 0 && totalPlan > 0) totalBox = 1;
+
         const recyclePerBox = Math.floor(totalRecycle / totalBox);
         const recycleRemainder = totalRecycle % totalBox;
         let remainingPlan = totalPlan;
@@ -622,9 +704,11 @@ function App() {
           if (currentRecycle > currentBoxTotal)
             currentRecycle = currentBoxTotal;
           const currentNet = currentBoxTotal - currentRecycle;
+
           let qtyDisplay = `${currentNet}`;
           if (currentRecycle > 0)
             qtyDisplay = `${currentNet} + ${currentRecycle}`;
+
           let totalDisplay = `${netRequest}`;
           if (totalRecycle > 0)
             totalDisplay = `${netRequest} + ${totalRecycle}`;
@@ -651,14 +735,14 @@ function App() {
     });
 
     if (allLabelsAccumulated.length === 0) {
-      alert("Tidak ada data yang perlu di-print (Qty 0 semua).");
+      alert("Tidak ada data yang perlu di-print (semua anomali atau Qty 0).");
       return;
     }
+
     setPrintType("REQ");
     setPrintData(allLabelsAccumulated);
   };
-
-  // === 6. PRINT ENGINE 2: LABEL (Switch logic) ===
+  
   const handlePrintLabel = (item, type) => {
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey];
@@ -835,6 +919,7 @@ function App() {
                 setActiveDropdown={setActiveDropdown}
                 handleRecycleChange={handleRecycleChange}
                 masterDb={masterDb}
+                toggleExcludePart={toggleExcludePart}
               />
             </div>
           )}
