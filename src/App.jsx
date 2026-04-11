@@ -8,6 +8,7 @@ import {
   setDoc,
   doc,
   deleteDoc,
+  addDoc,
 } from "firebase/firestore";
 import { generateKey, getMarkersFromDate } from "./utils";
 
@@ -17,12 +18,14 @@ import InputView from "./components/InputView";
 import ScanView from "./components/ScanView";
 import PrintLayout from "./components/PrintLayout";
 import ModalMenu from "./components/ModalMenu";
+import HistoryView from "./components/HistoryView";
+import ManualReqView from "./components/ManualReqView";
 
 function App() {
   // === 1. STATE MANAGEMENT ===
   const [dataMaterial, setDataMaterial] = useState([]);
   const [printData, setPrintData] = useState(null);
-  const [printType, setPrintType] = useState(null); // 'REQ' atau 'LABEL'
+  const [printType, setPrintType] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +41,11 @@ function App() {
 
   const [masterDb, setMasterDb] = useState({});
   const [isLoadingDb, setIsLoadingDb] = useState(false);
+
+  // STATE: HISTORY & CUSTOM POPUP
+  const [pendingHistory, setPendingHistory] = useState(null);
+  const [showPrintConfirm, setShowPrintConfirm] = useState(false);
+  const [isSavingHistory, setIsSavingHistory] = useState(false);
 
   const [inputForm, setInputForm] = useState({
     partName: "",
@@ -84,237 +92,24 @@ function App() {
     imgTagR: "",
   });
 
-  // === 2. FETCH DATA FIREBASE ===
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoadingDb(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, "master_parts"));
-        const data = {};
-        querySnapshot.forEach((doc) => {
-          data[doc.id] = doc.data();
-        });
-        setMasterDb(data);
-      } catch (error) {
-        console.error("Error connecting to Firebase:", error);
-        alert("Gagal mengambil data database! Cek internet.");
-      } finally {
-        setIsLoadingDb(false);
-      }
-    };
-    fetchData();
-  }, []);
+  // ========================================================================
+  // SISTEM AUTO-SYNC EXCEL (FILE SYSTEM ACCESS API)
+  // ========================================================================
+  const fileHandleRef = useRef(null);
+  const lastModifiedRef = useRef(0);
+  const selectedDateRef = useRef(selectedDate);
+  const masterDbRef = useRef(masterDb);
+  const [isAutoSyncing, setIsAutoSyncing] = useState(false);
 
-  // === 3. CRUD LOGIC ===
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setInputForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveInput = async () => {
-    if (!inputForm.partName) return alert("Part Name wajib diisi!");
-    const newKey = generateKey(inputForm.partName);
-
-    try {
-      if (editingKey && editingKey !== newKey) {
-        await deleteDoc(doc(db, "master_parts", editingKey));
-        setMasterDb((prev) => {
-          const temp = { ...prev };
-          delete temp[editingKey];
-          return temp;
-        });
-      }
-
-      await setDoc(doc(db, "master_parts", newKey), inputForm);
-      setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
-
-      setInputForm({
-        partName: "",
-        partNo: "",
-        weight: "",
-        stdQty: "",
-        partNameHgs: "",
-        partNoHgs: "",
-        finishGood: "",
-        partAssyName: "",
-        partAssyHgs: "",
-        partAssyFg: "",
-        partAssyNameLeft: "",
-        partAssyHgsLeft: "",
-        partAssyFgLeft: "",
-        partAssyNameRight: "",
-        partAssyHgsRight: "",
-        partAssyFgRight: "",
-        partNoHgsLeft: "",
-        partNameHgsLeft: "",
-        finishGoodLeft: "",
-        finishGoodNameLeft: "",
-        partNoHgsRight: "",
-        partNameHgsRight: "",
-        finishGoodRight: "",
-        finishGoodNameRight: "",
-        color: "",
-        materialName: "",
-        partNoMaterial: "",
-        materialName2: "",
-        partNoMaterial2: "",
-        model: "",
-        qrHgs: "",
-        imgHgs: "",
-        qrAssy: "",
-        imgAssy: "",
-        qrAssyL: "",
-        imgAssyL: "",
-        qrAssyR: "",
-        imgAssyR: "",
-        qrTagL: "",
-        imgTagL: "",
-        qrTagR: "",
-        imgTagR: "",
-      });
-      setEditingKey(null);
-      alert("Data berhasil disimpan ke Cloud!");
-    } catch (error) {
-      console.error("Error saving: ", error);
-      alert("Gagal menyimpan data.");
-    }
-  };
-
-  const handleEditDb = (key) => {
-    const data = masterDb[key];
-    setInputForm(data);
-    setEditingKey(key);
-    if (inputFormRef.current) {
-      inputFormRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setInputForm({
-      partName: "",
-      partNo: "",
-      weight: "",
-      stdQty: "",
-      partNameHgs: "",
-      partNoHgs: "",
-      finishGood: "",
-      partAssyName: "",
-      partAssyHgs: "",
-      partAssyFg: "",
-      partAssyNameLeft: "",
-      partAssyHgsLeft: "",
-      partAssyFgLeft: "",
-      partAssyNameRight: "",
-      partAssyHgsRight: "",
-      partAssyFgRight: "",
-      partNoHgsLeft: "",
-      partNameHgsLeft: "",
-      finishGoodLeft: "",
-      finishGoodNameLeft: "",
-      partNoHgsRight: "",
-      partNameHgsRight: "",
-      finishGoodRight: "",
-      finishGoodNameRight: "",
-      color: "",
-      materialName: "",
-      partNoMaterial: "",
-      materialName2: "",
-      partNoMaterial2: "",
-      model: "",
-      qrHgs: "",
-      imgHgs: "",
-      qrAssy: "",
-      imgAssy: "",
-      qrAssyL: "",
-      imgAssyL: "",
-      qrAssyR: "",
-      imgAssyR: "",
-      qrTagL: "",
-      imgTagL: "",
-      qrTagR: "",
-      imgTagR: "",
-    });
-    setEditingKey(null);
-  };
-
-  const handleDeleteDb = async (key) => {
-    if (window.confirm("Hapus data ini permanen?")) {
-      try {
-        await deleteDoc(doc(db, "master_parts", key));
-        setMasterDb((prev) => {
-          const newDb = { ...prev };
-          delete newDb[key];
-          return newDb;
-        });
-        if (editingKey === key) handleCancelEdit();
-      } catch (error) {
-        console.error("Error deleting: ", error);
-        alert("Gagal menghapus data.");
-      }
-    }
-  };
-
-  // === 4. EXCEL PROCESSING LOGIC ===
-  const handleFileUpload = (e) => {
-    const files = e.target.files;
-    if (!files || !files.length) return;
-
-    const markers = getMarkersFromDate(selectedDate);
-    setDataMaterial([]);
-    setIsProcessing(true);
-    const fileInput = e.target;
-
-    setTimeout(() => {
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = (evt) => {
-          try {
-            const bstr = evt.target.result;
-            const workbook = XLSX.read(bstr, { type: "array" });
-            let extractedData = [];
-
-            workbook.SheetNames.forEach((sheetName) => {
-              if (sheetName.trim().toUpperCase().startsWith("M")) {
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-                  header: 1,
-                  defval: "",
-                  raw: false,
-                });
-                const result = processSheet(jsonData, sheetName, markers);
-                if (result.length > 0)
-                  extractedData = [...extractedData, ...result];
-              }
-            });
-
-            if (extractedData.length > 0) {
-              const aggregated = aggregateData(extractedData);
-              setDataMaterial((prev) => [...prev, ...aggregated]);
-            }
-          } catch (error) {
-            console.error("Error parsing Excel:", error);
-            alert("Gagal membaca file Excel. Pastikan format benar.");
-          } finally {
-            setIsProcessing(false);
-            fileInput.value = "";
-          }
-        };
-      });
-    }, 800);
-  };
-
+  // 1. Ekstraksi Data dari Excel
   const processSheet = (rows, sheetName, markers) => {
-    let headerRow = -1;
-    let colNo = -1;
-    let colPartName = -1;
-    let colPartNo = -1;
-    let dateColIndex = -1;
-    let offsetSak = -1;
-    let offsetKg = -1;
+    let headerRow = -1,
+      colNo = -1,
+      colPartName = -1,
+      colPartNo = -1,
+      dateColIndex = -1,
+      offsetSak = -1,
+      offsetKg = -1;
 
     for (let i = 0; i < Math.min(50, rows.length); i++) {
       const row = rows[i];
@@ -511,7 +306,7 @@ function App() {
 
     return Object.values(grouped).map((item) => {
       const dbKey = generateKey(item.partName);
-      const extraData = masterDb[dbKey] || {};
+      const extraData = masterDbRef.current[dbKey] || {};
       let rawWeight = extraData.weight;
       let partWeight = parseFloat(String(rawWeight).replace(",", "."));
       let isValidWeight = !isNaN(partWeight) && partWeight > 0;
@@ -538,6 +333,331 @@ function App() {
     });
   };
 
+  // 2. Fungsi Pembaca File Utama
+  const processFileFromHandle = async () => {
+    if (!fileHandleRef.current) return;
+
+    try {
+      const file = await fileHandleRef.current.getFile();
+
+      // Cek jika file tidak berubah, hentikan proses (hemat resource)
+      if (file.lastModified === lastModifiedRef.current) return;
+
+      lastModifiedRef.current = file.lastModified;
+      setIsProcessing(true);
+
+      const markers = getMarkersFromDate(selectedDateRef.current);
+      const reader = new FileReader();
+
+      reader.readAsArrayBuffer(file);
+      reader.onload = (evt) => {
+        try {
+          const bstr = evt.target.result;
+          const workbook = XLSX.read(bstr, { type: "array" });
+          let extractedData = [];
+
+          workbook.SheetNames.forEach((sheetName) => {
+            if (sheetName.trim().toUpperCase().startsWith("M")) {
+              const worksheet = workbook.Sheets[sheetName];
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1,
+                defval: "",
+                raw: false,
+              });
+              const result = processSheet(jsonData, sheetName, markers);
+              if (result.length > 0)
+                extractedData = [...extractedData, ...result];
+            }
+          });
+
+          if (extractedData.length > 0) {
+            const aggregated = aggregateData(extractedData);
+            setDataMaterial(aggregated);
+          } else {
+            setDataMaterial([]);
+          }
+        } catch (error) {
+          console.error("Error parsing Excel:", error);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+    } catch (err) {
+      console.error("Auto-sync read error:", err);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFilePick = async () => {
+    try {
+      if (!window.showOpenFilePicker) {
+        alert(
+          "Browser Anda tidak mendukung fitur Live Auto-Sync! Gunakan Chrome atau Edge versi Desktop.",
+        );
+        return;
+      }
+
+      const [handle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: "Excel Files",
+            accept: {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                [".xlsx"],
+              "application/vnd.ms-excel": [".xls"],
+            },
+          },
+        ],
+        multiple: false,
+      });
+
+      fileHandleRef.current = handle;
+      lastModifiedRef.current = 0; // Force read pertama kali
+      setIsAutoSyncing(true);
+      await processFileFromHandle();
+    } catch (err) {
+      if (err.name !== "AbortError") console.error("File Picker Error:", err);
+    }
+  };
+
+  const handleResetData = () => {
+    setDataMaterial([]);
+    setIsAutoSyncing(false);
+    fileHandleRef.current = null;
+    lastModifiedRef.current = 0;
+  };
+
+  // 3. Efek Sinkronisasi Master DB
+  useEffect(() => {
+    masterDbRef.current = masterDb;
+  }, [masterDb]);
+
+  // 4. EFEK CERDAS: DETEKSI PERUBAHAN TANGGAL
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+    // Jika user mengganti tanggal dan file sudah pernah dipilih, paksa baca ulang
+    if (fileHandleRef.current) {
+      lastModifiedRef.current = 0; // Reset cache modifikasi
+      processFileFromHandle(); // Tarik data dengan tanggal baru
+    }
+  }, [selectedDate]);
+
+  // 5. Interval Mesin Pencari Auto Sync (Setiap 2 Detik)
+  useEffect(() => {
+    let interval;
+    if (isAutoSyncing) {
+      interval = setInterval(() => {
+        processFileFromHandle();
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [isAutoSyncing]);
+
+  // ========================================================================
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoadingDb(true);
+      try {
+        const querySnapshot = await getDocs(collection(db, "master_parts"));
+        const data = {};
+        querySnapshot.forEach((doc) => {
+          data[doc.id] = doc.data();
+        });
+        setMasterDb(data);
+      } catch (error) {
+        console.error("Error connecting to Firebase:", error);
+        alert("Gagal mengambil data database! Cek internet.");
+      } finally {
+        setIsLoadingDb(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      if (pendingHistory && pendingHistory.length > 0) {
+        setTimeout(() => {
+          setShowPrintConfirm(true);
+        }, 500);
+      }
+    };
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, [pendingHistory]);
+
+  const handleConfirmHistory = async () => {
+    setIsSavingHistory(true);
+    try {
+      const historyRef = collection(db, "print_history");
+      for (let item of pendingHistory) {
+        await addDoc(historyRef, item);
+      }
+      console.log("Berhasil disimpan ke History!");
+    } catch (error) {
+      console.error("Gagal save history:", error);
+      alert("Gagal mencatat ke History. Cek koneksi Anda.");
+    } finally {
+      setIsSavingHistory(false);
+      setPendingHistory(null);
+      setShowPrintConfirm(false);
+    }
+  };
+
+  const handleCancelHistory = () => {
+    setPendingHistory(null);
+    setShowPrintConfirm(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setInputForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveInput = async () => {
+    if (!inputForm.partName) return alert("Part Name wajib diisi!");
+    const newKey = generateKey(inputForm.partName);
+
+    try {
+      if (editingKey && editingKey !== newKey) {
+        await deleteDoc(doc(db, "master_parts", editingKey));
+        setMasterDb((prev) => {
+          const temp = { ...prev };
+          delete temp[editingKey];
+          return temp;
+        });
+      }
+      await setDoc(doc(db, "master_parts", newKey), inputForm);
+      setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
+      setInputForm({
+        partName: "",
+        partNo: "",
+        weight: "",
+        stdQty: "",
+        partNameHgs: "",
+        partNoHgs: "",
+        finishGood: "",
+        partAssyName: "",
+        partAssyHgs: "",
+        partAssyFg: "",
+        partAssyNameLeft: "",
+        partAssyHgsLeft: "",
+        partAssyFgLeft: "",
+        partAssyNameRight: "",
+        partAssyHgsRight: "",
+        partAssyFgRight: "",
+        partNoHgsLeft: "",
+        partNameHgsLeft: "",
+        finishGoodLeft: "",
+        finishGoodNameLeft: "",
+        partNoHgsRight: "",
+        partNameHgsRight: "",
+        finishGoodRight: "",
+        finishGoodNameRight: "",
+        color: "",
+        materialName: "",
+        partNoMaterial: "",
+        materialName2: "",
+        partNoMaterial2: "",
+        model: "",
+        qrHgs: "",
+        imgHgs: "",
+        qrAssy: "",
+        imgAssy: "",
+        qrAssyL: "",
+        imgAssyL: "",
+        qrAssyR: "",
+        imgAssyR: "",
+        qrTagL: "",
+        imgTagL: "",
+        qrTagR: "",
+        imgTagR: "",
+      });
+      setEditingKey(null);
+      alert("Data berhasil disimpan ke Cloud!");
+    } catch (error) {
+      console.error("Error saving: ", error);
+      alert("Gagal menyimpan data.");
+    }
+  };
+
+  const handleEditDb = (key) => {
+    const data = masterDb[key];
+    setInputForm(data);
+    setEditingKey(key);
+    if (inputFormRef.current)
+      inputFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+  };
+
+  const handleCancelEdit = () => {
+    setInputForm({
+      partName: "",
+      partNo: "",
+      weight: "",
+      stdQty: "",
+      partNameHgs: "",
+      partNoHgs: "",
+      finishGood: "",
+      partAssyName: "",
+      partAssyHgs: "",
+      partAssyFg: "",
+      partAssyNameLeft: "",
+      partAssyHgsLeft: "",
+      partAssyFgLeft: "",
+      partAssyNameRight: "",
+      partAssyHgsRight: "",
+      partAssyFgRight: "",
+      partNoHgsLeft: "",
+      partNameHgsLeft: "",
+      finishGoodLeft: "",
+      finishGoodNameLeft: "",
+      partNoHgsRight: "",
+      partNameHgsRight: "",
+      finishGoodRight: "",
+      finishGoodNameRight: "",
+      color: "",
+      materialName: "",
+      partNoMaterial: "",
+      materialName2: "",
+      partNoMaterial2: "",
+      model: "",
+      qrHgs: "",
+      imgHgs: "",
+      qrAssy: "",
+      imgAssy: "",
+      qrAssyL: "",
+      imgAssyL: "",
+      qrAssyR: "",
+      imgAssyR: "",
+      qrTagL: "",
+      imgTagL: "",
+      qrTagR: "",
+      imgTagR: "",
+    });
+    setEditingKey(null);
+  };
+
+  const handleDeleteDb = async (key) => {
+    if (window.confirm("Hapus data ini permanen?")) {
+      try {
+        await deleteDoc(doc(db, "master_parts", key));
+        setMasterDb((prev) => {
+          const newDb = { ...prev };
+          delete newDb[key];
+          return newDb;
+        });
+        if (editingKey === key) handleCancelEdit();
+      } catch (error) {
+        console.error("Error deleting: ", error);
+        alert("Gagal menghapus data.");
+      }
+    }
+  };
+
   const toggleExcludePart = (id) => {
     setDataMaterial((prev) =>
       prev.map((item) =>
@@ -560,13 +680,12 @@ function App() {
     );
   };
 
-  // === 5. PRINT ENGINE 1: REQUEST ===
   const handlePrintRequest = (item) => {
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey] || {};
     const labels = [];
     const totalPlan = item.totalQty;
-    const totalRecycle = item.recycleInput;
+    const totalRecycle = item.recycleInput || 0;
     const netRequest = Math.max(0, totalPlan - totalRecycle);
     let totalBox = Math.ceil(totalPlan / 11);
     if (totalBox === 0 && totalPlan > 0) totalBox = 1;
@@ -603,88 +722,38 @@ function App() {
       });
       remainingPlan -= currentBoxTotal;
     }
+
+    const dateObj = new Date();
+    const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+    const historyItem = {
+      printDate: dateObj.toISOString(),
+      monthYear: monthYear,
+      machine: item.machine ? item.machine.toUpperCase() : "-",
+      partName: item.partName || "-",
+      partNo: extraData.partNo || item.partNo || "-",
+      totalSak: parseInt(item.totalQty || 0),
+      totalKg: parseFloat(item.inputKg || 0),
+      recycle: parseFloat(item.recycleInput || 0),
+      printType: "SCAN_SATUAN",
+    };
+
+    setPendingHistory([historyItem]);
     setPrintType("REQ");
     setPrintData(labels);
   };
 
-  // const handlePrintAllRequest = () => {
-  //   if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
-  //   let allLabelsAccumulated = [];
-  //   dataMaterial.forEach((item) => {
-  //     if (item.totalQty > 0) {
-  //       const dbKey = generateKey(item.partName);
-  //       const extraData = masterDb[dbKey] || {};
-  //       const totalPlan = item.totalQty;
-  //       const totalRecycle = item.recycleInput || 0;
-  //       const netRequest = Math.max(0, totalPlan - totalRecycle);
-  //       if (netRequest === 0 && totalRecycle === 0) return;
-
-  //       let totalBox = Math.ceil(totalPlan / 11);
-  //       if (totalBox === 0 && totalPlan > 0) totalBox = 1;
-  //       const recyclePerBox = Math.floor(totalRecycle / totalBox);
-  //       const recycleRemainder = totalRecycle % totalBox;
-  //       let remainingPlan = totalPlan;
-
-  //       for (let i = 0; i < totalBox; i++) {
-  //         const currentBoxTotal = Math.min(11, remainingPlan);
-  //         let currentRecycle = recyclePerBox + (i < recycleRemainder ? 1 : 0);
-  //         if (currentRecycle > currentBoxTotal)
-  //           currentRecycle = currentBoxTotal;
-  //         const currentNet = currentBoxTotal - currentRecycle;
-  //         let qtyDisplay = `${currentNet}`;
-  //         if (currentRecycle > 0)
-  //           qtyDisplay = `${currentNet} + ${currentRecycle}`;
-  //         let totalDisplay = `${netRequest}`;
-  //         if (totalRecycle > 0)
-  //           totalDisplay = `${netRequest} + ${totalRecycle}`;
-  //         else totalDisplay = `${totalPlan}`;
-
-  //         allLabelsAccumulated.push({
-  //           ...item,
-  //           partNameExcel: item.partName,
-  //           partNoMain: extraData.partNo || item.partNo,
-  //           materialName: extraData.materialName || "-",
-  //           partNoMaterial: extraData.partNoMaterial || "-",
-  //           materialName2: extraData.materialName2 || "",
-  //           partNoMaterial2: extraData.partNoMaterial2 || "",
-  //           color: extraData.color || "BLACK",
-  //           model: extraData.model || "-",
-  //           qtyDisplay: qtyDisplay,
-  //           totalDisplay: totalDisplay,
-  //           boxKe: i + 1,
-  //           totalBox: totalBox,
-  //         });
-  //         remainingPlan -= currentBoxTotal;
-  //       }
-  //     }
-  //   });
-
-  //   if (allLabelsAccumulated.length === 0) {
-  //     alert("Tidak ada data yang perlu di-print (Qty 0 semua).");
-  //     return;
-  //   }
-  //   setPrintType("REQ");
-  //   setPrintData(allLabelsAccumulated);
-  // };
-
-
-
-  // === 6. PRINT ENGINE 2: LABEL (Switch logic) ===
-  
   const handlePrintAllRequest = () => {
-    if (
-      !window.confirm("Yakin ingin mencetak SEMUA data?")
-    )
-      return;
+    if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
 
     let allLabelsAccumulated = [];
+    let historyRecords = [];
+    const dateObj = new Date();
+    const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
 
     dataMaterial.forEach((item) => {
-      // TAMBAHKAN KONDISI: && !item.isExcluded
       if (item.totalQty > 0 && !item.isExcluded) {
         const dbKey = generateKey(item.partName);
         const extraData = masterDb[dbKey] || {};
-
         const totalPlan = item.totalQty;
         const totalRecycle = item.recycleInput || 0;
         const netRequest = Math.max(0, totalPlan - totalRecycle);
@@ -731,6 +800,18 @@ function App() {
           });
           remainingPlan -= currentBoxTotal;
         }
+
+        historyRecords.push({
+          printDate: dateObj.toISOString(),
+          monthYear: monthYear,
+          machine: item.machine ? item.machine.toUpperCase() : "-",
+          partName: item.partName || "-",
+          partNo: extraData.partNo || item.partNo || "-",
+          totalSak: parseInt(item.totalQty || 0),
+          totalKg: parseFloat(item.inputKg || 0),
+          recycle: parseFloat(item.recycleInput || 0),
+          printType: "SCAN_ALL",
+        });
       }
     });
 
@@ -739,10 +820,11 @@ function App() {
       return;
     }
 
+    setPendingHistory(historyRecords);
     setPrintType("REQ");
     setPrintData(allLabelsAccumulated);
   };
-  
+
   const handlePrintLabel = (item, type) => {
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey];
@@ -863,7 +945,6 @@ function App() {
     if (printData) setTimeout(() => window.print(), 500);
   }, [printData]);
 
-  // Group Data untuk UI Dashboard
   const groupedUI = dataMaterial.reduce((acc, item) => {
     if (!acc[item.machine]) acc[item.machine] = [];
     acc[item.machine].push(item);
@@ -872,22 +953,17 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden print:h-auto print:overflow-visible">
-      {/* 1. HEADER UTAMA */}
       <Header
         viewMode={viewMode}
         setViewMode={setViewMode}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
-        handlePrintAllRequest={handlePrintAllRequest}
-        handleFileUpload={handleFileUpload}
-        isProcessing={isProcessing}
       />
 
-      {/* 2. BODY UTAMA */}
       <div className="flex-1 overflow-y-auto print:hidden">
         <div className="w-full mx-auto">
           {viewMode === "input" && (
-            <div className="p-8">
+            <div className="p-8 w-full">
               <InputView
                 inputForm={inputForm}
                 setInputForm={setInputForm}
@@ -900,8 +976,6 @@ function App() {
                 handleDeleteDb={handleDeleteDb}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                dbTableMode={dbTableMode}
-                setDbTableMode={setDbTableMode}
                 handleExportFirebase={handleExportFirebase}
                 inputFormRef={inputFormRef}
               />
@@ -909,7 +983,7 @@ function App() {
           )}
 
           {viewMode === "scan" && (
-            <div className="w-full bg-slate-50 p-6">
+            <div className="w-full bg-slate-50 p-4 md:p-6 lg:px-8">
               <ScanView
                 dataMaterial={dataMaterial}
                 groupedUI={groupedUI}
@@ -920,21 +994,114 @@ function App() {
                 handleRecycleChange={handleRecycleChange}
                 masterDb={masterDb}
                 toggleExcludePart={toggleExcludePart}
+                handlePrintAllRequest={handlePrintAllRequest}
+                handleFilePick={handleFilePick}
+                isAutoSyncing={isAutoSyncing}
+                handleResetData={handleResetData}
+              />
+            </div>
+          )}
+
+          {viewMode === "history" && (
+            <div className="p-4 md:p-8">
+              <HistoryView db={db} masterDb={masterDb} />
+            </div>
+          )}
+
+          {viewMode === "manual" && (
+            <div className="p-4 md:p-8">
+              <ManualReqView
+                db={db}
+                masterDb={masterDb}
+                setPrintType={setPrintType}
+                setPrintData={setPrintData}
+                setPendingHistory={setPendingHistory}
               />
             </div>
           )}
         </div>
       </div>
 
-      {/* 3. AREA PRINTING (HIDDEN ON SCREEN) */}
+      {/* OVERLAY PROCESSING */}
+      {isProcessing && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-5">
+            <div className="w-14 h-14 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+            <span className="text-base font-black text-slate-700 animate-pulse tracking-wide">
+              {isAutoSyncing
+                ? "SYNC DATA TANGGAL BARU..."
+                : "MEMPROSES DATA..."}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP CONFIRM HISTORY */}
+      {showPrintConfirm && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
+            <div className="p-6">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4">
+                🖨️
+              </div>
+              <h3 className="font-black text-2xl text-slate-800 tracking-tight">
+                Status Print?
+              </h3>
+              <p className="text-slate-500 text-sm mt-2 font-medium leading-relaxed">
+                Apakah stiker tadi berhasil di-print atau di-save?
+              </p>
+              <div className="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-emerald-500 text-lg leading-none">
+                    ✅
+                  </span>
+                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Klik <span className="text-emerald-600">SAVE</span>
+                    <br />
+                    <span className="text-[10px] text-slate-500 normal-case font-medium">
+                      Data pemakaian akan masuk ke History.
+                    </span>
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 pt-3 border-t border-slate-200">
+                  <span className="text-red-500 text-lg leading-none">❌</span>
+                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Klik <span className="text-red-600">CANCEL</span>
+                    <br />
+                    <span className="text-[10px] text-slate-500 normal-case font-medium">
+                      Data dibuang & tidak masuk History.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={handleCancelHistory}
+                disabled={isSavingHistory}
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleConfirmHistory}
+                disabled={isSavingHistory}
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-blue-600 border-2 border-blue-600 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                {isSavingHistory ? "SAVING..." : "SAVE"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRINTING & MODALS */}
       <PrintLayout
         printType={printType}
         printData={printData}
         orientation={orientation}
         selectedDate={selectedDate}
       />
-
-      {/* 4. MODAL POPUP MENU */}
       <ModalMenu
         activeDropdown={activeDropdown}
         setActiveDropdown={setActiveDropdown}
@@ -945,7 +1112,6 @@ function App() {
         orientation={orientation}
       />
 
-      {/* STYLE UTAMA (Font & Reset) */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&display=swap');
         body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, span, div { font-family: 'Work Sans', sans-serif !important; }
