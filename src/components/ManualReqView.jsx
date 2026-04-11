@@ -186,16 +186,13 @@ const ManualReqView = ({
           <h2 className="font-black text-3xl text-slate-900 uppercase tracking-tight">
             Manual Request
           </h2>
-          <p className="text-slate-500 text-sm mt-1 font-bold uppercase tracking-widest">
-            Print Stiker Baru & Catat ke History
-          </p>
         </div>
         <button
           onClick={handlePrintSubmit}
           disabled={!formData.partKey || !formData.sak}
           className="bg-slate-900 text-white hover:bg-blue-600 font-black text-lg px-8 py-3 rounded-xl transition-all uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
         >
-          🖨️ PRINT STIKER
+          PRINT
         </button>
       </div>
 
