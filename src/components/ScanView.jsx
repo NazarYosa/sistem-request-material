@@ -231,7 +231,7 @@ const ScanView = ({
                             disabled={item.isExcluded}
                             className="bg-slate-800 hover:bg-black text-white text-[10px] font-bold px-2 py-1 rounded w-full max-w-[70px] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
                           >
-                            LBL
+                            PART TAG
                           </button>
                         </div>
                       </td>
