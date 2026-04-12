@@ -249,7 +249,7 @@ const ScanView = ({
   return (
     <div className="w-full flex flex-col gap-6">
       {/* HEADER SCAN VIEW */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-white p-5 rounded-xl border border-slate-300 shadow-sm">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center p-5 rounded-xl border border-slate-300">
         <div className="flex items-center gap-4 mb-4 lg:mb-0">
           <div className="w-10 h-10 bg-slate-100 text-slate-800 rounded-lg flex items-center justify-center text-xl border border-slate-300">
             📅
@@ -275,7 +275,7 @@ const ScanView = ({
             className={`flex-1 lg:flex-none flex items-center justify-center text-sm font-bold py-2.5 px-6 rounded-lg cursor-pointer transition-all border ${
               isAutoSyncing
                 ? "bg-slate-100 text-slate-900 border-slate-400"
-                : "bg-white text-slate-800 hover:bg-slate-50 border-slate-300 active:scale-95 shadow-sm"
+                : "text-slate-800 border-slate-300 active:scale-95"
             }`}
           >
             <span className="text-base mr-2">

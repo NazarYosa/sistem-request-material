@@ -216,12 +216,12 @@ const ManualReqView = ({
           </div>
           <div className="flex flex-col">
             <label className="text-xs font-bold text-slate-500 uppercase mb-1.5">
-              Nama Mesin
+              Mesin
             </label>
             <input
-              type="text"
+              type="number"
               name="machine"
-              placeholder="CONTOH: 1000T A"
+              placeholder="CONTOH: 2500"
               value={formData.machine}
               onChange={handleChange}
               className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none font-bold uppercase transition-all"
