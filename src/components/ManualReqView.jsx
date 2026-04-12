@@ -108,7 +108,7 @@ const ManualReqView = ({
     else totalDisplay = `${totalPlan}`;
 
     generatedLabels.push({
-      machine: formData.machine ? formData.machine.toUpperCase() : "MESIN",
+      machine: formData.machine ? formData.machine.toUpperCase() : "-",
       partNameExcel: partData.partName || "-",
       partNoMain: partData.partNo || "-",
       model: partData.model || "-",
