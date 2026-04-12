@@ -722,7 +722,7 @@ const InputView = ({
           onClick={handleExportFirebase}
           className="flex items-center gap-2 bg-red-100 text-red-700 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-red-200"
         >
-          🔥 Export Firebase
+         EXPORT DATABASE
         </button>
       </div>
 
