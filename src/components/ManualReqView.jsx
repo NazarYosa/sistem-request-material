@@ -109,14 +109,14 @@ const ManualReqView = ({
 
     generatedLabels.push({
       machine: formData.machine ? formData.machine.toUpperCase() : "MESIN",
-      partNameExcel: partData.partName || "NAMA PART",
-      partNoMain: partData.partNo || "NOMOR PART",
-      model: partData.model || "MODEL",
-      materialName: partData.materialName || "MATERIAL UTAMA",
+      partNameExcel: partData.partName || "-",
+      partNoMain: partData.partNo || "-",
+      model: partData.model || "-",
+      materialName: partData.materialName || "-",
       materialName2: partData.materialName2 || "",
       partNoMaterial: partData.partNoMaterial || "-",
       partNoMaterial2: partData.partNoMaterial2 || "",
-      color: partData.color || "BLACK",
+      color: partData.color || "-",
       qtyDisplay: qtyDisplay,
       totalDisplay: totalDisplay,
       boxKe: i + 1,
@@ -129,14 +129,14 @@ const ManualReqView = ({
   if (generatedLabels.length === 0) {
     generatedLabels.push({
       machine: formData.machine ? formData.machine.toUpperCase() : "MESIN",
-      partNameExcel: partData.partName || "NAMA PART",
-      partNoMain: partData.partNo || "NOMOR PART",
-      model: partData.model || "MODEL",
-      materialName: partData.materialName || "MATERIAL UTAMA",
+      partNameExcel: partData.partName || "-",
+      partNoMain: partData.partNo || "-",
+      model: partData.model || "-",
+      materialName: partData.materialName || "-",
       materialName2: partData.materialName2 || "",
       partNoMaterial: partData.partNoMaterial || "-",
       partNoMaterial2: partData.partNoMaterial2 || "",
-      color: partData.color || "BLACK",
+      color: partData.color || "-",
       qtyDisplay: "0",
       totalDisplay: "0",
       boxKe: 1,
@@ -261,7 +261,7 @@ const ManualReqView = ({
               )}
             </div>
             {showDropdown && (
-              <ul className="absolute z-50 w-full top-[100%] mt-2 bg-white border border-slate-200 rounded-xl max-h-60 overflow-y-auto shadow-xl divide-y divide-slate-100">
+              <ul className="absolute z-50 w-full top-full mt-2 bg-white border border-slate-200 rounded-xl max-h-60 overflow-y-auto shadow-xl divide-y divide-slate-100">
                 {filteredParts.length > 0 ? (
                   filteredParts.map((p) => (
                     <li
@@ -290,7 +290,7 @@ const ManualReqView = ({
           </div>
           <div className="grid grid-cols-3 gap-4 pt-2">
             <div className="flex flex-col">
-              <label className="text-xs font-bold text-blue-600 uppercase mb-1.5 text-center">
+              <label className="text-xs font-bold uppercase mb-1.5 text-center">
                 SAK
               </label>
               <input
@@ -301,11 +301,11 @@ const ManualReqView = ({
                 placeholder="0"
                 min="0"
                 required
-                className="px-2 py-3 text-center text-3xl font-black text-blue-600 bg-blue-50/50 border border-blue-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="px-2 py-3 text-center text-3xl font-black border rounded-xl focus:bg-white focus:ring-2  outline-none transition-all"
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-bold text-emerald-600 uppercase mb-1.5 text-center">
+              <label className="text-xs font-bold uppercase mb-1.5 text-center">
                 KG
               </label>
               <input
@@ -317,11 +317,11 @@ const ManualReqView = ({
                 min="0"
                 step="0.1"
                 required
-                className="px-2 py-3 text-center text-3xl font-black text-emerald-600 bg-emerald-50/50 border border-emerald-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                className="px-2 py-3 text-center text-3xl font-black  border rounded-xl focus:bg-white focus:ring-2  outline-none transition-all"
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-bold text-orange-500 uppercase mb-1.5 text-center">
+              <label className="text-xs font-bold uppercase mb-1.5 text-center">
                 REC (SAK)
               </label>
               <input
@@ -331,7 +331,7 @@ const ManualReqView = ({
                 onChange={handleChange}
                 placeholder="0"
                 min="0"
-                className="px-2 py-3 text-center text-3xl font-black text-orange-500 bg-orange-50/50 border border-orange-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                className="px-2 py-3 text-center text-3xl font-black   border  rounded-xl focus:bg-white focus:ring-2 outline-none transition-all"
               />
             </div>
           </div>
@@ -341,15 +341,12 @@ const ManualReqView = ({
         <div className="w-full xl:w-8/12 flex flex-col print:hidden overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-slate-400 text-sm uppercase tracking-widest">
-              Live Preview Stiker
+              Live Preview
             </h3>
-            <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-3 py-1.5 border border-blue-200 rounded-lg shadow-sm">
-              {generatedLabels.length} Stiker
-            </span>
           </div>
           <div className="w-full bg-slate-100 rounded-2xl border border-slate-200 overflow-x-auto overflow-y-hidden shadow-inner p-4 md:p-6 custom-scrollbar">
             <div className="w-max min-w-full pointer-events-none pb-2">
-              <div className="[&>div]:!block [&_.flex-wrap]:!flex-nowrap [&_.flex-wrap]:!w-max [&_.flex-wrap]:!gap-4 [&_.flex-wrap>div]:!w-[380px] [&_.flex-wrap>div]:!shrink-0 bg-white p-4 shadow-sm border border-slate-200 rounded-xl inline-block">
+              <div className="[&>div]:block! [&_.flex-wrap]:flex-nowrap! [&_.flex-wrap]:w-max! [&_.flex-wrap]:gap-4! [&_.flex-wrap>div]:w-[380px]! [&_.flex-wrap>div]:shrink-0! bg-white p-4 shadow-sm border border-slate-200 rounded-xl inline-block">
                 <PrintLayout
                   printType="REQ"
                   printData={generatedLabels}
@@ -360,7 +357,7 @@ const ManualReqView = ({
           </div>
           <p className="text-center text-[10px] text-slate-400 mt-3 uppercase font-bold tracking-widest flex items-center justify-center gap-3">
             <span className="text-lg">👈</span> Geser Kiri / Kanan untuk melihat
-            semua stiker <span className="text-lg">👉</span>
+            semua <span className="text-lg">👉</span>
           </p>
         </div>
       </div>
