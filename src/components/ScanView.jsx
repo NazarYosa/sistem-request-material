@@ -99,7 +99,7 @@ const ScanView = ({
                   Rec
                 </th>
                 <th className="px-2 py-3 text-center font-extrabold uppercase text-xs tracking-wider w-[8%]">
-                  Tot
+                  SAK
                 </th>
                 <th className="px-2 py-3 text-center font-extrabold uppercase text-[9px] tracking-wider w-[5%]">
                   Skip
@@ -125,7 +125,7 @@ const ScanView = ({
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1.5">
                           <span
-                            className={`font-black text-sm ${item.isExcluded ? "text-slate-400 line-through" : "text-slate-900"}`}
+                            className={`font-semibold text-xl ${item.isExcluded ? "text-slate-400 line-through" : "text-slate-900"}`}
                           >
                             {item.partName}
                           </span>
@@ -133,7 +133,7 @@ const ScanView = ({
                             {isRegistered ? (
                               <>
                                 {dbData.materialName && (
-                                  <span className="bg-white text-slate-700 border border-slate-300 px-2.5 py-1 rounded-md text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5 shadow-sm">
+                                  <span className=" text-slate-700 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide flex items-center gap-1.5">
                                     <span className="text-slate-400 text-[10px] tracking-widest">
                                       MAT:
                                     </span>
@@ -141,7 +141,7 @@ const ScanView = ({
                                   </span>
                                 )}
                                 {dbData.materialName2 && (
-                                  <span className="bg-white text-slate-700 border border-slate-300 px-2.5 py-1 rounded-md text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5 shadow-sm">
+                                  <span className=" text-slate-700 px-2.5 py-1 rounded-md text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5">
                                     <span className="text-slate-400 text-[10px] tracking-widest">
                                       MAT2:
                                     </span>
@@ -201,7 +201,7 @@ const ScanView = ({
 
                       <td className="px-2 py-3 text-center align-middle">
                         <span
-                          className={`font-black text-base ${item.isExcluded ? "text-slate-300" : "text-slate-900"}`}
+                          className={`font-bold text-base ${item.isExcluded ? "text-slate-300" : "text-slate-900"}`}
                         >
                           {item.totalQty}
                         </span>

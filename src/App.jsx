@@ -1132,7 +1132,6 @@
 
 // export default App;
 
-
 // src/App.jsx
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
@@ -1183,6 +1182,19 @@ function App() {
   const [inputForm, setInputForm] = useState({
     partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "",
   });
+
+  // ========================================================================
+  // INJEKSI FONT INTER OTOMATIS (TANPA PERLU EDIT INDEX.HTML)
+  // ========================================================================
+  useEffect(() => {
+    if (!document.getElementById("inter-font")) {
+      const link = document.createElement("link");
+      link.id = "inter-font";
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
 
   // ========================================================================
   // SISTEM AUTO-SYNC EXCEL (FILE SYSTEM ACCESS API)
@@ -1843,13 +1855,12 @@ function App() {
       <PrintLayout printType={printType} printData={printData} orientation={orientation} selectedDate={selectedDate} />
       <ModalMenu activeDropdown={activeDropdown} setActiveDropdown={setActiveDropdown} dataMaterial={dataMaterial} masterDb={masterDb} handlePrintLabel={handlePrintLabel} setOrientation={setOrientation} orientation={orientation} />
 
-      {/* --- CSS FONT INTER GLOBAL --- */}
+      {/* --- CSS FONT INTER & GLOBAL LETTER SPACING --- */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-        
-        body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, p, span, div, label { 
+        body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, p, span, div, label, a { 
           font-family: 'Inter', sans-serif !important; 
           font-optical-sizing: auto;
+          letter-spacing: 0.04em !important; /* Jarak huruf dilebarkan biar lega & elegan */
         }
         
         @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
