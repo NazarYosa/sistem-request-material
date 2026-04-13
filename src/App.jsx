@@ -1313,7 +1313,7 @@ function App() {
     return results;
   };
 
-  const aggregateData = (rawData) => {
+const aggregateData = (rawData) => {
     const grouped = {};
     rawData.forEach((item) => {
       const key = `${item.machine}__${item.partName}`;
@@ -1331,7 +1331,13 @@ function App() {
       let partWeight = parseFloat(String(rawWeight).replace(",", "."));
       let isValidWeight = !isNaN(partWeight) && partWeight > 0;
       let calculatedPlan = 0;
-      if (item.totalRawKg > 0 && isValidWeight) calculatedPlan = Math.ceil(item.totalRawKg / partWeight);
+      
+      // PERBAIKAN DI SINI: Menggunakan Math.round agar pembulatan normal
+      if (item.totalRawKg > 0 && isValidWeight) {
+        calculatedPlan = Math.round(item.totalRawKg / partWeight);
+      }
+      
+      // (Untuk Total Sak/Box tetap pakai Math.ceil agar box tidak kurang)
       const totalQty = Math.ceil(item.totalRawSak);
       const jmlLabel = Math.ceil(totalQty / 11);
 
