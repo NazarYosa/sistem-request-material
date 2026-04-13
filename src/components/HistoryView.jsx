@@ -123,35 +123,40 @@ const HistoryView = ({ db, masterDb }) => {
   return (
     <div className="bg-slate-50 min-h-screen p-4 md:p-8 font-sans text-slate-800">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-6 gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-4">
         <div>
-          <h2 className="font-black text-3xl text-slate-900 uppercase tracking-tight">
+          <h2 className="font-extrabold text-2xl md:text-3xl text-slate-800 uppercase tracking-tight">
             History Cetak
           </h2>
-          <p className="text-slate-500 text-base mt-1 font-medium tracking-wide">
+          <p className="text-slate-500 text-sm md:text-base mt-1 font-medium tracking-wide">
             Rekapitulasi Pemakaian Material
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-2 w-full lg:w-auto">
-          <input
-            type="text"
-            placeholder="CARI PART / MESIN..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-72 px-4 py-2.5 text-base bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all uppercase"
-          />
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full lg:w-auto">
+          <div className="relative w-full md:w-72">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="CARI PART / MESIN..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all uppercase placeholder:font-normal"
+            />
+          </div>
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={() => window.location.reload()}
-              className="flex-1 md:flex-none bg-slate-200 text-slate-700 hover:bg-slate-300 font-bold px-5 py-2.5 text-base rounded-lg transition-all uppercase"
+              className="flex-1 md:flex-none bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-5 py-2.5 text-sm rounded-lg transition-all uppercase shadow-sm"
             >
               REFRESH
             </button>
             <button
               onClick={handleDeleteAllHistory}
               disabled={historyData.length === 0 || isLoading}
-              className="flex-1 md:flex-none bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold px-5 py-2.5 text-base rounded-lg border border-red-200 hover:border-transparent transition-all uppercase disabled:opacity-50"
+              className="flex-1 md:flex-none bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold px-5 py-2.5 text-sm rounded-lg border border-red-200 hover:border-transparent transition-all uppercase disabled:opacity-50 shadow-sm"
             >
               HAPUS SEMUA
             </button>
@@ -159,50 +164,16 @@ const HistoryView = ({ db, masterDb }) => {
         </div>
       </div>
 
-      {/* DAFTAR FILTER MATERIAL */}
-      {!isLoading && uniqueMaterialsList.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-widest">
-            FILTER MATERIAL
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedMaterial("SEMUA")}
-              className={`px-4 py-2 text-sm font-bold rounded-full transition-all uppercase ${
-                selectedMaterial === "SEMUA"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-              }`}
-            >
-              SEMUA
-            </button>
-            {uniqueMaterialsList.map((mat) => (
-              <button
-                key={mat}
-                onClick={() => setSelectedMaterial(mat)}
-                className={`px-4 py-2 text-sm font-bold rounded-full transition-all uppercase ${
-                  selectedMaterial === mat
-                    ? "bg-slate-800 text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                {mat}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* CONTENT SECTION */}
       {isLoading ? (
         <div className="text-center py-16">
-          <p className="text-slate-500 text-xl font-bold uppercase animate-pulse">
+          <p className="text-slate-500 text-lg font-semibold uppercase animate-pulse">
             Memuat Data...
           </p>
         </div>
       ) : Object.keys(groupedByMonth).length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-slate-200">
-          <p className="text-slate-400 text-xl font-bold uppercase">
+        <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200">
+          <p className="text-slate-400 text-lg font-semibold uppercase tracking-wide">
             Tidak Ada Riwayat Ditemukan
           </p>
         </div>
@@ -234,40 +205,40 @@ const HistoryView = ({ db, masterDb }) => {
               return (
                 <div
                   key={month}
-                  className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+                  className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
                 >
                   {/* HEADER BULAN */}
                   <div
                     onClick={() => toggleMonth(month)}
-                    className="bg-slate-50 hover:bg-slate-100 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer transition-colors border-b border-slate-100"
+                    className="bg-slate-50 hover:bg-slate-100/70 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer transition-colors border-b border-slate-100"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xl font-black text-slate-400">
-                        {isExpanded ? "-" : "+"}
+                      <span className="text-xl font-bold text-slate-400 w-4 text-center">
+                        {isExpanded ? "−" : "+"}
                       </span>
-                      <h4 className="font-black text-2xl text-slate-800 uppercase tracking-tight">
+                      <h4 className="font-bold text-xl text-slate-800 uppercase tracking-tight">
                         {formatMonthYear(month)}
                       </h4>
                     </div>
-                    <div className="flex flex-wrap gap-6 text-base mt-2 md:mt-0">
+                    <div className="flex flex-wrap gap-6 text-sm mt-3 md:mt-0">
                       <div className="flex flex-col">
-                        <span className="text-slate-400 text-xs font-bold uppercase">
+                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                           Total Sak
                         </span>
-                        <span className="text-blue-600 font-black text-xl">
+                        <span className="text-blue-600 font-bold text-lg leading-tight mt-0.5">
                           {totalSakBulan.toLocaleString("id-ID")} SAK
                         </span>
                       </div>
                       <div className="flex flex-col border-l border-slate-200 pl-6">
-                        <span className="text-slate-400 text-xs font-bold uppercase">
+                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                           Total Beban
                         </span>
-                        <span className="text-emerald-600 font-black text-xl">
+                        <span className="text-emerald-600 font-bold text-lg leading-tight mt-0.5">
                           {totalKgBulan.toLocaleString("id-ID", {
                             maximumFractionDigits: 1,
                           })}{" "}
                           KG
-                          <span className="text-emerald-600/70 text-sm ml-2 font-bold">
+                          <span className="text-emerald-600/70 text-xs ml-1.5 font-semibold">
                             (
                             {totalTonBulan.toLocaleString("id-ID", {
                               minimumFractionDigits: 2,
@@ -301,40 +272,42 @@ const HistoryView = ({ db, masterDb }) => {
                           return (
                             <div
                               key={material}
-                              className="border-b border-slate-200 pb-6 last:border-0 last:pb-0"
+                              className="border-b border-slate-100 pb-8 last:border-0 last:pb-0"
                             >
-                              {/* HEADER MATERIAL: SIMPLE, NO BG, BIG NUMBERS */}
+                              {/* HEADER MATERIAL */}
                               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-4 gap-4">
                                 <div>
-                                  <span className="text-slate-400 text-xs font-bold tracking-widest uppercase block mb-0.5">
+                                  <span className="text-slate-400 text-[10px] font-bold tracking-widest uppercase block mb-1">
                                     MATERIAL
                                   </span>
-                                  <h5 className="font-black text-xl text-slate-800 uppercase tracking-wide">
+                                  <h5 className="font-bold text-lg text-slate-800 uppercase tracking-wide">
                                     {material}
                                   </h5>
                                 </div>
                                 <div className="flex gap-6 items-end">
                                   <div className="flex flex-col items-start lg:items-end">
-                                    <span className="text-slate-400 text-xs font-bold uppercase">
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                                       Pemakaian
                                     </span>
-                                    <span className="font-black text-2xl text-blue-600 leading-none mt-1">
+                                    <span className="font-bold text-xl text-blue-600 leading-none mt-1.5">
                                       {totalSakMat}{" "}
-                                      <span className="text-lg">SAK</span>
+                                      <span className="text-sm font-semibold">
+                                        SAK
+                                      </span>
                                     </span>
                                   </div>
                                   <div className="flex flex-col items-start lg:items-end border-l border-slate-200 pl-6">
-                                    <span className="text-slate-400 text-xs font-bold uppercase">
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
                                       Beban
                                     </span>
-                                    <div className="flex items-baseline gap-2 mt-1">
-                                      <span className="font-black text-2xl text-emerald-600 leading-none">
+                                    <div className="flex items-baseline gap-2 mt-1.5">
+                                      <span className="font-bold text-xl text-emerald-600 leading-none">
                                         {totalKgMat.toLocaleString("id-ID", {
                                           maximumFractionDigits: 1,
                                         })}{" "}
                                         KG
                                       </span>
-                                      <span className="text-emerald-600/70 text-sm font-bold">
+                                      <span className="text-emerald-600/70 text-xs font-semibold">
                                         (
                                         {totalTonMat.toLocaleString("id-ID", {
                                           minimumFractionDigits: 2,
@@ -348,29 +321,29 @@ const HistoryView = ({ db, masterDb }) => {
                               </div>
 
                               {/* TABEL CLEAN */}
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-base text-left">
-                                  <thead>
-                                    <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-xs">
-                                      <th className="py-3 font-bold w-1/6">
+                              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                                <table className="w-full text-sm text-left">
+                                  <thead className="bg-slate-50">
+                                    <tr className="border-b border-slate-200 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
+                                      <th className="py-3 px-4 w-1/6">
                                         Tgl & Waktu
                                       </th>
-                                      <th className="py-3 font-bold w-1/12">
+                                      <th className="py-3 px-2 w-1/12">
                                         Mesin
                                       </th>
-                                      <th className="py-3 font-bold w-2/5">
+                                      <th className="py-3 px-2 w-2/5">
                                         Part Name & No
                                       </th>
-                                      <th className="py-3 font-bold w-1/12 text-center text-blue-500">
+                                      <th className="py-3 px-2 w-1/12 text-center text-blue-600">
                                         SAK
                                       </th>
-                                      <th className="py-3 font-bold w-1/6 text-center text-emerald-500">
+                                      <th className="py-3 px-2 w-1/6 text-center text-emerald-600">
                                         KG (TON)
                                       </th>
-                                      <th className="py-3 font-bold w-1/12 text-center text-orange-400">
+                                      <th className="py-3 px-2 w-1/12 text-center text-orange-500">
                                         REC
                                       </th>
-                                      <th className="py-3 font-bold w-1/12 text-right">
+                                      <th className="py-3 px-4 w-1/12 text-right">
                                         AKSI
                                       </th>
                                     </tr>
@@ -381,9 +354,9 @@ const HistoryView = ({ db, masterDb }) => {
                                       return (
                                         <tr
                                           key={row.id}
-                                          className="hover:bg-slate-50 transition-colors"
+                                          className="hover:bg-slate-50/50 transition-colors"
                                         >
-                                          <td className="py-3 text-slate-500 whitespace-nowrap text-sm">
+                                          <td className="py-3 px-4 text-slate-500 whitespace-nowrap text-xs font-medium">
                                             {new Date(
                                               row.printDate,
                                             ).toLocaleString("id-ID", {
@@ -393,30 +366,30 @@ const HistoryView = ({ db, masterDb }) => {
                                               minute: "2-digit",
                                             })}
                                           </td>
-                                          <td className="py-3 font-black text-slate-700 text-base">
+                                          <td className="py-3 px-2 font-semibold text-slate-700 text-sm">
                                             {row.machine}
                                           </td>
-                                          <td className="py-3 pr-4">
-                                            <div className="font-black text-slate-800 text-base">
+                                          <td className="py-3 px-2 pr-4">
+                                            <div className="font-semibold text-slate-800 text-sm">
                                               {row.partName}
                                             </div>
-                                            <div className="text-slate-500 font-medium text-xs mt-0.5">
+                                            <div className="text-slate-500 font-medium text-[11px] mt-0.5">
                                               {row.partNo}
                                             </div>
                                           </td>
-                                          <td className="py-3 text-center">
-                                            <span className="font-black text-xl text-blue-600">
+                                          <td className="py-3 px-2 text-center">
+                                            <span className="font-bold text-base text-blue-600">
                                               {row.totalSak}
                                             </span>
                                           </td>
-                                          <td className="py-3 text-center">
-                                            <div className="font-bold text-emerald-600 text-base">
+                                          <td className="py-3 px-2 text-center">
+                                            <div className="font-semibold text-emerald-600 text-sm">
                                               {row.totalKg.toLocaleString(
                                                 "id-ID",
                                                 { maximumFractionDigits: 1 },
                                               )}
                                             </div>
-                                            <div className="text-slate-400 text-[10px] font-bold">
+                                            <div className="text-slate-400 text-[10px] font-medium mt-0.5">
                                               {rowTon.toLocaleString("id-ID", {
                                                 minimumFractionDigits: 3,
                                                 maximumFractionDigits: 3,
@@ -424,17 +397,17 @@ const HistoryView = ({ db, masterDb }) => {
                                               t
                                             </div>
                                           </td>
-                                          <td className="py-3 text-center font-bold text-orange-500 text-base">
+                                          <td className="py-3 px-2 text-center font-semibold text-orange-500 text-sm">
                                             {row.recycle > 0
                                               ? row.recycle
                                               : "-"}
                                           </td>
-                                          <td className="py-3 text-right">
+                                          <td className="py-3 px-4 text-right">
                                             <button
                                               onClick={() =>
                                                 handleDeleteHistory(row.id)
                                               }
-                                              className="text-slate-400 hover:text-red-500 font-bold text-xs uppercase px-2 py-1 rounded hover:bg-red-50 transition-all"
+                                              className="text-slate-400 hover:text-red-500 font-semibold text-[10px] tracking-wider uppercase px-2 py-1.5 rounded hover:bg-red-50 transition-all border border-transparent hover:border-red-200"
                                             >
                                               HAPUS
                                             </button>
