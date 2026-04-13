@@ -414,7 +414,7 @@ const PrintLayout = ({ printType, printData, orientation, selectedDate }) => {
                         {lbl.machine} T
                       </div>
                       {/* PERBAIKAN: whitespace-nowrap agar sejajar, text-[14px] agar pas, letter-spacing normal */}
-                      <div 
+                      <div
                         className="w-[44%] text-center font-black uppercase leading-none whitespace-nowrap"
                         style={{ fontSize: "14px", letterSpacing: "normal" }}
                       >
@@ -582,7 +582,9 @@ const PrintLayout = ({ printType, printData, orientation, selectedDate }) => {
                       <span className="w-[150px] flex items-center">
                         Tanggal:{" "}
                         <span className="font-bold ml-1">
-                          {new Date(selectedDate).toLocaleDateString("id-ID")}
+                          {new Date(
+                            lbl.reqDate || selectedDate,
+                          ).toLocaleDateString("id-ID")}
                         </span>
                       </span>
                     </div>

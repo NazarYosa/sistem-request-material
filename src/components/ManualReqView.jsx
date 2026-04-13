@@ -121,6 +121,7 @@ const ManualReqView = ({
       totalDisplay: totalDisplay,
       boxKe: i + 1,
       totalBox: totalBox,
+      reqDate: formData.reqDate,
     });
 
     remainingPlan -= currentBoxTotal;
@@ -141,6 +142,7 @@ const ManualReqView = ({
       totalDisplay: "0",
       boxKe: 1,
       totalBox: 1,
+      reqDate: formData.reqDate,
     });
   }
 
@@ -170,12 +172,19 @@ const ManualReqView = ({
 
     setPendingHistory([historyRecord]);
 
-    // 2. Trigger Print (App.jsx akan otomatis memanggil window.print())
     setPrintType("REQ");
     setPrintData(generatedLabels);
 
-    // Reset Form Input
-    setFormData({ ...formData, sak: "", kg: "", recycle: "" });
+    // Reset Form Input (Kosongkan semua isi form)
+    setFormData({
+      partKey: "",
+      machine: "",
+      reqDate: new Date().toISOString().slice(0, 10), // Reset ke tanggal hari ini
+      sak: "",
+      kg: "",
+      recycle: "",
+    });
+    setSearchQuery("");
   };
 
   return (

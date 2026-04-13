@@ -1154,6 +1154,7 @@ import PrintLayout from "./components/PrintLayout";
 import ModalMenu from "./components/ModalMenu";
 import HistoryView from "./components/HistoryView";
 import ManualReqView from "./components/ManualReqView";
+import PartInfoView from "./components/PartInfoView";
 
 function App() {
   const [dataMaterial, setDataMaterial] = useState([]);
@@ -1770,15 +1771,33 @@ const aggregateData = (rawData) => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden print:h-auto print:overflow-visible">
-      
-      <Header viewMode={viewMode} setViewMode={setViewMode} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+      <Header
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
 
       <div className="flex-1 overflow-y-auto print:hidden">
         <div className="w-full mx-auto">
           {viewMode === "input" && (
             <div className="p-8 w-full">
               <InputView
-                inputForm={inputForm} setInputForm={setInputForm} handleInputChange={handleInputChange} handleSaveInput={handleSaveInput} handleCancelEdit={handleCancelEdit} editingKey={editingKey} masterDb={masterDb} handleEditDb={handleEditDb} handleDeleteDb={handleDeleteDb} searchTerm={searchTerm} setSearchTerm={setSearchTerm} handleExportFirebase={handleExportFirebase} inputFormRef={inputFormRef}
+                inputForm={inputForm}
+                setInputForm={setInputForm}
+                handleInputChange={handleInputChange}
+                handleSaveInput={handleSaveInput}
+                handleCancelEdit={handleCancelEdit}
+                editingKey={editingKey}
+                masterDb={masterDb}
+                handleEditDb={handleEditDb}
+                handleDeleteDb={handleDeleteDb}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                handleExportFirebase={handleExportFirebase}
+                inputFormRef={inputFormRef}
+                dbTableMode={dbTableMode} // <--- INI SUDAH DITAMBAHKAN
+                setDbTableMode={setDbTableMode}
               />
             </div>
           )}
@@ -1786,10 +1805,19 @@ const aggregateData = (rawData) => {
           {viewMode === "scan" && (
             <div className="w-full bg-slate-50 p-4 md:p-6 lg:px-8">
               <ScanView
-                dataMaterial={dataMaterial} groupedUI={groupedUI} selectedDate={selectedDate} setDataMaterial={setDataMaterial} handlePrintRequest={handlePrintRequest} setActiveDropdown={setActiveDropdown} handleRecycleChange={handleRecycleChange} masterDb={masterDb} toggleExcludePart={toggleExcludePart} handlePrintAllRequest={handlePrintAllRequest} 
-                handleFilePick={handleFilePick} 
-                isAutoSyncing={isAutoSyncing} 
-                handleResetData={handleResetData} 
+                dataMaterial={dataMaterial}
+                groupedUI={groupedUI}
+                selectedDate={selectedDate}
+                setDataMaterial={setDataMaterial}
+                handlePrintRequest={handlePrintRequest}
+                setActiveDropdown={setActiveDropdown}
+                handleRecycleChange={handleRecycleChange}
+                masterDb={masterDb}
+                toggleExcludePart={toggleExcludePart}
+                handlePrintAllRequest={handlePrintAllRequest}
+                handleFilePick={handleFilePick}
+                isAutoSyncing={isAutoSyncing}
+                handleResetData={handleResetData}
               />
             </div>
           )}
@@ -1802,9 +1830,18 @@ const aggregateData = (rawData) => {
 
           {viewMode === "manual" && (
             <div className="p-4 md:p-8">
-              <ManualReqView 
-                db={db} masterDb={masterDb} setPrintType={setPrintType} setPrintData={setPrintData} setPendingHistory={setPendingHistory} 
+              <ManualReqView
+                db={db}
+                masterDb={masterDb}
+                setPrintType={setPrintType}
+                setPrintData={setPrintData}
+                setPendingHistory={setPendingHistory}
               />
+            </div>
+          )}
+          {viewMode === "info" && (
+            <div className="p-4 md:p-8 w-full">
+              <PartInfoView masterDb={masterDb} />
             </div>
           )}
         </div>
@@ -1816,7 +1853,9 @@ const aggregateData = (rawData) => {
           <div className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-5">
             <div className="w-14 h-14 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin"></div>
             <span className="text-base font-black text-slate-700 animate-pulse tracking-wide">
-              {isAutoSyncing ? "SYNC DATA TANGGAL BARU..." : "MEMPROSES DATA..."}
+              {isAutoSyncing
+                ? "SYNC DATA TANGGAL BARU..."
+                : "MEMPROSES DATA..."}
             </span>
           </div>
         </div>
@@ -1827,29 +1866,55 @@ const aggregateData = (rawData) => {
         <div className="fixed inset-0 z-9999 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
             <div className="p-6">
-              <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-full flex items-center justify-center text-2xl mb-4">🖨️</div>
-              <h3 className="font-black text-2xl text-slate-800 tracking-tight">Status Print?</h3>
-              <p className="text-slate-500 text-sm mt-2 font-medium leading-relaxed">Apakah stiker tadi berhasil di-print atau di-save?</p>
+              <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-full flex items-center justify-center text-2xl mb-4">
+                🖨️
+              </div>
+              <h3 className="font-black text-2xl text-slate-800 tracking-tight">
+                Status Print?
+              </h3>
+              <p className="text-slate-500 text-sm mt-2 font-medium leading-relaxed">
+                Apakah stiker tadi berhasil di-print atau di-save?
+              </p>
               <div className="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
                 <div className="flex items-start gap-3">
-                  <span className="text-slate-900 text-lg leading-none">✔️</span>
+                  <span className="text-slate-900 text-lg leading-none">
+                    ✔️
+                  </span>
                   <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    Klik <span className="text-slate-900">SAVE</span><br/>
-                    <span className="text-[10px] text-slate-500 normal-case font-medium">Data pemakaian akan masuk ke History.</span>
+                    Klik <span className="text-slate-900">SAVE</span>
+                    <br />
+                    <span className="text-[10px] text-slate-500 normal-case font-medium">
+                      Data pemakaian akan masuk ke History.
+                    </span>
                   </p>
                 </div>
                 <div className="flex items-start gap-3 pt-3 border-t border-slate-200">
-                  <span className="text-slate-400 text-lg leading-none">❌</span>
+                  <span className="text-slate-400 text-lg leading-none">
+                    ❌
+                  </span>
                   <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    Klik <span className="text-slate-600">CANCEL</span><br/>
-                    <span className="text-[10px] text-slate-500 normal-case font-medium">Data dibuang & tidak masuk History.</span>
+                    Klik <span className="text-slate-600">CANCEL</span>
+                    <br />
+                    <span className="text-[10px] text-slate-500 normal-case font-medium">
+                      Data dibuang & tidak masuk History.
+                    </span>
                   </p>
                 </div>
               </div>
             </div>
             <div className="px-6 pb-6 flex gap-3">
-              <button onClick={handleCancelHistory} disabled={isSavingHistory} className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 transition-all active:scale-95">CANCEL</button>
-              <button onClick={handleConfirmHistory} disabled={isSavingHistory} className="flex-1 px-4 py-3 rounded-xl font-black tracking-wider text-white bg-slate-900 border-2 border-slate-900 hover:bg-black transition-all flex items-center justify-center gap-2 active:scale-95">
+              <button
+                onClick={handleCancelHistory}
+                disabled={isSavingHistory}
+                className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleConfirmHistory}
+                disabled={isSavingHistory}
+                className="flex-1 px-4 py-3 rounded-xl font-black tracking-wider text-white bg-slate-900 border-2 border-slate-900 hover:bg-black transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
                 {isSavingHistory ? "SAVING..." : "SAVE"}
               </button>
             </div>
@@ -1858,8 +1923,21 @@ const aggregateData = (rawData) => {
       )}
 
       {/* PRINTING & MODALS */}
-      <PrintLayout printType={printType} printData={printData} orientation={orientation} selectedDate={selectedDate} />
-      <ModalMenu activeDropdown={activeDropdown} setActiveDropdown={setActiveDropdown} dataMaterial={dataMaterial} masterDb={masterDb} handlePrintLabel={handlePrintLabel} setOrientation={setOrientation} orientation={orientation} />
+      <PrintLayout
+        printType={printType}
+        printData={printData}
+        orientation={orientation}
+        selectedDate={selectedDate}
+      />
+      <ModalMenu
+        activeDropdown={activeDropdown}
+        setActiveDropdown={setActiveDropdown}
+        dataMaterial={dataMaterial}
+        masterDb={masterDb}
+        handlePrintLabel={handlePrintLabel}
+        setOrientation={setOrientation}
+        orientation={orientation}
+      />
 
       {/* --- CSS FONT INTER & GLOBAL LETTER SPACING --- */}
       <style>{`
