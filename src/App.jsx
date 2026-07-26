@@ -5,12 +5,48 @@ import { db } from "./firebase";
 import {
   collection,
   getDocs,
+  getDoc,
   setDoc,
   doc,
   deleteDoc,
-  addDoc,
 } from "firebase/firestore";
 import { generateKey, getMarkersFromDate } from "./utils";
+
+// ================= CACHE MASTER_PARTS DI DEVICE (localStorage) =================
+// Tujuannya: hindari fetch ulang seluruh collection "master_parts" tiap kali
+// app dibuka, kecuali memang ada perubahan data di server.
+const MASTER_DB_CACHE_KEY = "vuteq_master_db_cache_v1";
+
+function loadMasterDbCache() {
+  try {
+    const raw = localStorage.getItem(MASTER_DB_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw); // { updatedAt, data }
+  } catch (e) {
+    console.warn("Cache master_parts korup, diabaikan:", e);
+    return null;
+  }
+}
+
+function saveMasterDbCache(updatedAt, data) {
+  try {
+    localStorage.setItem(
+      MASTER_DB_CACHE_KEY,
+      JSON.stringify({ updatedAt, data }),
+    );
+  } catch (e) {
+    // Kalau localStorage penuh/gagal, gak fatal, cuma berarti next load fetch ulang
+    console.warn("Gagal simpan cache master_parts:", e);
+  }
+}
+
+// Panggil ini SETIAP KALI ada tulis/hapus ke collection master_parts,
+// supaya device lain tau data berubah dan mau fetch ulang.
+async function bumpMasterDbUpdatedAt() {
+  const now = Date.now();
+  await setDoc(doc(db, "meta", "master_parts"), { updatedAt: now });
+  return now;
+}
 
 // --- IMPORT KOMPONEN ---
 import Header from "./components/Header";
@@ -18,7 +54,6 @@ import InputView from "./components/InputView";
 import ScanView from "./components/ScanView";
 import PrintLayout from "./components/PrintLayout";
 import ModalMenu from "./components/ModalMenu";
-import HistoryView from "./components/HistoryView";
 import ManualReqView from "./components/ManualReqView";
 import PartInfoView from "./components/PartInfoView";
 
@@ -41,10 +76,6 @@ function App() {
 
   const [masterDb, setMasterDb] = useState({});
   const [isLoadingDb, setIsLoadingDb] = useState(false);
-
-  const [pendingHistory, setPendingHistory] = useState(null);
-  const [showPrintConfirm, setShowPrintConfirm] = useState(false);
-  const [isSavingHistory, setIsSavingHistory] = useState(false);
 
   const [inputForm, setInputForm] = useState({
     partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "",
@@ -326,54 +357,47 @@ const aggregateData = (rawData) => {
     const fetchData = async () => {
       setIsLoadingDb(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "master_parts"));
-        const data = {};
-        querySnapshot.forEach((doc) => {
-          data[doc.id] = doc.data();
-        });
-        setMasterDb(data);
+        // 1. Cek dulu "penanda waktu update terakhir" di server (1 read doc, murah)
+        const metaSnap = await getDoc(doc(db, "meta", "master_parts"));
+        const serverUpdatedAt = metaSnap.exists()
+          ? metaSnap.data().updatedAt
+          : null;
+
+        const cached = loadMasterDbCache();
+
+        if (
+          cached &&
+          serverUpdatedAt &&
+          cached.updatedAt === serverUpdatedAt
+        ) {
+          // Data di device masih sama persis dengan di server -> pakai cache,
+          // TIDAK perlu fetch seluruh collection master_parts.
+          setMasterDb(cached.data);
+        } else {
+          // Belum ada cache, atau ada perubahan di server -> fetch full collection
+          const querySnapshot = await getDocs(collection(db, "master_parts"));
+          const data = {};
+          querySnapshot.forEach((d) => {
+            data[d.id] = d.data();
+          });
+          setMasterDb(data);
+          saveMasterDbCache(serverUpdatedAt || Date.now(), data);
+        }
       } catch (error) {
         console.error("Error connecting to Firebase:", error);
-        alert("Gagal mengambil data database! Cek internet.");
+        // Kalau gagal (misal lagi offline), coba tetap jalan pakai cache lama
+        const cached = loadMasterDbCache();
+        if (cached) {
+          setMasterDb(cached.data);
+        } else {
+          alert("Gagal mengambil data database! Cek internet.");
+        }
       } finally {
         setIsLoadingDb(false);
       }
     };
     fetchData();
   }, []);
-
-  useEffect(() => {
-    const handleAfterPrint = () => {
-      if (pendingHistory && pendingHistory.length > 0) {
-        setTimeout(() => { setShowPrintConfirm(true); }, 500); 
-      }
-    };
-    window.addEventListener("afterprint", handleAfterPrint);
-    return () => window.removeEventListener("afterprint", handleAfterPrint);
-  }, [pendingHistory]);
-
-  const handleConfirmHistory = async () => {
-    setIsSavingHistory(true);
-    try {
-      const historyRef = collection(db, "print_history");
-      for (let item of pendingHistory) {
-        await addDoc(historyRef, item);
-      }
-      console.log("Berhasil disimpan ke History!");
-    } catch (error) {
-      console.error("Gagal save history:", error);
-      alert("Gagal mencatat ke History. Cek koneksi Anda.");
-    } finally {
-      setIsSavingHistory(false);
-      setPendingHistory(null);
-      setShowPrintConfirm(false);
-    }
-  };
-
-  const handleCancelHistory = () => {
-    setPendingHistory(null);
-    setShowPrintConfirm(false);
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -401,6 +425,14 @@ const handleSaveInput = async () => {
 
     // Gunakan dataToSave untuk dikirim ke Firebase
     await setDoc(doc(db, "master_parts", newKey), dataToSave);
+
+    // Tandai ke server + cache device bahwa data master_parts berubah,
+    // supaya device lain (atau reload berikutnya) tau harus fetch ulang.
+    const newMasterDb = { ...masterDbRef.current };
+    if (editingKey && editingKey !== newKey) delete newMasterDb[editingKey];
+    newMasterDb[newKey] = dataToSave;
+    const updatedAt = await bumpMasterDbUpdatedAt();
+    saveMasterDbCache(updatedAt, newMasterDb);
 
     // Gunakan dataToSave untuk di-render di tabel web
     setMasterDb((prev) => ({ ...prev, [newKey]: dataToSave }));
@@ -475,6 +507,12 @@ const handleSaveInput = async () => {
     if (window.confirm("Hapus data ini permanen?")) {
       try {
         await deleteDoc(doc(db, "master_parts", key));
+
+        const newMasterDb = { ...masterDbRef.current };
+        delete newMasterDb[key];
+        const updatedAt = await bumpMasterDbUpdatedAt();
+        saveMasterDbCache(updatedAt, newMasterDb);
+
         setMasterDb((prev) => {
           const newDb = { ...prev };
           delete newDb[key];
@@ -537,13 +575,6 @@ const handleSaveInput = async () => {
       remainingPlan -= currentBoxTotal;
     }
 
-    const dateObj = new Date();
-    const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
-    const historyItem = {
-      printDate: dateObj.toISOString(), monthYear: monthYear, machine: item.machine ? item.machine.toUpperCase() : "-", partName: item.partName || "-", partNo: extraData.partNo || item.partNo || "-", totalSak: parseInt(item.totalQty || 0), totalKg: parseFloat(item.inputKg || 0), recycle: parseFloat(item.recycleInput || 0), printType: "SCAN_SATUAN",
-    };
-
-    setPendingHistory([historyItem]); 
     setPrintType("REQ");
     setPrintData(labels);
   };
@@ -552,9 +583,6 @@ const handleSaveInput = async () => {
     if (!window.confirm("Yakin ingin mencetak SEMUA data?")) return;
 
     let allLabelsAccumulated = [];
-    let historyRecords = [];
-    const dateObj = new Date();
-    const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
 
     dataMaterial.forEach((item) => {
       if (item.totalQty > 0 && !item.isExcluded) {
@@ -592,9 +620,6 @@ const handleSaveInput = async () => {
           remainingPlan -= currentBoxTotal;
         }
 
-        historyRecords.push({
-          printDate: dateObj.toISOString(), monthYear: monthYear, machine: item.machine ? item.machine.toUpperCase() : "-", partName: item.partName || "-", partNo: extraData.partNo || item.partNo || "-", totalSak: parseInt(item.totalQty || 0), totalKg: parseFloat(item.inputKg || 0), recycle: parseFloat(item.recycleInput || 0), printType: "SCAN_ALL",
-        });
       }
     });
 
@@ -603,7 +628,6 @@ const handleSaveInput = async () => {
       return;
     }
 
-    setPendingHistory(historyRecords); 
     setPrintType("REQ");
     setPrintData(allLabelsAccumulated);
   };
@@ -739,12 +763,6 @@ const handleSaveInput = async () => {
             </div>
           )}
 
-          {viewMode === "history" && (
-            <div className="p-4 md:p-8">
-              <HistoryView db={db} masterDb={masterDb} />
-            </div>
-          )}
-
           {viewMode === "manual" && (
             <div className="p-4 md:p-8">
               <ManualReqView
@@ -752,7 +770,6 @@ const handleSaveInput = async () => {
                 masterDb={masterDb}
                 setPrintType={setPrintType}
                 setPrintData={setPrintData}
-                setPendingHistory={setPendingHistory}
               />
             </div>
           )}
@@ -774,67 +791,6 @@ const handleSaveInput = async () => {
                 ? "SYNC DATA TANGGAL BARU..."
                 : "MEMPROSES DATA..."}
             </span>
-          </div>
-        </div>
-      )}
-
-      {/* POPUP CONFIRM HISTORY */}
-      {showPrintConfirm && (
-        <div className="fixed inset-0 z-9999 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 print:hidden animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
-            <div className="p-6">
-              <div className="w-12 h-12 bg-slate-100 text-slate-900 rounded-full flex items-center justify-center text-2xl mb-4">
-                🖨️
-              </div>
-              <h3 className="font-black text-2xl text-slate-800 tracking-tight">
-                Status Print?
-              </h3>
-              <p className="text-slate-500 text-sm mt-2 font-medium leading-relaxed">
-                Apakah stiker tadi berhasil di-print atau di-save?
-              </p>
-              <div className="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                <div className="flex items-start gap-3">
-                  <span className="text-slate-900 text-lg leading-none">
-                    ✔️
-                  </span>
-                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    Klik <span className="text-slate-900">SAVE</span>
-                    <br />
-                    <span className="text-[10px] text-slate-500 normal-case font-medium">
-                      Data pemakaian akan masuk ke History.
-                    </span>
-                  </p>
-                </div>
-                <div className="flex items-start gap-3 pt-3 border-t border-slate-200">
-                  <span className="text-slate-400 text-lg leading-none">
-                    ❌
-                  </span>
-                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    Klik <span className="text-slate-600">CANCEL</span>
-                    <br />
-                    <span className="text-[10px] text-slate-500 normal-case font-medium">
-                      Data dibuang & tidak masuk History.
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="px-6 pb-6 flex gap-3">
-              <button
-                onClick={handleCancelHistory}
-                disabled={isSavingHistory}
-                className="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
-              >
-                CANCEL
-              </button>
-              <button
-                onClick={handleConfirmHistory}
-                disabled={isSavingHistory}
-                className="flex-1 px-4 py-3 rounded-xl font-black tracking-wider text-white bg-slate-900 border-2 border-slate-900 hover:bg-black transition-all flex items-center justify-center gap-2 active:scale-95"
-              >
-                {isSavingHistory ? "SAVING..." : "SAVE"}
-              </button>
-            </div>
           </div>
         </div>
       )}

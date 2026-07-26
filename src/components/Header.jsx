@@ -74,7 +74,6 @@ const Header = ({ viewMode, setViewMode, selectedDate, setSelectedDate }) => {
     { id: "input", label: "INPUT DB" },
     { id: "info", label: "INFO PART" }, 
     { id: "manual", label: "MANUAL REQ" },
-    { id: "history", label: "HISTORY" },
   ];
 
   return (

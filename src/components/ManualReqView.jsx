@@ -8,7 +8,6 @@ const ManualReqView = ({
   masterDb,
   setPrintType,
   setPrintData,
-  setPendingHistory,
 }) => {
   const now = new Date();
 
@@ -152,25 +151,6 @@ const ManualReqView = ({
       alert("Peringatan: Part Name, Jumlah SAK, dan Tanggal wajib diisi!");
       return;
     }
-
-    const currentTime = new Date().toTimeString().slice(0, 5);
-    const dateObj = new Date(`${formData.reqDate}T${currentTime}`);
-    const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
-
-    // 1. Simpan ke antrean konfirmasi di App.jsx (BUKAN LANGSUNG KE FIREBASE)
-    const historyRecord = {
-      printDate: dateObj.toISOString(),
-      monthYear: monthYear,
-      machine: formData.machine ? formData.machine.toUpperCase() : "-",
-      partName: partData.partName || "PART MANUAL",
-      partNo: partData.partNo || "-",
-      totalSak: totalPlan,
-      totalKg: parseFloat(formData.kg || 0),
-      recycle: totalRecycle,
-      printType: "MANUAL",
-    };
-
-    setPendingHistory([historyRecord]);
 
     setPrintType("REQ");
     setPrintData(generatedLabels);
