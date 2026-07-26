@@ -49,13 +49,14 @@ async function bumpMasterDbUpdatedAt() {
 }
 
 // --- IMPORT KOMPONEN ---
-import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
 import InputView from "./components/InputView";
 import ScanView from "./components/ScanView";
 import PrintLayout from "./components/PrintLayout";
 import ModalMenu from "./components/ModalMenu";
 import ManualReqView from "./components/ManualReqView";
 import PartInfoView from "./components/PartInfoView";
+import StockDashboardView from "./components/StockDashboardView";
 
 function App() {
   const [dataMaterial, setDataMaterial] = useState([]);
@@ -710,17 +711,21 @@ const handleSaveInput = async () => {
     return acc;
   }, {});
 
+  // Mode TV/kiosk: diakses lewat URL khusus, full-screen tanpa Sidebar/menu lain
+  if (typeof window !== "undefined" && window.location.pathname === "/tv-stok") {
+    return <StockDashboardView db={db} masterDb={masterDb} kiosk />;
+  }
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 text-slate-800 font-sans overflow-hidden print:h-auto print:overflow-visible">
-      <Header
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-      />
+      <Sidebar viewMode={viewMode} setViewMode={setViewMode} />
 
       <div className="flex-1 overflow-y-auto print:hidden">
         <div className="w-full mx-auto">
+          {viewMode === "stock" && (
+            <StockDashboardView db={db} masterDb={masterDb} />
+          )}
+
           {viewMode === "input" && (
             <div className="p-8 w-full">
               <InputView
@@ -749,6 +754,7 @@ const handleSaveInput = async () => {
                 dataMaterial={dataMaterial}
                 groupedUI={groupedUI}
                 selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
                 setDataMaterial={setDataMaterial}
                 handlePrintRequest={handlePrintRequest}
                 setActiveDropdown={setActiveDropdown}

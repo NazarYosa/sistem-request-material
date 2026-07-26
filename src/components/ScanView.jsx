@@ -6,6 +6,7 @@ const ScanView = ({
   dataMaterial,
   groupedUI,
   selectedDate,
+  setSelectedDate,
   setDataMaterial,
   handlePrintRequest,
   setActiveDropdown,
@@ -263,9 +264,17 @@ const ScanView = ({
                 year: "numeric",
               })}
             </h3>
-            <span className="text-slate-500 text-xs font-bold tracking-widest uppercase mt-0.5 block">
-              Total: {dataMaterial.length} Items Terdeteksi
-            </span>
+            <div className="flex flex-wrap items-center gap-3 mt-1">
+              <span className="text-slate-500 text-xs font-bold tracking-widest uppercase block">
+                Total: {dataMaterial.length} Items Terdeteksi
+              </span>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              />
+            </div>
           </div>
         </div>
 
