@@ -16,7 +16,6 @@ const ScanView = ({
   handleFilePick,
   isAutoSyncing,
   handleResetData,
-  handlePrintAllPartTag,
 }) => {
   const isDataEmpty = dataMaterial.length === 0;
 
@@ -97,12 +96,12 @@ const ScanView = ({
                   Kg
                 </th>
                 <th className="px-2 py-3 text-center font-extrabold uppercase text-xs tracking-wider w-[8%]">
-                  Recycle
+                  Rec
                 </th>
                 <th className="px-2 py-3 text-center font-extrabold uppercase text-xs tracking-wider w-[8%]">
                   SAK
                 </th>
-                <th className="px-2 py-3 text-center font-extrabold uppercase text-xs tracking-wider w-[5%]">
+                <th className="px-2 py-3 text-center font-extrabold uppercase text-[9px] tracking-wider w-[5%]">
                   Skip
                 </th>
                 <th className="px-4 py-3 text-right font-extrabold uppercase text-xs tracking-wider w-[12%]">
@@ -271,88 +270,44 @@ const ScanView = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <button
+            onClick={handleFilePick}
+            className={`flex-1 lg:flex-none flex items-center justify-center text-sm font-bold py-2.5 px-6 rounded-lg cursor-pointer transition-all border ${
+              isAutoSyncing
+                ? "bg-slate-100 text-slate-900 border-slate-400"
+                : "text-slate-800 border-slate-300 active:scale-95"
+            }`}
+          >
+            <span className="text-base mr-2">
+              {isAutoSyncing ? "🔄" : "📂"}
+            </span>
+            {isAutoSyncing ? "AUTO SYNC AKTIF" : "BUKA EXCEL"}
+          </button>
 
-  <button
-    onClick={handleFilePick}
-    className={`flex-1 lg:flex-none flex items-center justify-center text-sm font-bold py-2.5 px-6 rounded-lg cursor-pointer transition-all border ${
-      isAutoSyncing
-        ? "bg-slate-100 text-slate-900 border-slate-400"
-        : "text-slate-800 border-slate-300 active:scale-95"
-    }`}
-  >
-    <span className="text-base mr-2">
-      {isAutoSyncing ? "🔄" : "📂"}
-    </span>
-    {isAutoSyncing ? "AUTO SYNC AKTIF" : "BUKA EXCEL"}
-  </button>
+          <button
+            onClick={handlePrintAllRequest}
+            disabled={isDataEmpty}
+            className={`flex-1 lg:flex-none py-2.5 px-6 rounded-lg font-bold flex items-center justify-center transition-all text-sm border ${
+              isDataEmpty
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-slate-900 text-white hover:bg-black border-slate-900 active:scale-95 shadow-sm"
+            }`}
+          >
+            <span className="text-base mr-2">🖨️</span> PRINT ALL REQ
+          </button>
 
-  <button
-    onClick={handlePrintAllRequest}
-    disabled={isDataEmpty}
-    className={`flex-1 lg:flex-none py-2.5 px-6 rounded-lg font-bold flex items-center justify-center transition-all text-sm border ${
-      isDataEmpty
-        ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
-        : "bg-slate-900 text-white hover:bg-black border-slate-900 active:scale-95 shadow-sm"
-    }`}
-  >
-    <span className="text-base mr-2">🖨️</span>
-    PRINT ALL REQ
-  </button>
-
-  {/* ===== DROPDOWN PRINT ALL TAG ===== */}
-  <details className="relative flex-1 lg:flex-none group">
-    <summary
-      className={`list-none py-2.5 px-6 rounded-lg font-bold flex items-center justify-center text-sm border cursor-pointer transition-all ${
-        isDataEmpty
-          ? "bg-slate-50 text-slate-400 border-slate-200 pointer-events-none cursor-not-allowed"
-          : "bg-slate-800 text-white hover:bg-black border-slate-800 active:scale-95 shadow-sm"
-      }`}
-    >
-      <span className="text-base mr-2">🏷️</span>
-      PRINT ALL TAG
-      <span className="ml-2 text-xs">▼</span>
-    </summary>
-
-    {!isDataEmpty && (
-      <div className="absolute left-0 mt-2 w-full min-w-[180px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50">
-        <button
-          onClick={() => handlePrintAllPartTag("Gen")}
-          className="w-full px-4 py-3 text-left hover:bg-slate-100 transition"
-        >
-          🏷️ ALL TAG GEN
-        </button>
-
-        <button
-          onClick={() => handlePrintAllPartTag("Kiri")}
-          className="w-full px-4 py-3 text-left hover:bg-slate-100 transition"
-        >
-          🏷️ ALL TAG KIRI
-        </button>
-
-        <button
-          onClick={() => handlePrintAllPartTag("Kanan")}
-          className="w-full px-4 py-3 text-left hover:bg-slate-100 transition"
-        >
-          🏷️ ALL TAG KANAN
-        </button>
-      </div>
-    )}
-  </details>
-  {/* ================================ */}
-
-  <button
-    onClick={handleResetData}
-    disabled={isDataEmpty}
-    className={`flex-1 lg:flex-none py-2.5 px-6 rounded-lg font-bold transition-all text-sm border ${
-      isDataEmpty
-        ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
-        : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-slate-300 active:scale-95 shadow-sm"
-    }`}
-  >
-    RESET DATA
-  </button>
-
-</div>
+          <button
+            onClick={handleResetData}
+            disabled={isDataEmpty}
+            className={`flex-1 lg:flex-none py-2.5 px-6 rounded-lg font-bold transition-all text-sm border ${
+              isDataEmpty
+                ? "bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed"
+                : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-slate-300 active:scale-95 shadow-sm"
+            }`}
+          >
+            RESET DATA
+          </button>
+        </div>
       </div>
 
       {/* KONTEN UTAMA TABEL */}

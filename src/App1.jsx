@@ -1,14 +1,52 @@
+// src/App.jsx
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { db } from "./firebase";
 import {
   collection,
   getDocs,
+  getDoc,
   setDoc,
   doc,
   deleteDoc,
 } from "firebase/firestore";
 import { generateKey, getMarkersFromDate } from "./utils";
+
+// ================= CACHE MASTER_PARTS DI DEVICE (localStorage) =================
+// Tujuannya: hindari fetch ulang seluruh collection "master_parts" tiap kali
+// app dibuka, kecuali memang ada perubahan data di server.
+const MASTER_DB_CACHE_KEY = "vuteq_master_db_cache_v1";
+
+function loadMasterDbCache() {
+  try {
+    const raw = localStorage.getItem(MASTER_DB_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw); // { updatedAt, data }
+  } catch (e) {
+    console.warn("Cache master_parts korup, diabaikan:", e);
+    return null;
+  }
+}
+
+function saveMasterDbCache(updatedAt, data) {
+  try {
+    localStorage.setItem(
+      MASTER_DB_CACHE_KEY,
+      JSON.stringify({ updatedAt, data }),
+    );
+  } catch (e) {
+    // Kalau localStorage penuh/gagal, gak fatal, cuma berarti next load fetch ulang
+    console.warn("Gagal simpan cache master_parts:", e);
+  }
+}
+
+// Panggil ini SETIAP KALI ada tulis/hapus ke collection master_parts,
+// supaya device lain tau data berubah dan mau fetch ulang.
+async function bumpMasterDbUpdatedAt() {
+  const now = Date.now();
+  await setDoc(doc(db, "meta", "master_parts"), { updatedAt: now });
+  return now;
+}
 
 // --- IMPORT KOMPONEN ---
 import Header from "./components/Header";
@@ -39,9 +77,8 @@ function App() {
   const [masterDb, setMasterDb] = useState({});
   const [isLoadingDb, setIsLoadingDb] = useState(false);
 
-
   const [inputForm, setInputForm] = useState({
-    partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+    partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "",
   });
 
   // ========================================================================
@@ -320,15 +357,41 @@ const aggregateData = (rawData) => {
     const fetchData = async () => {
       setIsLoadingDb(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "master_parts"));
-        const data = {};
-        querySnapshot.forEach((doc) => {
-          data[doc.id] = doc.data();
-        });
-        setMasterDb(data);
+        // 1. Cek dulu "penanda waktu update terakhir" di server (1 read doc, murah)
+        const metaSnap = await getDoc(doc(db, "meta", "master_parts"));
+        const serverUpdatedAt = metaSnap.exists()
+          ? metaSnap.data().updatedAt
+          : null;
+
+        const cached = loadMasterDbCache();
+
+        if (
+          cached &&
+          serverUpdatedAt &&
+          cached.updatedAt === serverUpdatedAt
+        ) {
+          // Data di device masih sama persis dengan di server -> pakai cache,
+          // TIDAK perlu fetch seluruh collection master_parts.
+          setMasterDb(cached.data);
+        } else {
+          // Belum ada cache, atau ada perubahan di server -> fetch full collection
+          const querySnapshot = await getDocs(collection(db, "master_parts"));
+          const data = {};
+          querySnapshot.forEach((d) => {
+            data[d.id] = d.data();
+          });
+          setMasterDb(data);
+          saveMasterDbCache(serverUpdatedAt || Date.now(), data);
+        }
       } catch (error) {
         console.error("Error connecting to Firebase:", error);
-        alert("Gagal mengambil data database! Cek internet.");
+        // Kalau gagal (misal lagi offline), coba tetap jalan pakai cache lama
+        const cached = loadMasterDbCache();
+        if (cached) {
+          setMasterDb(cached.data);
+        } else {
+          alert("Gagal mengambil data database! Cek internet.");
+        }
       } finally {
         setIsLoadingDb(false);
       }
@@ -340,32 +403,91 @@ const aggregateData = (rawData) => {
     const { name, value } = e.target;
     setInputForm((prev) => ({ ...prev, [name]: value }));
   };
+const handleSaveInput = async () => {
+  if (!inputForm.partName) return alert("Part Name wajib diisi!");
+  const newKey = generateKey(inputForm.partName);
 
-  const handleSaveInput = async () => {
-    if (!inputForm.partName) return alert("Part Name wajib diisi!");
-    const newKey = generateKey(inputForm.partName);
-
-    try {
-      if (editingKey && editingKey !== newKey) {
-        await deleteDoc(doc(db, "master_parts", editingKey));
-        setMasterDb((prev) => {
-          const temp = { ...prev };
-          delete temp[editingKey];
-          return temp;
-        });
-      }
-      await setDoc(doc(db, "master_parts", newKey), inputForm);
-      setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
-      setInputForm({
-        partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+  try {
+    if (editingKey && editingKey !== newKey) {
+      await deleteDoc(doc(db, "master_parts", editingKey));
+      setMasterDb((prev) => {
+        const temp = { ...prev };
+        delete temp[editingKey];
+        return temp;
       });
-      setEditingKey(null);
-      alert("Data berhasil disimpan ke Cloud!");
-    } catch (error) {
-      console.error("Error saving: ", error);
-      alert("Gagal menyimpan data.");
     }
-  };
+
+    // 🔥 BUNGKUS DATA DENGAN PENANDA WAKTU SEBELUM DIKIRIM
+    const dataToSave = {
+      ...inputForm,
+      createdAt: Date.now(), // Berfungsi sebagai tanda lahir & tanda revisi terbaru
+    };
+
+    // Gunakan dataToSave untuk dikirim ke Firebase
+    await setDoc(doc(db, "master_parts", newKey), dataToSave);
+
+    // Tandai ke server + cache device bahwa data master_parts berubah,
+    // supaya device lain (atau reload berikutnya) tau harus fetch ulang.
+    const newMasterDb = { ...masterDbRef.current };
+    if (editingKey && editingKey !== newKey) delete newMasterDb[editingKey];
+    newMasterDb[newKey] = dataToSave;
+    const updatedAt = await bumpMasterDbUpdatedAt();
+    saveMasterDbCache(updatedAt, newMasterDb);
+
+    // Gunakan dataToSave untuk di-render di tabel web
+    setMasterDb((prev) => ({ ...prev, [newKey]: dataToSave }));
+
+    setInputForm({
+      partName: "",
+      partNo: "",
+      weight: "",
+      stdQty: "",
+      partNameHgs: "",
+      partNoHgs: "",
+      finishGood: "",
+      partAssyName: "",
+      partAssyHgs: "",
+      partAssyFg: "",
+      partAssyNameLeft: "",
+      partAssyHgsLeft: "",
+      partAssyFgLeft: "",
+      partAssyNameRight: "",
+      partAssyHgsRight: "",
+      partAssyFgRight: "",
+      partNoHgsLeft: "",
+      partNameHgsLeft: "",
+      finishGoodLeft: "",
+      finishGoodNameLeft: "",
+      partNoHgsRight: "",
+      partNameHgsRight: "",
+      finishGoodRight: "",
+      finishGoodNameRight: "",
+      color: "",
+      materialName: "",
+      partNoMaterial: "",
+      materialName2: "",
+      partNoMaterial2: "",
+      model: "",
+      qrHgs: "",
+      imgHgs: "",
+      qrAssy: "",
+      imgAssy: "",
+      qrAssyL: "",
+      imgAssyL: "",
+      qrAssyR: "",
+      imgAssyR: "",
+      qrTagL: "",
+      imgTagL: "",
+      qrTagR: "",
+      imgTagR: "",
+    });
+    setEditingKey(null);
+    alert("Data berhasil disimpan ke Cloud!");
+  } catch (error) {
+    console.error("Error saving: ", error);
+    alert("Gagal menyimpan data.");
+  }
+};
 
   const handleEditDb = (key) => {
     const data = masterDb[key];
@@ -376,7 +498,7 @@ const aggregateData = (rawData) => {
 
   const handleCancelEdit = () => {
     setInputForm({
-      partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+      partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "",
     });
     setEditingKey(null);
   };
@@ -385,6 +507,12 @@ const aggregateData = (rawData) => {
     if (window.confirm("Hapus data ini permanen?")) {
       try {
         await deleteDoc(doc(db, "master_parts", key));
+
+        const newMasterDb = { ...masterDbRef.current };
+        delete newMasterDb[key];
+        const updatedAt = await bumpMasterDbUpdatedAt();
+        saveMasterDbCache(updatedAt, newMasterDb);
+
         setMasterDb((prev) => {
           const newDb = { ...prev };
           delete newDb[key];
@@ -491,6 +619,7 @@ const aggregateData = (rawData) => {
           });
           remainingPlan -= currentBoxTotal;
         }
+
       }
     });
 
@@ -503,98 +632,6 @@ const aggregateData = (rawData) => {
     setPrintData(allLabelsAccumulated);
   };
   
-const handlePrintAllPartTag = (kategori) => {
-    if (!window.confirm(`Yakin ingin mencetak SEMUA Part Tag untuk kategori: ${kategori}?`)) return;
-
-    let allLabelsAccumulated = [];
-    let hasMissingDb = false;
-
-    // 1. Filter data yang memiliki Plan > 0 dan tidak di-skip
-    const validData = dataMaterial.filter(item => item.inputPlan > 0 && !item.isExcluded);
-
-    // 2. Urutkan berdasarkan Mesin (Descending, menyesuaikan UI ScanView)
-    const sortedData = validData.sort((a, b) => {
-      const numA = parseInt(a.machine.replace(/\D/g, "")) || 0;
-      const numB = parseInt(b.machine.replace(/\D/g, "")) || 0;
-      if (numA !== numB) return numB - numA;
-      return a.machine.localeCompare(b.machine);
-    });
-
-    // 3. Looping data untuk dicocokkan dengan Master DB
-    sortedData.forEach((item) => {
-      const dbKey = generateKey(item.partName);
-      const extraData = masterDb[dbKey];
-
-      if (!extraData) {
-        hasMissingDb = true;
-        return;
-      }
-
-      let targetName = "", targetHgs = "", targetFg = "", targetQr = "", targetImg = "";
-
-      // Ambil data spesifik berdasarkan Kategori
-      if (kategori === "Gen") {
-  // General
-  targetName = extraData.partNameHgs;
-  targetHgs = extraData.partNoHgs;
-  targetFg = extraData.finishGood;
-  targetQr = extraData.qrHgs;
-  targetImg = extraData.imgHgs;
-
-} else if (kategori === "Kiri") {
-  // ALL KIRI = ASSY LEFT
-  targetName = extraData.partAssyNameLeft;
-  targetHgs = extraData.partAssyHgsLeft;
-  targetFg = extraData.partAssyFgLeft;
-  targetQr = extraData.qrAssyL;
-  targetImg = extraData.imgAssyL || "";
-
-} else if (kategori === "Kanan") {
-  // ALL KANAN = ASSY RIGHT
-  targetName = extraData.partAssyNameRight;
-  targetHgs = extraData.partAssyHgsRight;
-  targetFg = extraData.partAssyFgRight;
-  targetQr = extraData.qrAssyR;
-  targetImg = extraData.imgAssyR || "";
-}
-
-      // 4. Jika Part tersebut memiliki nama/HGS untuk Gen/Kiri/Kanan, buatkan antrean
-      if (targetName || targetHgs) {
-        const totalQtyPlan = parseInt(item.inputPlan) || 0;
-        const stdPack = parseInt(extraData.stdQty) || 1;
-        const totalBox = Math.ceil(totalQtyPlan / stdPack) || 1;
-
-        for (let i = 1; i <= totalBox; i++) {
-          allLabelsAccumulated.push({
-            machine: item.machine,
-            partName: targetName || "-",
-            hgs: targetHgs || "-",
-            fg: targetFg || "-",
-            qr: targetQr,
-            img: targetImg,
-            partNo: extraData.partNo,
-            model: extraData.model,
-            qty: stdPack,
-            boxKe: i,
-            totalBox: totalBox,
-            printOrientation: extraData.printOrientation || "PORTRAIT",
-          });
-        }
-      }
-    });
-
-    // 5. Validasi akhir sebelum melempar ke PrintLayout
-    if (allLabelsAccumulated.length === 0) {
-      alert(`Tidak ada data Part Tag ${kategori} yang valid untuk dicetak (Pastikan data sudah diisi di menu INPUT).`);
-      if (hasMissingDb) alert("Peringatan: Beberapa part terdeteksi belum masuk ke Database (MISSING DB)!");
-      return;
-    }
-
-    setPrintType("LABEL");
-    setPrintData(allLabelsAccumulated);
-  };
-
-
   const handlePrintLabel = (item, type) => {
     const dbKey = generateKey(item.partName);
     const extraData = masterDb[dbKey];
@@ -722,12 +759,9 @@ const handlePrintAllPartTag = (kategori) => {
                 handleFilePick={handleFilePick}
                 isAutoSyncing={isAutoSyncing}
                 handleResetData={handleResetData}
-                handlePrintAllPartTag={handlePrintAllPartTag}
               />
             </div>
           )}
-
-
 
           {viewMode === "manual" && (
             <div className="p-4 md:p-8">
@@ -780,72 +814,24 @@ const handlePrintAllPartTag = (kategori) => {
 
       {/* --- CSS FONT INTER & GLOBAL LETTER SPACING --- */}
       <style>{`
-  body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, p, span, div, label, a { 
-    font-family: 'Inter', sans-serif !important; 
-    font-optical-sizing: auto;
-    letter-spacing: 0.04em !important;
-  }
-
-  @keyframes progress {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-
-  .animate-progress {
-    animation: progress 1.5s infinite linear;
-  }
-
-  div {
-    float: none !important;
-  }
-
-  @media print {
-
-    @page {
-      size: A4 ${printType === "REQ" || (printType === "LABEL" && orientation === "LANDSCAPE") ? "landscape" : "portrait"};
-      margin: 5mm;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    .print-page {
-      width: 100%;
-      min-height: calc(100vh - 10mm);
-      box-sizing: border-box;
-      page-break-after: always;
-      break-after: page;
-      page-break-inside: avoid;
-    }
-
-    .print-page:last-child {
-      page-break-after: auto;
-      break-after: auto;
-    }
-
-    .page-break-inside-avoid {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .grid-cols-2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 3mm;
-    }
-
-    .grid-cols-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5mm;
-    }
-  }
-`}</style>
+        body, html, .font-sans, table, th, td, button, input, h1, h2, h3, h4, p, span, div, label, a { 
+          font-family: 'Inter', sans-serif !important; 
+          font-optical-sizing: auto;
+          letter-spacing: 0.04em !important; /* Jarak huruf dilebarkan biar lega & elegan */
+        }
+        
+        @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .animate-progress { animation: progress 1.5s infinite linear; }
+        div { float: none !important; }
+        
+        @media print {
+          @page { size: A4 ${printType === "REQ" || (printType === "LABEL" && orientation === "LANDSCAPE") ? "landscape" : "portrait"}; margin: 5mm; }
+          body { -webkit-print-color-adjust: exact; }
+          .page-break-inside-avoid { page-break-inside: avoid; }
+          .grid-cols-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm; }
+          .grid-cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+        }
+      `}</style>
     </div>
   );
 }
