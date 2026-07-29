@@ -192,19 +192,6 @@ const InputView = ({
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-purple-600 uppercase mb-1.5">
-                  Qty / Box (HGS)
-                </label>
-                <input
-                  name="hgsQty"
-                  type="number"
-                  value={inputForm.hgsQty || ""}
-                  onChange={handleInputChange}
-                  className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="0"
-                />
-              </div>
-              <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
                   Model
                 </label>

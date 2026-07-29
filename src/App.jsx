@@ -41,7 +41,7 @@ function App() {
 
 
   const [inputForm, setInputForm] = useState({
-    partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+    partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
   });
 
   // ========================================================================
@@ -357,7 +357,7 @@ const aggregateData = (rawData) => {
       await setDoc(doc(db, "master_parts", newKey), inputForm);
       setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
       setInputForm({
-        partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+        partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
       });
       setEditingKey(null);
       alert("Data berhasil disimpan ke Cloud!");
@@ -376,7 +376,7 @@ const aggregateData = (rawData) => {
 
   const handleCancelEdit = () => {
     setInputForm({
-      partName: "", partNo: "", weight: "", stdQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+      partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
     });
     setEditingKey(null);
   };
