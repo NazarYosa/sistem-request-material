@@ -775,7 +775,6 @@ const handlePrintAllPartTag = (kategori) => {
           {viewMode === "manual" && (
             <div className="p-4 md:p-8">
               <ManualReqView
-                db={db}
                 masterDb={masterDb}
                 setPrintType={setPrintType}
                 setPrintData={setPrintData}

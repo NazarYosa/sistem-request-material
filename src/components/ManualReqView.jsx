@@ -4,7 +4,6 @@ import PrintLayout from "./PrintLayout";
 import { generateKey } from "../utils";
 
 const ManualReqView = ({
-  db,
   masterDb,
   setPrintType,
   setPrintData,
