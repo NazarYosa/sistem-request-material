@@ -226,6 +226,18 @@ const InputView = ({
                   className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent transition-all"
                 />
               </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">
+                  Mesin
+                </label>
+                <input
+                  name="mesin"
+                  value={inputForm.mesin || ""}
+                  onChange={handleInputChange}
+                  placeholder="CONTOH: 2500"
+                  className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-800 focus:border-transparent transition-all"
+                />
+              </div>
 
               {/* --- KODE TAMBAHAN: ORIENTASI KERTAS --- */}
               <div className="lg:col-span-2 mt-2">

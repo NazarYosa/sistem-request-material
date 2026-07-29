@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
-import { db } from "./firebase";
-import {
-  collection,
-  getDocs,
-  setDoc,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
+import { supabase } from "./supabase";
+import { toDbRow, fromDbRow } from "./masterPartsMapper";
 import { generateKey, getMarkersFromDate } from "./utils";
 
 // --- IMPORT KOMPONEN ---
@@ -41,7 +35,7 @@ function App() {
 
 
   const [inputForm, setInputForm] = useState({
-    partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+    partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", mesin: "", imgHgs: "", imgAssy: "", imgAssyL: "", imgAssyR: "", imgTagL: "", imgTagR: "", printOrientation: "",
   });
 
   // ========================================================================
@@ -320,20 +314,52 @@ const aggregateData = (rawData) => {
     const fetchData = async () => {
       setIsLoadingDb(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "master_parts"));
+        const { data: rows, error } = await supabase
+          .from("master_parts")
+          .select("*");
+        if (error) throw error;
+
         const data = {};
-        querySnapshot.forEach((doc) => {
-          data[doc.id] = doc.data();
+        rows.forEach((row) => {
+          data[row.id] = fromDbRow(row);
         });
         setMasterDb(data);
       } catch (error) {
-        console.error("Error connecting to Firebase:", error);
+        console.error("Error connecting to Supabase:", error);
         alert("Gagal mengambil data database! Cek internet.");
       } finally {
         setIsLoadingDb(false);
       }
     };
     fetchData();
+
+    // 🔥 REALTIME: begitu ada part baru/diedit/dihapus dari device lain,
+    // masterDb di sini otomatis ikut update tanpa perlu refresh manual.
+    const channel = supabase
+      .channel("master_parts_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "master_parts" },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setMasterDb((prev) => {
+              const next = { ...prev };
+              delete next[payload.old.id];
+              return next;
+            });
+          } else {
+            setMasterDb((prev) => ({
+              ...prev,
+              [payload.new.id]: fromDbRow(payload.new),
+            }));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleInputChange = (e) => {
@@ -347,17 +373,24 @@ const aggregateData = (rawData) => {
 
     try {
       if (editingKey && editingKey !== newKey) {
-        await deleteDoc(doc(db, "master_parts", editingKey));
+        const { error: delError } = await supabase
+          .from("master_parts")
+          .delete()
+          .eq("id", editingKey);
+        if (delError) throw delError;
         setMasterDb((prev) => {
           const temp = { ...prev };
           delete temp[editingKey];
           return temp;
         });
       }
-      await setDoc(doc(db, "master_parts", newKey), inputForm);
+      const { error } = await supabase
+        .from("master_parts")
+        .upsert(toDbRow({ ...inputForm, id: newKey }));
+      if (error) throw error;
       setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
       setInputForm({
-        partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+        partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", mesin: "", imgHgs: "", imgAssy: "", imgAssyL: "", imgAssyR: "", imgTagL: "", imgTagR: "", printOrientation: "",
       });
       setEditingKey(null);
       alert("Data berhasil disimpan ke Cloud!");
@@ -376,7 +409,7 @@ const aggregateData = (rawData) => {
 
   const handleCancelEdit = () => {
     setInputForm({
-      partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", qrHgs: "", imgHgs: "", qrAssy: "", imgAssy: "", qrAssyL: "", imgAssyL: "", qrAssyR: "", imgAssyR: "", qrTagL: "", imgTagL: "", qrTagR: "", imgTagR: "", printOrientation: "",
+      partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", mesin: "", imgHgs: "", imgAssy: "", imgAssyL: "", imgAssyR: "", imgTagL: "", imgTagR: "", printOrientation: "",
     });
     setEditingKey(null);
   };
@@ -384,7 +417,11 @@ const aggregateData = (rawData) => {
   const handleDeleteDb = async (key) => {
     if (window.confirm("Hapus data ini permanen?")) {
       try {
-        await deleteDoc(doc(db, "master_parts", key));
+        const { error } = await supabase
+          .from("master_parts")
+          .delete()
+          .eq("id", key);
+        if (error) throw error;
         setMasterDb((prev) => {
           const newDb = { ...prev };
           delete newDb[key];
@@ -642,9 +679,15 @@ const handlePrintAllPartTag = (kategori) => {
   const handleExportFirebase = async () => {
     setIsProcessing(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "master_parts"));
+      const { data: rows, error } = await supabase
+        .from("master_parts")
+        .select("*");
+      if (error) throw error;
+
       const allData = {};
-      querySnapshot.forEach((doc) => { allData[doc.id] = doc.data(); });
+      rows.forEach((row) => {
+        allData[row.id] = fromDbRow(row);
+      });
       const jsonString = JSON.stringify(allData, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -657,7 +700,7 @@ const handlePrintAllPartTag = (kategori) => {
       alert(`✅ Berhasil Export ${Object.keys(allData).length} Data!`);
     } catch (error) {
       console.error("Gagal export:", error);
-      alert("Gagal koneksi ke Firebase.");
+      alert("Gagal koneksi ke Supabase.");
     } finally {
       setIsProcessing(false);
     }
