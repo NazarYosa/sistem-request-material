@@ -1,5 +1,6 @@
 import React from "react";
 import { QRCodeSVG } from "qrcode.react";
+import logo from "../assets/vuteq-logo.png";
 
 const PrintLayout = ({ printType, printData, orientation, selectedDate }) => {
   return (
@@ -273,26 +274,26 @@ const PrintLayout = ({ printType, printData, orientation, selectedDate }) => {
                       <div
                         className="grid grid-cols-5 grid-rows-[1.4fr_1fr_1fr_1fr_1fr_1fr_1fr] border border-black box-border bg-white"
                         style={
-                          isAutoRotated 
-                          ? {
-                              width: "54mm", 
-                              height: "95mm",
-                              transform: "rotate(-90deg)",
-                              transformOrigin: "center center",
-                              position: "absolute",
-                              top: "-20.5mm", 
-                              left: "20.5mm",
-                            } 
-                          : {
-                              width: "100%",
-                              height: "100%",
-                            }
+                          isAutoRotated
+                            ? {
+                                width: "54mm",
+                                height: "95mm",
+                                transform: "rotate(-90deg)",
+                                transformOrigin: "center center",
+                                position: "absolute",
+                                top: "-20.5mm",
+                                left: "20.5mm",
+                              }
+                            : {
+                                width: "100%",
+                                height: "100%",
+                              }
                         }
                       >
                         {/* Header: Logo, Tag, Model, QR */}
                         <div className="col-start-1 row-start-1 border-r border-b border-black flex items-center justify-center p-0.5 overflow-hidden">
                           <img
-                            src="/vuteq-logo.png"
+                            src={logo}
                             alt="VuteQ Logo"
                             className="w-full h-full object-contain"
                           />
@@ -375,45 +376,44 @@ const PrintLayout = ({ printType, printData, orientation, selectedDate }) => {
                           </span>
                         </div>
                         <div className="col-start-1 row-start-5 border-r border-b border-black flex items-center justify-center bg-gray-100">
-  <span className="text-[8px] font-bold">QTY</span>
-</div>
-<div className="col-start-1 row-start-6 row-span-2 border-r border-black flex items-center justify-center">
-  <span className="text-xl font-black">{lbl.qty}</span>
-</div>
+                          <span className="text-[8px] font-bold">QTY</span>
+                        </div>
+                        <div className="col-start-1 row-start-6 row-span-2 border-r border-black flex items-center justify-center">
+                          <span className="text-xl font-black">{lbl.qty}</span>
+                        </div>
 
-{/* TGL PROD */}
-<div className="col-start-2 row-start-5 border-r border-b border-black p-0.5 flex items-center justify-center">
-  <span className="text-[6px] font-bold text-center">
-    TGL PROD
-  </span>
-</div>
-<div className="col-start-3 col-span-2 row-start-5 border-r border-b border-black p-0.5"></div>
-<div className="col-start-5 row-start-5 border-b border-black px-1 flex items-center">
-  <span className="text-[7px] font-bold">PIC</span>
-</div>
+                        {/* TGL PROD */}
+                        <div className="col-start-2 row-start-5 border-r border-b border-black p-0.5 flex items-center justify-center">
+                          <span className="text-[6px] font-bold text-center">
+                            TGL PROD
+                          </span>
+                        </div>
+                        <div className="col-start-3 col-span-2 row-start-5 border-r border-b border-black p-0.5"></div>
+                        <div className="col-start-5 row-start-5 border-b border-black px-1 flex items-center">
+                          <span className="text-[7px] font-bold">PIC</span>
+                        </div>
 
-{/* TGL ASSY */}
-<div className="col-start-2 row-start-6 border-r border-b border-black p-0.5 flex items-center justify-center">
-  <span className="text-[6px] font-bold text-center">
-    TGL ASSY
-  </span>
-</div>
-<div className="col-start-3 col-span-2 row-start-6 border-r border-b border-black p-0.5"></div>
-<div className="col-start-5 row-start-6 border-b border-black px-1 flex items-center">
-  <span className="text-[7px] font-bold">PIC</span>
-</div>
+                        {/* TGL ASSY */}
+                        <div className="col-start-2 row-start-6 border-r border-b border-black p-0.5 flex items-center justify-center">
+                          <span className="text-[6px] font-bold text-center">
+                            TGL ASSY
+                          </span>
+                        </div>
+                        <div className="col-start-3 col-span-2 row-start-6 border-r border-b border-black p-0.5"></div>
+                        <div className="col-start-5 row-start-6 border-b border-black px-1 flex items-center">
+                          <span className="text-[7px] font-bold">PIC</span>
+                        </div>
 
-{/* TGL DLV */}
-<div className="col-start-2 row-start-7 border-r border-black p-0.5 flex items-center justify-center">
-  <span className="text-[6px] font-bold text-center">
-    TGL DLV
-  </span>
-</div>
-<div className="col-start-3 col-span-2 row-start-7 border-r border-black p-0.5"></div>
-<div className="col-start-5 row-start-7 px-1 flex items-center">
-  <span className="text-[7px] font-bold">PIC</span>
-</div>
-
+                        {/* TGL DLV */}
+                        <div className="col-start-2 row-start-7 border-r border-black p-0.5 flex items-center justify-center">
+                          <span className="text-[6px] font-bold text-center">
+                            TGL DLV
+                          </span>
+                        </div>
+                        <div className="col-start-3 col-span-2 row-start-7 border-r border-black p-0.5"></div>
+                        <div className="col-start-5 row-start-7 px-1 flex items-center">
+                          <span className="text-[7px] font-bold">PIC</span>
+                        </div>
                       </div>
                     </div>
                   );
