@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "./supabase";
-import { toDbRow, fromDbRow } from "./masterPartsMapper";
+import { fromDbRow } from "./masterPartsMapper"; // dipakai handleExportFirebase (backup JSON), di luar scope migrasi
 import { generateKey, getMarkersFromDate } from "./utils";
+import { useMasterParts } from "./hooks/useMasterParts";
 
 // --- IMPORT KOMPONEN ---
 import Header from "./components/Header";
@@ -30,8 +31,7 @@ function App() {
     new Date().toLocaleDateString("en-CA"),
   );
 
-  const [masterDb, setMasterDb] = useState({});
-  const [isLoadingDb, setIsLoadingDb] = useState(false);
+  const { masterDb, isLoadingDb, saveMasterPart, deleteMasterPart } = useMasterParts();
 
 
   const [inputForm, setInputForm] = useState({
@@ -310,58 +310,6 @@ const aggregateData = (rawData) => {
     return () => clearInterval(interval);
   }, [isAutoSyncing]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoadingDb(true);
-      try {
-        const { data: rows, error } = await supabase
-          .from("master_parts")
-          .select("*");
-        if (error) throw error;
-
-        const data = {};
-        rows.forEach((row) => {
-          data[row.id] = fromDbRow(row);
-        });
-        setMasterDb(data);
-      } catch (error) {
-        console.error("Error connecting to Supabase:", error);
-        alert("Gagal mengambil data database! Cek internet.");
-      } finally {
-        setIsLoadingDb(false);
-      }
-    };
-    fetchData();
-
-    // 🔥 REALTIME: begitu ada part baru/diedit/dihapus dari device lain,
-    // masterDb di sini otomatis ikut update tanpa perlu refresh manual.
-    const channel = supabase
-      .channel("master_parts_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "master_parts" },
-        (payload) => {
-          if (payload.eventType === "DELETE") {
-            setMasterDb((prev) => {
-              const next = { ...prev };
-              delete next[payload.old.id];
-              return next;
-            });
-          } else {
-            setMasterDb((prev) => ({
-              ...prev,
-              [payload.new.id]: fromDbRow(payload.new),
-            }));
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setInputForm((prev) => ({ ...prev, [name]: value }));
@@ -372,23 +320,7 @@ const aggregateData = (rawData) => {
     const newKey = generateKey(inputForm.partName);
 
     try {
-      if (editingKey && editingKey !== newKey) {
-        const { error: delError } = await supabase
-          .from("master_parts")
-          .delete()
-          .eq("id", editingKey);
-        if (delError) throw delError;
-        setMasterDb((prev) => {
-          const temp = { ...prev };
-          delete temp[editingKey];
-          return temp;
-        });
-      }
-      const { error } = await supabase
-        .from("master_parts")
-        .upsert(toDbRow({ ...inputForm, id: newKey }));
-      if (error) throw error;
-      setMasterDb((prev) => ({ ...prev, [newKey]: inputForm }));
+      await saveMasterPart({ inputForm, newKey, editingKey });
       setInputForm({
         partName: "", partNo: "", weight: "", stdQty: "", hgsQty: "", partNameHgs: "", partNoHgs: "", finishGood: "", partAssyName: "", partAssyHgs: "", partAssyFg: "", partAssyNameLeft: "", partAssyHgsLeft: "", partAssyFgLeft: "", partAssyNameRight: "", partAssyHgsRight: "", partAssyFgRight: "", partNoHgsLeft: "", partNameHgsLeft: "", finishGoodLeft: "", finishGoodNameLeft: "", partNoHgsRight: "", partNameHgsRight: "", finishGoodRight: "", finishGoodNameRight: "", color: "", materialName: "", partNoMaterial: "", materialName2: "", partNoMaterial2: "", model: "", mesin: "", imgHgs: "", imgAssy: "", imgAssyL: "", imgAssyR: "", imgTagL: "", imgTagR: "", printOrientation: "",
       });
@@ -417,16 +349,7 @@ const aggregateData = (rawData) => {
   const handleDeleteDb = async (key) => {
     if (window.confirm("Hapus data ini permanen?")) {
       try {
-        const { error } = await supabase
-          .from("master_parts")
-          .delete()
-          .eq("id", key);
-        if (error) throw error;
-        setMasterDb((prev) => {
-          const newDb = { ...prev };
-          delete newDb[key];
-          return newDb;
-        });
+        await deleteMasterPart(key);
         if (editingKey === key) handleCancelEdit();
       } catch (error) {
         console.error("Error deleting: ", error);

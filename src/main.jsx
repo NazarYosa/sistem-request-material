@@ -1,10 +1,26 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App";
+import "./index.css"; // sesuaikan kalau nama file css-mu berbeda
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// Satu QueryClient untuk seluruh app.
+// defaultOptions ini opsional — nilai di bawah cukup aman untuk kasus
+// "data dari Supabase + realtime subscription" seperti project ini.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000, // 30 detik dianggap masih "fresh"
+      refetchOnWindowFocus: false, // biar gak refetch tiap pindah tab (opsional, hapus kalau mau default)
+      retry: 1,
+    },
+  },
+});
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>,
+);
